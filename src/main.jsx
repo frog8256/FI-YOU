@@ -18,9 +18,11 @@ import {
   LogOut,
   Map,
   MessageCircle,
+  Orbit,
   Pencil,
   Settings,
   ShieldCheck,
+  Share2,
   Sparkles,
   Trash2,
   User
@@ -440,7 +442,7 @@ function FeedbackScreen({ onContinue }) {
   return (
     <div className="screen feedback-screen">
       <div className="map-ghost" aria-hidden="true">
-        <Map size={36} />
+        <Orbit size={36} />
         <span /><span /><span />
       </div>
       <section className="feedback-copy">
@@ -655,7 +657,7 @@ function DiaryScreen() {
     <div className="screen home-screen with-bottom-nav">
       <header className="diary-topbar diary-topbar-v2">
         <div className="diary-title-lockup">
-          <span className="diary-title-icon"><Sparkles size={20} /></span>
+          <span className="diary-title-icon"><BookOpen size={20} /></span>
           <div>
             <p className="eyebrow">Self Discovery Log</p>
             <h1>Diary</h1>
@@ -1504,7 +1506,7 @@ function UMapScreen() {
     <div className="screen home-screen u-map-screen with-bottom-nav">
       <header className="diary-topbar u-map-topbar">
         <div className="diary-title-lockup">
-          <span className="diary-title-icon u-map-title-icon"><Map size={20} /></span>
+          <span className="diary-title-icon u-map-title-icon"><Orbit size={20} /></span>
           <h1>U-Map</h1>
         </div>
       </header>
@@ -1519,11 +1521,7 @@ function UMapScreen() {
       </div>
 
       <section className={`glass-card u-map-primary-card ${isClear ? "clear" : "initial"}`}>
-        <div className="u-map-card-head">
-          <p className="eyebrow">U-Map</p>
-          {isClear && <span>Unlocked · 선명도 72%</span>}
-        </div>
-        <h1>{isClear ? "윤곽이 더 선명해졌어요" : "아직은 흐릿한 윤곽이에요"}</h1>
+        <h1>{isClear ? "윤곽이 선명해졌어요" : "아직은 흐릿한 윤곽이에요"}</h1>
         <p>
           {isClear
             ? "질문과 Diary에서 반복된 단서가 쌓이면서 관계, 가치관, 감정 흐름이 더 또렷하게 보이고 있어요."
@@ -1540,6 +1538,7 @@ function UMapScreen() {
             </>
           )}
         </div>
+        <small className="u-map-updated">Updated 2026.06.14</small>
       </section>
 
       <section className="u-map-detail-section">
@@ -1585,28 +1584,63 @@ function UMapScreen() {
 }
 
 function SettingsScreen() {
-  const settingsItems = [
+  const [reportOpen, setReportOpen] = React.useState(false);
+  const [settingsDetailOpen, setSettingsDetailOpen] = React.useState(false);
+  const profileSummaryCards = [
+    ["최근 발견된 단서", "혼자 정리하는 시간과 관계 안에서의 거리감 조절이 반복해서 보여요."],
+    ["반복되는 흐름", "선택 전 내 기준을 확인하려는 흐름이 질문과 Diary에서 함께 나타납니다."],
+    ["더 알아가면 좋은 영역", "갈등 상황의 반응과 에너지 회복 방식을 더 살펴보면 좋아요."],
+    ["다음 탐구 제안", "오늘 마음에 남은 장면을 하나 더 남겨 U-Map의 윤곽을 이어가 보세요."]
+  ];
+  const settingsDetailItems = [
     ["계정 설정", "로그인, 기본 정보", User],
-    ["Star / 보상 내역", "출석 +10 · Diary +12 · 광고 +15", Gift],
-    ["알림 설정", "질문과 기록 리마인드", Bell],
     ["언어 설정", "한국어", Globe2],
-    ["서비스 약관 / 개인정보 처리방침", "동의 문서 확인", FileText],
+    ["알림 설정", "질문과 기록 리마인드", Bell],
     ["데이터 관리", "기록 내보내기와 삭제", Database],
+    ["서비스 약관", "개인정보 처리방침과 동의 문서", FileText],
     ["로그아웃", "현재 계정에서 나가기", LogOut]
   ];
 
+  if (settingsDetailOpen) {
+    return (
+      <div className="screen home-screen with-bottom-nav">
+        <header className="top-row">
+          <button className="icon-button" type="button" onClick={() => setSettingsDetailOpen(false)} aria-label="Profile로 돌아가기">
+            <ChevronLeft size={22} />
+          </button>
+          <span>설정</span>
+          <i />
+        </header>
+
+        <section className="settings-section">
+          {settingsDetailItems.map(([title, description, Icon]) => (
+            <button className="settings-row" type="button" key={title}>
+              <span className="settings-row-icon"><Icon size={18} /></span>
+              <span>
+                <strong>{title}</strong>
+                <em>{description}</em>
+              </span>
+              <ChevronRight size={17} />
+            </button>
+          ))}
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="screen home-screen with-bottom-nav">
-      <header className="top-row">
-        <span />
-        <span>Settings</span>
-        <i />
+      <header className="diary-topbar settings-topbar">
+        <div className="diary-title-lockup">
+          <span className="diary-title-icon"><User size={20} /></span>
+          <h1>Profile</h1>
+        </div>
       </header>
 
       <section className="settings-profile-card">
         <div className="settings-avatar"><User size={26} /></div>
         <div className="settings-profile-main">
-          <p className="eyebrow">내 정보</p>
+          <p className="settings-signal-line">아이디어를 현실화하고 싶어 하는</p>
           <h1>지우님</h1>
           <span>1996.06.13 · 탐험가</span>
         </div>
@@ -1619,27 +1653,93 @@ function SettingsScreen() {
         </div>
       </section>
 
-      <button className="settings-pdf-card" type="button" aria-label="지금까지 기록 PDF 리포트 다운로드">
-        <span className="settings-row-icon"><FileText size={18} /></span>
-        <span>
-          <strong>기록 PDF 리포트</strong>
-          <em>지금까지의 단서와 흐름 Download</em>
-        </span>
-        <small>100 Star</small>
-      </button>
-
-      <section className="settings-section">
-        {settingsItems.map(([title, description, Icon]) => (
-          <button className="settings-row" type="button" key={title}>
-            <span className="settings-row-icon"><Icon size={18} /></span>
-            <span>
-              <strong>{title}</strong>
-              <em>{description}</em>
-            </span>
-            <ChevronRight size={17} />
-          </button>
+      <section className="profile-summary-grid" aria-label="리포트 요약">
+        {profileSummaryCards.map(([title, copy]) => (
+          <article className="profile-summary-card" key={title}>
+            <strong>{title}</strong>
+            <p>{copy}</p>
+          </article>
         ))}
       </section>
+
+      <section className="settings-section">
+        <button className="settings-row" type="button" onClick={() => setReportOpen(true)} aria-label="리포트 열기">
+          <span className="settings-row-icon"><FileText size={18} /></span>
+          <span>
+            <strong>리포트</strong>
+            <em>질문과 Diary 기록 요약</em>
+          </span>
+          <ChevronRight size={17} />
+        </button>
+        <button className="settings-row" type="button">
+          <span className="settings-row-icon"><Gift size={18} /></span>
+          <span>
+            <strong>Star / 보상 내역</strong>
+            <em>출석 +10 · Diary +12 · 광고 +15</em>
+          </span>
+          <ChevronRight size={17} />
+        </button>
+        <button className="settings-row" type="button" onClick={() => setSettingsDetailOpen(true)} aria-label="설정 상세 열기">
+          <span className="settings-row-icon"><Settings size={18} /></span>
+          <span>
+            <strong>설정</strong>
+            <em>계정, 언어, 알림, 데이터 관리</em>
+          </span>
+          <ChevronRight size={17} />
+        </button>
+      </section>
+      {reportOpen && <ReportSheet onClose={() => setReportOpen(false)} />}
+    </div>
+  );
+}
+
+function ReportSheet({ onClose }) {
+  const reportContent = [
+    ["전체 흐름 요약", "현재까지의 질문과 Diary에서는 새로운 가능성을 탐색하려는 마음과, 그 가능성을 현실적인 기준으로 정리하려는 흐름이 함께 보입니다. 단정된 성격이 아니라, 반복해서 나타난 단서들이 만든 현재의 윤곽으로 이해하는 것이 좋아요."],
+    ["관계와 거리감", "관계에서는 진정성을 중요하게 보면서도, 혼자 생각을 정리할 시간이 필요하다는 단서가 함께 나타납니다. 가까워지고 싶은 마음과 나의 속도를 지키고 싶은 마음 사이에서 균형을 찾는 흐름이 있습니다."],
+    ["선택 기준", "선택을 앞둘 때 외부의 기대만 따르기보다 내 기준이 납득되는지를 확인하려는 경향이 보입니다. 이 기준은 아직 완전히 고정된 것이 아니라, 기록이 쌓일수록 더 선명해질 수 있습니다."],
+    ["다음 탐구 방향", "앞으로는 갈등 상황에서의 반응, 에너지가 회복되는 환경, 협업 안에서 강점이 드러나는 순간을 더 살펴보면 U-Map의 윤곽이 더 자연스럽게 이어질 수 있습니다."]
+  ];
+
+  return (
+    <div className="calendar-overlay" role="dialog" aria-modal="true" aria-label="리포트">
+      <div className="calendar-sheet report-sheet">
+        <header className="calendar-header">
+          <button className="icon-button" type="button" onClick={onClose} aria-label="닫기">
+            <ChevronLeft size={21} />
+          </button>
+          <div>
+            <h2>리포트</h2>
+          </div>
+          <span />
+        </header>
+        <div className="report-action-row" aria-label="리포트 작업">
+          <button className="report-action-button active" type="button">
+            <FileText size={15} />
+            <span>분석내용 바로보기</span>
+          </button>
+          <button className="report-action-button" type="button" aria-label="공유하기">
+            <Share2 size={15} />
+            <span>공유하기</span>
+          </button>
+        </div>
+        <p className="report-sheet-copy">현재까지의 질문과 Diary 기록을 바탕으로 정리했어요.</p>
+        <div className="report-content-heading">
+          <span>Report</span>
+          <h3>분석 내용</h3>
+        </div>
+        <section className="report-full-content">
+          {reportContent.map(([title, copy]) => (
+            <article key={title}>
+              <h3>{title}</h3>
+              <p>{copy}</p>
+            </article>
+          ))}
+        </section>
+        <button className="primary-button report-close-button" type="button" onClick={onClose}>
+          닫기
+        </button>
+      </div>
     </div>
   );
 }
@@ -1717,8 +1817,8 @@ function BottomNav({ activeTab, onTabChange }) {
     { id: "home", label: "홈", icon: Home },
     { id: "diary", label: "다이어리", icon: BookOpen },
     { id: "explore", label: "탐구", icon: Sparkles, primary: true },
-    { id: "map", label: "U-Map", icon: Map },
-    { id: "settings", label: "Settings", icon: Settings }
+    { id: "map", label: "U-Map", icon: Orbit },
+    { id: "settings", label: "Profile", icon: User }
   ];
 
   return (
