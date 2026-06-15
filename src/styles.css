@@ -2911,11 +2911,20 @@ button.star-cost-pill {
 }
 
 .star-topup-copy {
-  margin: 0 0 14px;
+  margin: 0 0 8px;
   color: #cfc6e8;
   font-size: 13px;
   font-weight: 750;
   line-height: 1.45;
+  word-break: keep-all;
+}
+
+.star-topup-mock-note {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
   word-break: keep-all;
 }
 
@@ -2942,6 +2951,18 @@ button.star-cost-pill {
   font: inherit;
   text-align: left;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.star-package-row:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.star-topup-error {
+  margin: 10px 0 0;
+  color: #ffd1df;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .star-package-row.recommended {

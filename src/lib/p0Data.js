@@ -190,6 +190,12 @@ export async function softDeleteDiary(id) {
   throwIf(error);
 }
 
+export async function revokeDiaryStarOnce(diaryId) {
+  const { data, error } = await supabase.rpc("revoke_diary_star", { p_diary_id: diaryId });
+  throwIf(error);
+  return Number(data || 0);
+}
+
 export async function getStarBalance() {
   const { data, error } = await supabase.rpc("get_star_balance");
   throwIf(error);
@@ -230,6 +236,30 @@ export async function unlockEntitlement({ type, cost, refId }) {
   return data;
 }
 
+export async function createStarCheckout(packageId) {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  throwIf(sessionError);
+
+  const token = sessionData?.session?.access_token;
+  if (!token) throw new Error("not_authenticated");
+
+  const response = await fetch("/api/create-star-checkout", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ packageId })
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "checkout_failed");
+  }
+
+  return payload;
+}
+
 export async function fetchEntitlements() {
   const { data, error } = await supabase
     .from("entitlements")
@@ -261,6 +291,17 @@ export async function createRelation({ userId, name, relationshipType }) {
     })
     .select()
     .single();
+  throwIf(error);
+  return data;
+}
+
+export async function upsertRelationAnswer({ relationId, questionId, selectedOptionId, optionalText }) {
+  const { data, error } = await supabase.rpc("upsert_relation_answer", {
+    p_relation_id: relationId,
+    p_question_id: questionId,
+    p_selected_option_id: selectedOptionId || null,
+    p_optional_text: optionalText || null
+  });
   throwIf(error);
   return data;
 }

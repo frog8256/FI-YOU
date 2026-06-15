@@ -31,6 +31,7 @@ import {
 import "./styles.css";
 import {
   completeOnboarding,
+  createStarCheckout,
   createRelation,
   ensureProfile,
   fetchAnsweredQuestionIds,
@@ -44,6 +45,7 @@ import {
   grantDiaryStarOnce,
   isInsufficientStarError,
   onAuthStateChange,
+  revokeDiaryStarOnce,
   saveDiary,
   signInWithGoogle,
   signOut,
@@ -52,7 +54,8 @@ import {
   unlockEntitlement,
   updateProfile,
   upsertAnswer,
-  upsertOnboardingAnswer
+  upsertOnboardingAnswer,
+  upsertRelationAnswer
 } from "./lib/p0Data";
 
 const chunk = (...chunks) => chunks;
@@ -175,13 +178,30 @@ function StarCostPill({ amount, suffix = "", className = "", as = "span", ...pro
 }
 
 function StarTopUpSheet({ balance = 150, onClose, onFilled }) {
+  const [error, setError] = React.useState("");
+  const [loadingPackage, setLoadingPackage] = React.useState("");
   const packages = [
-    { name: "첫 구매 한정", note: "처음 가볍게 시작", amount: 100, price: "$0.99" },
-    { name: "기본팩", note: "짧은 탐구에 적당해요", amount: 120, price: "$1.99" },
-    { name: "탐구팩", note: "자주 쓰기 좋은 균형", amount: 350, price: "$4.99", recommended: true },
-    { name: "딥다이브팩", note: "깊은 분석을 여유 있게", amount: 800, price: "$9.99" },
-    { name: "오래 알아가기팩", note: "긴 흐름을 꾸준히", amount: 1800, price: "$19.99" }
+    { id: "first_100", name: "첫 구매 한정", note: "처음 가볍게 시작", amount: 100, price: "$0.99" },
+    { id: "basic_120", name: "기본팩", note: "짧은 탐구에 적당해요", amount: 120, price: "$1.99" },
+    { id: "explore_350", name: "탐구팩", note: "자주 쓰기 좋은 균형", amount: 350, price: "$4.99", recommended: true },
+    { id: "deep_800", name: "딥다이브팩", note: "깊은 분석을 여유 있게", amount: 800, price: "$9.99" },
+    { id: "long_1800", name: "오래 알아가기팩", note: "긴 흐름을 꾸준히", amount: 1800, price: "$19.99" }
   ];
+
+  const openCheckout = async (packageId, amount) => {
+    setError("");
+    setLoadingPackage(packageId);
+    try {
+      const { url } = await createStarCheckout(packageId);
+      if (!url) throw new Error("checkout_url_missing");
+      window.location.href = url;
+    } catch (checkoutError) {
+      console.warn("Star checkout failed", checkoutError);
+      setError("결제 연결을 확인해야 해요. Stripe 환경변수와 webhook 설정이 완료되면 다시 시도할 수 있어요.");
+    } finally {
+      setLoadingPackage("");
+    }
+  };
 
   return (
     <div className="calendar-overlay" role="dialog" aria-modal="true" aria-label="Star 채우기">
@@ -200,18 +220,18 @@ function StarTopUpSheet({ balance = 150, onClose, onFilled }) {
           <span>현재 보유</span>
           <StarCostPill amount={balance} />
         </div>
-        <p className="star-topup-copy">필요한 만큼 채우고, 보던 심화 분석을 이어서 열 수 있어요.</p>
+        <p className="star-topup-copy">필요한 만큼 채우고, 결제가 확인되면 Star가 ledger에 적립돼요.</p>
+        <p className="star-topup-mock-note">결제 성공 후 webhook 확인이 끝나야 Star가 반영돼요.</p>
+        {error && <p className="star-topup-error">{error}</p>}
         <div className="star-package-list">
-          {packages.map(({ name, note, amount, price, recommended }) => (
+          {packages.map(({ id, name, note, amount, price, recommended }) => (
             <button
               className={`star-package-row ${recommended ? "recommended" : ""}`}
               type="button"
               key={name}
               aria-label={`${name}, ${amount} Star, ${price}`}
-              onClick={() => {
-                onFilled?.(amount);
-                onClose();
-              }}
+              disabled={!!loadingPackage}
+              onClick={() => openCheckout(id, amount)}
             >
               <span className="star-package-copy">
                 <span className="star-package-titleline">
@@ -222,7 +242,7 @@ function StarTopUpSheet({ balance = 150, onClose, onFilled }) {
               </span>
               <span className="star-package-value">
                 <StarCostPill amount={amount} />
-                <strong>{price}</strong>
+                <strong>{loadingPackage === id ? "연결 중" : price}</strong>
               </span>
             </button>
           ))}
@@ -298,6 +318,7 @@ function App() {
   const [profile, setProfile] = React.useState(null);
   const [onboardingQuestions, setOnboardingQuestions] = React.useState(firstQuestions);
   const [freeQuestions, setFreeQuestions] = React.useState(freeExploreQuestions);
+  const [relationQuestions, setRelationQuestions] = React.useState([]);
   const [starBalance, setStarBalance] = React.useState(150);
   const [latestUMapSnapshot, setLatestUMapSnapshot] = React.useState(null);
   const [entitlements, setEntitlements] = React.useState([]);
@@ -310,9 +331,10 @@ function App() {
       const nextProfile = await ensureProfile(nextSession.user);
       setProfile(nextProfile);
       await grantAttendanceStar().catch(() => null);
-      const [requiredQuestions, basicQuestions, answeredFreeIds, balance, snapshot, entitlementRows] = await Promise.all([
+      const [requiredQuestions, basicQuestions, relationMapQuestions, answeredFreeIds, balance, snapshot, entitlementRows] = await Promise.all([
         fetchQuestions("onboarding_required"),
         fetchQuestions("basic_free"),
+        fetchQuestions("relation_map"),
         fetchAnsweredQuestionIds("answers", nextSession.user.id).catch(() => new Set()),
         getStarBalance(),
         fetchLatestUMapSnapshot().catch(() => null),
@@ -320,6 +342,7 @@ function App() {
       ]);
       if (requiredQuestions.length) setOnboardingQuestions(requiredQuestions);
       if (basicQuestions.length) setFreeQuestions(basicQuestions.filter((question) => !answeredFreeIds.has(question.id)));
+      if (relationMapQuestions.length) setRelationQuestions(relationMapQuestions);
       setStarBalance(balance);
       setLatestUMapSnapshot(snapshot);
       setEntitlements(entitlementRows);
@@ -436,6 +459,11 @@ function App() {
       selectedOptionId: selectedRecord?.id || null,
       optionalText
     });
+    try {
+      setLatestUMapSnapshot(await fetchLatestUMapSnapshot());
+    } catch (error) {
+      console.warn("Failed to refresh U-Map snapshot after answer", error);
+    }
   };
 
   const refreshStarBalance = React.useCallback(async () => {
@@ -444,6 +472,15 @@ function App() {
       setStarBalance(await getStarBalance());
     } catch (error) {
       console.warn("Failed to refresh Star balance", error);
+    }
+  }, [session]);
+
+  const refreshUMapSnapshot = React.useCallback(async () => {
+    if (!session) return;
+    try {
+      setLatestUMapSnapshot(await fetchLatestUMapSnapshot());
+    } catch (error) {
+      console.warn("Failed to refresh U-Map snapshot", error);
     }
   }, [session]);
 
@@ -490,9 +527,11 @@ function App() {
             session={session}
             profile={profile}
             freeQuestions={freeQuestions}
+            relationQuestions={relationQuestions}
             starBalance={starBalance}
             onStarBalanceChange={setStarBalance}
             onStarBalanceRefresh={refreshStarBalance}
+            onUMapSnapshotRefresh={refreshUMapSnapshot}
             onSaveFreeAnswer={saveFreeAnswer}
             latestUMapSnapshot={latestUMapSnapshot}
             entitlements={entitlements}
@@ -839,9 +878,11 @@ function MainAppShell({
   session,
   profile,
   freeQuestions,
+  relationQuestions,
   starBalance: syncedStarBalance = 150,
   onStarBalanceChange,
   onStarBalanceRefresh,
+  onUMapSnapshotRefresh,
   onSaveFreeAnswer,
   latestUMapSnapshot,
   entitlements
@@ -1048,7 +1089,20 @@ function MainAppShell({
       <div className="main-app-screen">
         <RelationQuestionScreen
           partner={pendingStarUse?.partner}
+          questions={relationQuestions}
           onBack={() => setMapFlow("relationStart")}
+          onAnswer={async (question, selected, memo) => {
+            if (!session?.user?.id || !pendingStarUse?.partner?.id || !question?.id) return;
+            const selectedRecord = question.optionRecords?.find((option) => option.label === selected);
+            await upsertRelationAnswer({
+              userId: session.user.id,
+              relationId: pendingStarUse.partner.id,
+              questionId: question.id,
+              selectedOptionId: selectedRecord?.id || null,
+              optionalText: memo
+            });
+            await onUMapSnapshotRefresh?.();
+          }}
           onComplete={() => setMapFlow("relationResult")}
         />
       </div>
@@ -1068,7 +1122,7 @@ function MainAppShell({
       {activeTab === "home" && (
         <HomeScreen onExplore={openFreeLoop} starBalance={starBalance} onOpenTopUp={() => openStarTopUp()} />
       )}
-      {activeTab === "diary" && <DiaryScreen session={session} onStarBalanceRefresh={onStarBalanceRefresh} />}
+      {activeTab === "diary" && <DiaryScreen session={session} onStarBalanceRefresh={onStarBalanceRefresh} onUMapSnapshotRefresh={onUMapSnapshotRefresh} />}
       {activeTab === "explore" && <ExploreScreen onExplore={openFreeLoop} onStartFreeExplore={handleSpendFreeExplore} starBalance={starBalance} />}
       {activeTab === "map" && (
         <UMapScreen
@@ -1169,7 +1223,7 @@ function HomeScreen({ onExplore, starBalance = 150, onOpenTopUp }) {
   );
 }
 
-function DiaryScreen({ session, onStarBalanceRefresh }) {
+function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
   const [calendarOpen, setCalendarOpen] = React.useState(false);
   const [selectedDay, setSelectedDay] = React.useState(13);
   const [mode, setMode] = React.useState("list");
@@ -1296,6 +1350,7 @@ function DiaryScreen({ session, onStarBalanceRefresh }) {
             console.warn("Diary Star grant skipped or failed", rewardError);
           }
         }
+        await onUMapSnapshotRefresh?.();
         await loadDiaries();
       } catch (error) {
         console.warn("Failed to save diary, keeping local mock state", error);
@@ -1308,7 +1363,14 @@ function DiaryScreen({ session, onStarBalanceRefresh }) {
   const handleDeleteDiary = async (entry) => {
     if (entry.id) {
       try {
+        try {
+          await revokeDiaryStarOnce(entry.id);
+          await onStarBalanceRefresh?.();
+        } catch (revokeError) {
+          console.warn("Diary Star revoke RPC unavailable or skipped", revokeError);
+        }
         await softDeleteDiary(entry.id);
+        await onUMapSnapshotRefresh?.();
         await loadDiaries();
       } catch (error) {
         console.warn("Failed to delete diary", error);
@@ -3151,11 +3213,11 @@ function RelationStartScreen({ onBack, onOpenConfirm }) {
   );
 }
 
-function RelationQuestionScreen({ partner, onBack, onComplete }) {
+function RelationQuestionScreen({ partner, questions, onBack, onAnswer, onComplete }) {
   const [index, setIndex] = React.useState(0);
   const [selected, setSelected] = React.useState("");
   const [memo, setMemo] = React.useState("");
-  const questions = [
+  const fallbackQuestions = [
     {
       question: "이 관계에서 가장 자주 떠오르는 장면은 무엇인가요?",
       options: ["편안한 대화", "답을 기다리는 시간", "거리감을 조절하는 순간", "내 마음을 숨기는 순간"]
@@ -3173,13 +3235,19 @@ function RelationQuestionScreen({ partner, onBack, onComplete }) {
       options: ["먼저 정리하기", "조심스럽게 묻기", "잠시 거리두기", "바로 표현하기"]
     }
   ];
-  const current = questions[index % questions.length];
+  const questionList = questions?.length ? questions : fallbackQuestions;
+  const current = questionList[index % questionList.length];
   const progress = index + 1;
 
-  const next = () => {
+  const next = async () => {
+    try {
+      await onAnswer?.(current, selected, memo);
+    } catch (error) {
+      console.warn("Failed to save relation answer", error);
+    }
     setSelected("");
     setMemo("");
-    if (index >= 3) onComplete();
+    if (index >= Math.min(questionList.length, 20) - 1) onComplete();
     else setIndex((value) => value + 1);
   };
 
