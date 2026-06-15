@@ -31,7 +31,6 @@ import {
 import "./styles.css";
 import {
   completeOnboarding,
-  createStarCheckout,
   createRelation,
   ensureProfile,
   fetchAnsweredQuestionIds,
@@ -177,34 +176,15 @@ function StarCostPill({ amount, suffix = "", className = "", as = "span", ...pro
   );
 }
 
-function StarTopUpSheet({ balance = 150, onClose, onFilled }) {
-  const [error, setError] = React.useState("");
-  const [loadingPackage, setLoadingPackage] = React.useState("");
-  const packages = [
-    { id: "first_100", name: "첫 구매 한정", note: "처음 가볍게 시작", amount: 100, price: "$0.99" },
-    { id: "basic_120", name: "기본팩", note: "짧은 탐구에 적당해요", amount: 120, price: "$1.99" },
-    { id: "explore_350", name: "탐구팩", note: "자주 쓰기 좋은 균형", amount: 350, price: "$4.99", recommended: true },
-    { id: "deep_800", name: "딥다이브팩", note: "깊은 분석을 여유 있게", amount: 800, price: "$9.99" },
-    { id: "long_1800", name: "오래 알아가기팩", note: "긴 흐름을 꾸준히", amount: 1800, price: "$19.99" }
+function StarTopUpSheet({ balance = 150, onClose }) {
+  const earnLoops = [
+    ["Diary 기록", "+12 Star", "50자 이상 오늘의 단서를 남기면 하루 한 번 받을 수 있어요."],
+    ["출석", "+10 Star", "앱에 들어와 오늘의 흐름을 이어가면 쌓여요."],
+    ["광고 리워드", "+15 Star", "광고 리워드는 준비 중이며, 기록 루프 안에서 Star를 모으는 방식으로 연결할 예정이에요."]
   ];
 
-  const openCheckout = async (packageId, amount) => {
-    setError("");
-    setLoadingPackage(packageId);
-    try {
-      const { url } = await createStarCheckout(packageId);
-      if (!url) throw new Error("checkout_url_missing");
-      window.location.href = url;
-    } catch (checkoutError) {
-      console.warn("Star checkout failed", checkoutError);
-      setError("결제 연결을 확인해야 해요. Stripe 환경변수와 webhook 설정이 완료되면 다시 시도할 수 있어요.");
-    } finally {
-      setLoadingPackage("");
-    }
-  };
-
   return (
-    <div className="calendar-overlay" role="dialog" aria-modal="true" aria-label="Star 채우기">
+    <div className="calendar-overlay" role="dialog" aria-modal="true" aria-label="Star 모으기">
       <div className="calendar-sheet star-topup-sheet">
         <header className="calendar-header">
           <button className="icon-button" type="button" onClick={onClose} aria-label="닫기">
@@ -212,7 +192,7 @@ function StarTopUpSheet({ balance = 150, onClose, onFilled }) {
           </button>
           <div>
             <p className="eyebrow">Star</p>
-            <h2>Star 채우기</h2>
+            <h2>Star 모으기</h2>
           </div>
           <span />
         </header>
@@ -220,33 +200,22 @@ function StarTopUpSheet({ balance = 150, onClose, onFilled }) {
           <span>현재 보유</span>
           <StarCostPill amount={balance} />
         </div>
-        <p className="star-topup-copy">필요한 만큼 채우고, 결제가 확인되면 Star가 ledger에 적립돼요.</p>
-        <p className="star-topup-mock-note">결제 성공 후 webhook 확인이 끝나야 Star가 반영돼요.</p>
-        {error && <p className="star-topup-error">{error}</p>}
-        <div className="star-package-list">
-          {packages.map(({ id, name, note, amount, price, recommended }) => (
-            <button
-              className={`star-package-row ${recommended ? "recommended" : ""}`}
-              type="button"
-              key={name}
-              aria-label={`${name}, ${amount} Star, ${price}`}
-              disabled={!!loadingPackage}
-              onClick={() => openCheckout(id, amount)}
-            >
-              <span className="star-package-copy">
-                <span className="star-package-titleline">
-                  <em>{name}</em>
-                  {recommended && <i>추천</i>}
-                </span>
-                <small>{note}</small>
-              </span>
-              <span className="star-package-value">
-                <StarCostPill amount={amount} />
-                <strong>{loadingPackage === id ? "연결 중" : price}</strong>
-              </span>
-            </button>
+        <p className="star-topup-copy">부족한 Star는 기록과 탐구 루프로 천천히 모을 수 있게 정리하고 있어요.</p>
+        <p className="star-topup-mock-note">지금은 외부 화면으로 이동하지 않고, 모을 수 있는 방법만 안내합니다.</p>
+        <div className="star-earn-list">
+          {earnLoops.map(([label, amount, copy]) => (
+            <article className="star-earn-row" key={label}>
+              <div>
+                <strong>{label}</strong>
+                <p>{copy}</p>
+              </div>
+              <span>{amount}</span>
+            </article>
           ))}
         </div>
+        <button className="secondary-button star-topup-close-button" type="button" onClick={onClose}>
+          나중에 보기
+        </button>
       </div>
     </div>
   );
@@ -351,7 +320,7 @@ function App() {
       }
     } catch (error) {
       console.warn("Supabase bootstrap failed, keeping mock fallback", error);
-      setAuthNotice("Supabase 데이터를 불러오지 못해 mock 화면을 유지하고 있어요.");
+      setAuthNotice("데이터를 불러오지 못해 기본 화면으로 이어가고 있어요.");
     }
   }, [initialScreen]);
 
@@ -893,7 +862,6 @@ function MainAppShell({
   const [pendingStarUse, setPendingStarUse] = React.useState(null);
   const [starTopUpOpen, setStarTopUpOpen] = React.useState(false);
   const [starBalance, setStarBalance] = React.useState(syncedStarBalance);
-  const [topUpIntent, setTopUpIntent] = React.useState(null);
 
   React.useEffect(() => {
     setStarBalance(syncedStarBalance);
@@ -909,23 +877,12 @@ function MainAppShell({
     setFreeLoopOpen(true);
   };
 
-  const openStarTopUp = (intent = null) => {
-    setTopUpIntent(intent);
+  const openStarTopUp = () => {
     setStarTopUpOpen(true);
   };
 
   const closeStarTopUp = () => {
     setStarTopUpOpen(false);
-    setTopUpIntent(null);
-  };
-
-  const handleGlobalTopUpFilled = (amount) => {
-    setStarBalance((current) => current + amount);
-    onStarBalanceChange?.((current) => current + amount);
-    if (topUpIntent === "love") {
-      setLoveUnlocked(true);
-    }
-    setTopUpIntent(null);
   };
 
   const handleSpendFreeExplore = async () => {
@@ -1146,7 +1103,6 @@ function MainAppShell({
         <StarTopUpSheet
           balance={starBalance}
           onClose={closeStarTopUp}
-          onFilled={handleGlobalTopUpFilled}
         />
       )}
     </div>
@@ -1160,7 +1116,7 @@ function HomeScreen({ onExplore, starBalance = 150, onOpenTopUp }) {
         <div className="home-title-only">
           <h1>오늘의 탐구</h1>
         </div>
-        <button className="status-pill" type="button" onClick={onOpenTopUp} aria-label={`Star 채우기, 보유 Star ${starBalance}`}>
+        <button className="status-pill" type="button" onClick={onOpenTopUp} aria-label={`Star 모으기, 보유 Star ${starBalance}`}>
           <span className="status-pill-section point-section">
             <Sparkles size={14} />
             {starBalance}
@@ -2772,7 +2728,7 @@ function StarLedgerScreen({ balance = 150, onBalanceChange, onBack }) {
         <strong><Sparkles size={20} />{balance}</strong>
         <p>Star는 FI-YOU 안에서 더 깊은 탐구를 열 때 사용하는 단위예요.</p>
         <button className="secondary-button star-topup-entry-button" type="button" onClick={() => setTopUpOpen(true)}>
-          Star 채우기
+          Star 모으기
         </button>
       </section>
 
@@ -2804,7 +2760,6 @@ function StarLedgerScreen({ balance = 150, onBalanceChange, onBack }) {
         <StarTopUpSheet
           balance={balance}
           onClose={() => setTopUpOpen(false)}
-          onFilled={(amount) => onBalanceChange?.((current) => current + amount)}
         />
       )}
     </div>
@@ -3017,7 +2972,7 @@ function GrowthScreen({ onBack, onOpenCompare }) {
       <section className="u-map-detail-section">
         <div className="section-heading">
           <h2>축별 변화</h2>
-          <span>mock</span>
+          <span>현재 기록 기준</span>
         </div>
         <div className="growth-change-list">
           {axisChanges.map(([axis, copy]) => (
@@ -3050,9 +3005,7 @@ function GrowthScreen({ onBack, onOpenCompare }) {
 
 function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, onConfirm }) {
   const [topUpOpen, setTopUpOpen] = React.useState(false);
-  const [topUpDone, setTopUpDone] = React.useState(false);
-  const baseBalance = syncedBalance;
-  const balance = topUpDone ? baseBalance + 100 : baseBalance;
+  const balance = syncedBalance;
   const after = balance - action.cost;
   const isShort = after < 0;
   const shortage = Math.abs(after);
@@ -3088,7 +3041,7 @@ function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, on
       <div className="free-confirm-actions">
         <button className="primary-button cost-cta-button" type="button" onClick={isShort ? () => setTopUpOpen(true) : onConfirm}>
           {isShort ? (
-            <span>Star 채우기</span>
+            <span>Star 모으기</span>
           ) : (
             <>
               <span>{action.ctaLabel || action.title}</span>
@@ -3103,7 +3056,7 @@ function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, on
       </div>
 
       {topUpOpen && (
-        <StarTopUpSheet balance={balance} onClose={() => setTopUpOpen(false)} onFilled={() => setTopUpDone(true)} />
+        <StarTopUpSheet balance={balance} onClose={() => setTopUpOpen(false)} />
       )}
     </div>
   );
@@ -3315,7 +3268,7 @@ function RelationMapResultScreen({ partner, onBack }) {
       <section className="u-map-detail-section">
         <div className="section-heading">
           <h2>주요 단서</h2>
-          <span>mock</span>
+          <span>현재 기록 기준</span>
         </div>
         <div className="u-map-insight-list">
           {clues.map((item) => (
@@ -3372,7 +3325,7 @@ function RelationshipScreen({ onBack }) {
           {resultSections.map((item) => (
             <article className="glass-card relationship-result-card" key={item}>
               <strong>{item}</strong>
-              <p>현재까지의 기록을 바탕으로 이 관계 안에서 반복되는 반응과 조절 방식을 mock으로 정리했어요.</p>
+              <p>현재까지의 기록을 바탕으로 이 관계 안에서 반복되는 반응과 조절 방식을 정리했어요.</p>
             </article>
           ))}
         </section>

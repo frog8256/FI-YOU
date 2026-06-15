@@ -2928,6 +2928,52 @@ button.star-cost-pill {
   word-break: keep-all;
 }
 
+.star-earn-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.star-earn-row {
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(190, 160, 255, .14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.star-earn-row strong {
+  display: block;
+  color: #f7f2ff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.star-earn-row p {
+  margin: 3px 0 0;
+  color: rgba(233, 225, 255, .66);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.star-earn-row > span {
+  color: #ffdf7e;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.star-topup-close-button {
+  width: 100%;
+  margin-top: 4px;
+}
+
 .star-package-list {
   display: grid;
   gap: 8px;

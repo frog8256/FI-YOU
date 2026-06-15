@@ -236,30 +236,6 @@ export async function unlockEntitlement({ type, cost, refId }) {
   return data;
 }
 
-export async function createStarCheckout(packageId) {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  throwIf(sessionError);
-
-  const token = sessionData?.session?.access_token;
-  if (!token) throw new Error("not_authenticated");
-
-  const response = await fetch("/api/create-star-checkout", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ packageId })
-  });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.error || "checkout_failed");
-  }
-
-  return payload;
-}
-
 export async function fetchEntitlements() {
   const { data, error } = await supabase
     .from("entitlements")
