@@ -13,8 +13,11 @@ function normalizeQuestion(question, options) {
 
   return {
     id: question.id,
+    questionSet: question.question_set,
+    sequence: question.sequence,
     question: question.prompt,
     helper: question.helper_text,
+    axisKeys: question.axis_keys || [],
     note: Boolean(question.helper_text),
     options: orderedOptions.map((option) => option.label),
     optionRecords: orderedOptions
@@ -118,6 +121,26 @@ export async function completeOnboarding(userId) {
   return data;
 }
 
+export async function fetchLaunchGateState() {
+  const { data, error } = await supabase.rpc("get_launch_gate_state");
+  throwIf(error);
+  return data;
+}
+
+export async function fetchQuestionLoopState(questionSet) {
+  const { data, error } = await supabase.rpc("get_question_loop_state", {
+    p_question_set: questionSet
+  });
+  throwIf(error);
+  return data;
+}
+
+export async function fetchUserContentState() {
+  const { data, error } = await supabase.rpc("get_user_content_state");
+  throwIf(error);
+  return data;
+}
+
 export async function fetchQuestions(questionSet) {
   const { data: questions, error } = await supabase
     .from("questions")
@@ -131,7 +154,7 @@ export async function fetchQuestions(questionSet) {
 
   const { data: options, error: optionError } = await supabase
     .from("question_options")
-    .select("id, question_id, sequence, label")
+    .select("id, question_id, sequence, label, axis_weights")
     .in("question_id", questions.map((question) => question.id))
     .order("sequence", { ascending: true });
   throwIf(optionError);
@@ -261,11 +284,29 @@ export async function spendStar({ reason, amount, refType, refId }) {
   return data;
 }
 
+export async function startFreeExplore({ clientRequestId, metadata = {} }) {
+  const { data, error } = await supabase.rpc("start_free_explore", {
+    p_client_request_id: clientRequestId,
+    p_metadata: metadata
+  });
+  throwIf(error);
+  return data;
+}
+
 export async function unlockEntitlement({ type, cost, refId }) {
   const { data, error } = await supabase.rpc("unlock_entitlement", {
     p_entitlement_type: type,
     p_cost: cost,
     p_ref_id: refId || null
+  });
+  throwIf(error);
+  return data;
+}
+
+export async function finalizeRelationMap({ relationId, cost = 80 }) {
+  const { data, error } = await supabase.rpc("finalize_relation_map", {
+    p_relation_id: relationId,
+    p_cost: cost
   });
   throwIf(error);
   return data;

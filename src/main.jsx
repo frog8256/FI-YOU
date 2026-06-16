@@ -483,7 +483,119 @@ const starLedgerItems = [
   ["관계 분석", "-50", "관계 안에서 반복되는 흐름을 살펴봤어요.", "2026.06.11"]
 ];
 
+function PricingPage() {
+  const starPackages = [
+    ["First Purchase", "100 Star", "$0.99", "One-time welcome pack"],
+    ["Basic Pack", "120 Star", "$1.99", ""],
+    ["Explore Pack", "350 Star", "$4.99", "Most popular"],
+    ["Deep Pack", "800 Star", "$9.99", ""],
+    ["Long Journey Pack", "1,800 Star", "$19.99", ""]
+  ];
+  const starUses = [
+    ["Free Exploration Session", "30 Star"],
+    ["Love Tendency Analysis", "50 Star"],
+    ["Relation-Map", "80 Star / person"],
+    ["Past Self Comparison", "30 Star"]
+  ];
+  const rewards = [
+    ["Daily check-in", "+10 Star"],
+    ["Diary entry", "+12 Star"],
+    ["Rewarded ad", "+15 Star"]
+  ];
+
+  return (
+    <main className="pricing-page">
+      <section className="pricing-hero">
+        <div className="brand-mark pricing-mark">
+          <Sparkles size={28} />
+        </div>
+        <p className="eyebrow">AI Self Discovery Platform</p>
+        <h1>FI-YOU Pricing</h1>
+        <p>
+          FI-YOU uses Star credits to unlock deeper self-discovery features,
+          including exploration sessions, Relation-Map, and extended analysis.
+        </p>
+      </section>
+
+      <section className="pricing-section glass-card">
+        <div className="pricing-section-header">
+          <div>
+            <p className="eyebrow">Star Credits</p>
+            <h2>Star Packages</h2>
+          </div>
+          <StarCostPill amount="150" />
+        </div>
+        <div className="pricing-package-grid">
+          {starPackages.map(([name, amount, price, badge]) => (
+            <article className={`pricing-package ${badge === "Most popular" ? "featured" : ""}`} key={name}>
+              <div>
+                <span>{name}</span>
+                {badge && <em>{badge}</em>}
+              </div>
+              <strong>{amount}</strong>
+              <p>{price}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="pricing-two-column">
+        <article className="pricing-section glass-card">
+          <p className="eyebrow">Use Star</p>
+          <h2>Unlock deeper features</h2>
+          <div className="pricing-list">
+            {starUses.map(([label, cost]) => (
+              <div className="pricing-row" key={label}>
+                <span>{label}</span>
+                <strong>{cost}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="pricing-section glass-card">
+          <p className="eyebrow">Earn Star</p>
+          <h2>Free rewards</h2>
+          <div className="pricing-list">
+            {rewards.map(([label, amount]) => (
+              <div className="pricing-row" key={label}>
+                <span>{label}</span>
+                <strong>{amount}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="pricing-section pricing-policy glass-card">
+        <ShieldCheck size={22} />
+        <div>
+          <h2>Important notice</h2>
+          <p>
+            FI-YOU does not provide medical diagnosis, psychological counseling, or treatment.
+            Analysis results are self-understanding references based on the user's records and conversations.
+          </p>
+          <p>
+            For payment support or refund requests, contact support@fi-you.com.
+            Used Star credits may be excluded from refunds.
+          </p>
+        </div>
+      </section>
+
+      <a className="pricing-home-link" href="/">
+        Go to FI-YOU
+        <ArrowRight size={18} />
+      </a>
+    </main>
+  );
+}
+
 function App() {
+  const isPricingPage = window.location.pathname.replace(/\/+$/, "") === "/pricing";
+  if (isPricingPage) {
+    return <PricingPage />;
+  }
+
   const initialScreen = new URLSearchParams(window.location.search).get("screen")?.trim().toLowerCase();
   const isAuthReturn = initialScreen === "home" || initialScreen === "auth";
   const [step, setStep] = React.useState(isAuthReturn ? "auth-loading" : "intro");
@@ -500,6 +612,12 @@ function App() {
   const [latestUMapSnapshot, setLatestUMapSnapshot] = React.useState(null);
   const [entitlements, setEntitlements] = React.useState([]);
   const [authNotice, setAuthNotice] = React.useState("");
+  const [profileNotice, setProfileNotice] = React.useState("");
+  const [questionNotice, setQuestionNotice] = React.useState("");
+  const [profileSaving, setProfileSaving] = React.useState(false);
+  const [questionSaving, setQuestionSaving] = React.useState(false);
+  const profileSavingRef = React.useRef(false);
+  const questionSavingRef = React.useRef(false);
   const userId = session?.user?.id;
 
   React.useEffect(() => {
@@ -604,9 +722,13 @@ function App() {
   const currentOnboardingQuestion = onboardingQuestions[questionIndex] || firstQuestions[questionIndex];
 
   const goNextQuestion = async () => {
+    if (questionSavingRef.current) return;
+    setQuestionNotice("");
     if (userId && currentOnboardingQuestion?.id) {
       const selectedRecord = currentOnboardingQuestion.optionRecords?.find((option) => option.label === selectedOption);
       try {
+        questionSavingRef.current = true;
+        setQuestionSaving(true);
         await upsertOnboardingAnswer({
           userId,
           questionId: currentOnboardingQuestion.id,
@@ -615,6 +737,11 @@ function App() {
         });
       } catch (error) {
         console.warn("Failed to save onboarding answer", error);
+        setQuestionNotice("답변을 저장하지 못했어요. 연결을 확인한 뒤 다시 시도해주세요.");
+        return;
+      } finally {
+        questionSavingRef.current = false;
+        setQuestionSaving(false);
       }
     }
 
@@ -626,10 +753,17 @@ function App() {
     }
     if (userId) {
       try {
+        questionSavingRef.current = true;
+        setQuestionSaving(true);
         const nextProfile = await completeOnboarding(userId);
         setProfile(nextProfile);
       } catch (error) {
         console.warn("Failed to complete onboarding", error);
+        setQuestionNotice("첫 단서 완료 상태를 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
+        return;
+      } finally {
+        questionSavingRef.current = false;
+        setQuestionSaving(false);
       }
     }
     setStep("feedback");
@@ -648,12 +782,21 @@ function App() {
   };
 
   const handleProfileComplete = async ({ nickname, birthday }) => {
+    if (profileSavingRef.current) return;
+    setProfileNotice("");
     if (userId) {
       try {
+        profileSavingRef.current = true;
+        setProfileSaving(true);
         const nextProfile = await updateProfile(userId, { nickname, birthday });
         setProfile(nextProfile);
       } catch (error) {
         console.warn("Failed to save profile", error);
+        setProfileNotice("프로필을 저장하지 못했어요. 연결을 확인한 뒤 다시 시도해주세요.");
+        return;
+      } finally {
+        profileSavingRef.current = false;
+        setProfileSaving(false);
       }
     }
     setStep("ready");
@@ -710,7 +853,7 @@ function App() {
           <LoginScreen onBack={() => setStep("intro")} onContinue={handleGoogleLogin} notice={authNotice} />
         )}
         {step === "profile" && (
-          <ProfileSetupScreen onBack={() => setStep("login")} onComplete={handleProfileComplete} />
+          <ProfileSetupScreen onBack={() => setStep("login")} onComplete={handleProfileComplete} saving={profileSaving} notice={profileNotice} />
         )}
         {step === "ready" && <ReadyScreen onBack={() => setStep("profile")} onStart={startQuestions} />}
         {step === "question" && (
@@ -729,6 +872,8 @@ function App() {
             onSelect={(option) => setAnswers((current) => ({ ...current, [questionIndex]: option }))}
             onNoteChange={setNote}
             onNext={goNextQuestion}
+            saving={questionSaving}
+            notice={questionNotice}
           />
         )}
         {step === "feedback" && (
@@ -875,7 +1020,7 @@ function LoginScreen({ onBack, onContinue, notice }) {
   );
 }
 
-function ProfileSetupScreen({ onBack, onComplete }) {
+function ProfileSetupScreen({ onBack, onComplete, saving = false, notice = "" }) {
   const [nickname, setNickname] = React.useState("");
   const [birth, setBirth] = React.useState({ year: "", month: "", day: "" });
   const monthRef = React.useRef(null);
@@ -939,14 +1084,15 @@ function ProfileSetupScreen({ onBack, onComplete }) {
       <button
         className="primary-button setup-button"
         type="button"
-        disabled={!isComplete}
+        disabled={!isComplete || saving}
         onClick={() => onComplete({
           nickname: nickname.trim(),
           birthday: `${birth.year}-${birth.month}-${birth.day}`
         })}
       >
-        {isComplete ? "FI-YOU 시작하기" : "이름과 생년월일을 입력해주세요"}
+        {saving ? "프로필 저장 중" : isComplete ? "FI-YOU 시작하기" : "이름과 생년월일을 입력해주세요"}
       </button>
+      {notice && <p className="legal-copy">{notice}</p>}
     </div>
   );
 }
@@ -981,7 +1127,7 @@ function ReadyScreen({ onBack, onStart }) {
   );
 }
 
-function QuestionScreen({ question, questionIndex, selectedOption, note, onBack, onSelect, onNoteChange, onNext }) {
+function QuestionScreen({ question, questionIndex, selectedOption, note, onBack, onSelect, onNoteChange, onNext, saving = false, notice = "" }) {
   const isLast = questionIndex === firstQuestions.length - 1;
   const [noteSheetOpen, setNoteSheetOpen] = React.useState(false);
   const notePreview = note.trim() ? `${note.trim().slice(0, 28)}${note.trim().length > 28 ? "..." : ""}` : "";
@@ -1033,10 +1179,11 @@ function QuestionScreen({ question, questionIndex, selectedOption, note, onBack,
         </section>
       )}
 
-      <button className="primary-button question-button" type="button" disabled={!selectedOption} onClick={onNext}>
-        {!selectedOption ? "가까운 쪽을 골라주세요" : isLast ? "첫 단서 저장하기" : "다음"}
+      <button className="primary-button question-button" type="button" disabled={!selectedOption || saving} onClick={onNext}>
+        {saving ? "저장 중" : !selectedOption ? "가까운 쪽을 골라주세요" : isLast ? "첫 단서 저장하기" : "다음"}
         {selectedOption && <ArrowRight size={19} />}
       </button>
+      {notice && <p className="legal-copy">{notice}</p>}
 
       {question.note && noteSheetOpen && (
         <div className="calendar-overlay onboarding-note-overlay" role="dialog" aria-modal="true" aria-label="선택 서술 입력">
@@ -1143,6 +1290,9 @@ function MainAppShell({
   const [pendingStarUse, setPendingStarUse] = React.useState(null);
   const [starTopUpOpen, setStarTopUpOpen] = React.useState(false);
   const [starBalance, setStarBalance] = React.useState(syncedStarBalance);
+  const [starActionPending, setStarActionPending] = React.useState(false);
+  const [starActionNotice, setStarActionNotice] = React.useState("");
+  const starActionPendingRef = React.useRef(false);
 
   React.useEffect(() => {
     setStarBalance(syncedStarBalance);
@@ -1167,8 +1317,11 @@ function MainAppShell({
   };
 
   const handleSpendFreeExplore = async () => {
+    if (starActionPendingRef.current) return false;
     if (!session) return true;
     try {
+      starActionPendingRef.current = true;
+      setStarActionPending(true);
       await spendStar({
         reason: "free_explore",
         amount: 30,
@@ -1186,15 +1339,21 @@ function MainAppShell({
       }
       console.warn("Failed to spend Star for free explore", error);
       return false;
+    } finally {
+      starActionPendingRef.current = false;
+      setStarActionPending(false);
     }
   };
 
   const handleUnlockLove = async () => {
+    if (starActionPendingRef.current) return;
     if (!session) {
       openStarTopUp("love");
       return;
     }
     try {
+      starActionPendingRef.current = true;
+      setStarActionPending(true);
       await unlockEntitlement({ type: "love_analysis", cost: 50, refId: null });
       trackEvent(kpiEvents.starSpent, { reason: "love_analysis", amount: 50 });
       setLoveUnlocked(true);
@@ -1205,22 +1364,38 @@ function MainAppShell({
         openStarTopUp("love");
       }
       else console.warn("Failed to unlock love analysis", error);
+    } finally {
+      starActionPendingRef.current = false;
+      setStarActionPending(false);
     }
   };
 
   const handleConfirmStarUse = async () => {
+    if (starActionPendingRef.current) return;
     if (!pendingStarUse) return;
+    setStarActionNotice("");
     if (!session) {
       setMapFlow(pendingStarUse.after);
       return;
     }
     try {
+      starActionPendingRef.current = true;
+      setStarActionPending(true);
       if (pendingStarUse.kind === "compare") {
         await unlockEntitlement({ type: "past_compare", cost: 30, refId: null });
         trackEvent(kpiEvents.starSpent, { reason: "past_compare", amount: 30 });
       }
       if (pendingStarUse.kind === "relation") {
-        await unlockEntitlement({ type: "relation_map", cost: 80, refId: pendingStarUse.partner?.id || null });
+        const relationDraft = pendingStarUse.partner || {};
+        const savedRelation = relationDraft.id
+          ? relationDraft
+          : await createRelation({
+            userId: session.user.id,
+            name: relationDraft.name,
+            relationshipType: relationDraft.type
+          });
+        await unlockEntitlement({ type: "relation_map", cost: 80, refId: savedRelation.id });
+        setPendingStarUse((current) => current ? { ...current, partner: savedRelation } : current);
         trackEvent(kpiEvents.starSpent, { reason: "relation_map", amount: 80 });
       }
       await onStarBalanceRefresh?.();
@@ -1232,7 +1407,11 @@ function MainAppShell({
       }
       else {
         console.warn("Failed to unlock Star content", error);
+        setStarActionNotice("Star 사용을 완료하지 못했어요. 잠시 후 다시 시도해주세요.");
       }
+    } finally {
+      starActionPendingRef.current = false;
+      setStarActionPending(false);
     }
   };
 
@@ -1273,6 +1452,8 @@ function MainAppShell({
           balance={starBalance}
           onBack={() => setMapFlow(pendingStarUse.kind === "relation" ? "relationStart" : "growth")}
           onConfirm={handleConfirmStarUse}
+          pending={starActionPending}
+          notice={starActionNotice}
         />
       </div>
     );
@@ -1292,31 +1473,17 @@ function MainAppShell({
         <RelationStartScreen
           onBack={() => setMapFlow("main")}
           onOpenConfirm={(partner) => {
-            Promise.resolve()
-              .then(async () => {
-                if (!session?.user?.id) return partner;
-                return createRelation({
-                  userId: session.user.id,
-                  name: partner.name,
-                  relationshipType: partner.type
-                });
-              })
-              .then((savedPartner) => {
-                setPendingStarUse({
-                  kind: "relation",
-                  title: "Relation-Map",
-                  ctaLabel: "Relation-Map 열기",
-                  cost: 80,
-                  description: `${partner.name || "상대"}님과의 관계 안에서 내가 경험하는 흐름을 Relation-Map으로 정리해요.`,
-                  after: "relationQuestions",
-                  partner: savedPartner || partner
-                });
-                setMapFlow("starConfirm");
-              })
-              .catch((error) => {
-                console.warn("Failed to create relation", error);
-                setPendingStarUse(null);
-              });
+            setStarActionNotice("");
+            setPendingStarUse({
+              kind: "relation",
+              title: "Relation-Map",
+              ctaLabel: "Relation-Map 열기",
+              cost: 80,
+              description: `${partner.name || "상대"}님과의 관계 안에서 내가 경험하는 흐름을 Relation-Map으로 정리해요.`,
+              after: "relationQuestions",
+              partner
+            });
+            setMapFlow("starConfirm");
           }}
         />
       </div>
@@ -3576,7 +3743,7 @@ function GrowthScreen({ onBack, onOpenCompare }) {
   );
 }
 
-function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, onConfirm }) {
+function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, onConfirm, pending = false, notice = "" }) {
   const [topUpOpen, setTopUpOpen] = React.useState(false);
   const balance = syncedBalance;
   const after = balance - action.cost;
@@ -3609,12 +3776,15 @@ function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, on
             <span>필요한 Star만 사용하고, 질문과 기본 U-Map은 그대로 이어갈 수 있어요.</span>
           )}
         </div>
+        {notice && <p className="diary-inline-error star-confirm-error">{notice}</p>}
       </section>
 
       <div className="free-confirm-actions">
-        <button className="primary-button cost-cta-button" type="button" onClick={isShort ? () => setTopUpOpen(true) : onConfirm}>
+        <button className="primary-button cost-cta-button" type="button" disabled={pending} onClick={isShort ? () => setTopUpOpen(true) : onConfirm}>
           {isShort ? (
             <span>Star 모으기 안내</span>
+          ) : pending ? (
+            <span>여는 중</span>
           ) : (
             <>
               <span>{action.ctaLabel || action.title}</span>
@@ -3623,7 +3793,7 @@ function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, on
           )}
           <ArrowRight size={19} />
         </button>
-        <button className="secondary-button" type="button" onClick={onBack}>
+        <button className="secondary-button" type="button" onClick={onBack} disabled={pending}>
           나중에 보기
         </button>
       </div>
@@ -3684,11 +3854,8 @@ function PastCompareResultScreen({ onBack }) {
 function RelationStartScreen({ onBack, onOpenConfirm }) {
   const [name, setName] = React.useState("");
   const [type, setType] = React.useState("관심 있는 사람");
-  const relationConnections = [
-    ["민준", "관심 있는 사람", "질문 8/20 · Relation-Map 작성 중", "이어하기"],
-    ["서연", "친구", "Relation-Map 열림", "보기"],
-    ["지훈", "동료", "질문 3/20", "이어하기"]
-  ];
+  const relationConnections = [];
+  const trimmedName = name.trim();
 
   return (
     <div className="screen home-screen u-map-subscreen relation-start-screen">
@@ -3719,20 +3886,27 @@ function RelationStartScreen({ onBack, onOpenConfirm }) {
           <span>재진입</span>
         </div>
         <div className="relation-connection-list">
-          {relationConnections.map(([person, relation, status, action]) => (
-            <article className="relation-connection-card" key={`${person}-${relation}`}>
-              <div>
-                <strong>{person}</strong>
-                <p>{relation} · {status}</p>
-              </div>
-              <button type="button">{action}</button>
+          {relationConnections.length ? (
+            relationConnections.map(([person, relation, status, action]) => (
+              <article className="relation-connection-card" key={`${person}-${relation}`}>
+                <div>
+                  <strong>{person}</strong>
+                  <p>{relation} · {status}</p>
+                </div>
+                <button type="button">{action}</button>
+              </article>
+            ))
+          ) : (
+            <article className="relation-empty-card">
+              <strong>아직 연결된 관계가 없어요.</strong>
+              <p>새 관계를 추가하면, 그 관계 안에서 내가 경험하는 흐름을 이어서 살펴볼 수 있어요.</p>
             </article>
-          ))}
+          )}
         </div>
       </section>
 
-      <button className="primary-button setup-button cost-cta-button" type="button" onClick={() => onOpenConfirm({ name, type })}>
-        <span>Relation-Map 열기</span>
+      <button className="primary-button setup-button cost-cta-button" type="button" disabled={!trimmedName} onClick={() => onOpenConfirm({ name: trimmedName, type })}>
+        <span>{trimmedName ? "Relation-Map 열기" : "상대 이름을 입력해주세요"}</span>
         <StarCostPill amount={80} suffix="/ 명" />
       </button>
     </div>
@@ -3743,6 +3917,8 @@ function RelationQuestionScreen({ partner, questions, onBack, onAnswer, onComple
   const [index, setIndex] = React.useState(0);
   const [selected, setSelected] = React.useState("");
   const [memo, setMemo] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [notice, setNotice] = React.useState("");
   const defaultRelationQuestions = [
     {
       question: "이 관계에서 가장 자주 떠오르는 장면은 무엇인가요?",
@@ -3766,10 +3942,17 @@ function RelationQuestionScreen({ partner, questions, onBack, onAnswer, onComple
   const progress = index + 1;
 
   const next = async () => {
+    if (saving) return;
+    setNotice("");
     try {
+      setSaving(true);
       await onAnswer?.(current, selected, memo);
     } catch (error) {
       console.warn("Failed to save relation answer", error);
+      setNotice("관계 답변을 저장하지 못했어요. 연결을 확인한 뒤 다시 시도해주세요.");
+      return;
+    } finally {
+      setSaving(false);
     }
     setSelected("");
     setMemo("");
@@ -3805,10 +3988,11 @@ function RelationQuestionScreen({ partner, questions, onBack, onAnswer, onComple
         <label htmlFor="relation-memo">조금 더 설명하기</label>
         <textarea id="relation-memo" value={memo} onChange={(event) => setMemo(event.target.value.slice(0, 300))} placeholder="이 관계에서 내가 경험하는 장면이나 반응을 적어주세요." />
       </section>
-      <button className="primary-button question-button" type="button" disabled={!selected} onClick={next}>
-        다음 질문
+      <button className="primary-button question-button" type="button" disabled={!selected || saving} onClick={next}>
+        {saving ? "저장 중" : "다음 질문"}
         {selected && <ArrowRight size={19} />}
       </button>
+      {notice && <p className="legal-copy">{notice}</p>}
     </div>
   );
 }
@@ -4020,22 +4204,59 @@ function FreeQuestionLoop({ questions, onAnswer, onClose }) {
   const [selected, setSelected] = React.useState("");
   const [memo, setMemo] = React.useState("");
   const [memoSheetOpen, setMemoSheetOpen] = React.useState(false);
-  const questionList = questions?.length ? questions : freeExploreQuestions;
-  const question = questionList[index % questionList.length];
+  const [saving, setSaving] = React.useState(false);
+  const [notice, setNotice] = React.useState("");
+  const questionList = Array.isArray(questions) ? questions : freeExploreQuestions;
+  const totalCount = Math.max(30, questionList.length);
+  const question = questionList[index];
   const displayIndex = index + 1;
   const memoPreview = memo.trim() ? `${memo.trim().slice(0, 28)}${memo.trim().length > 28 ? "..." : ""}` : "";
 
   const goNext = async () => {
+    if (!question || saving) return;
+    const persistedQuestion = Boolean(question.id);
+    setNotice("");
     try {
+      setSaving(true);
       await onAnswer?.(question, selected, memo);
     } catch (error) {
       console.warn("Failed to save free question answer", error);
+      setNotice("답변을 저장하지 못했어요. 연결을 확인한 뒤 다시 시도해주세요.");
+      return;
+    } finally {
+      setSaving(false);
     }
     setMemoSheetOpen(false);
     setSelected("");
     setMemo("");
-    setIndex((current) => Math.min(current + 1, Math.max(0, questionList.length - 1)));
+    setIndex((current) => {
+      if (persistedQuestion) return Math.min(current, Math.max(0, questionList.length - 2));
+      return Math.min(current + 1, Math.max(0, questionList.length - 1));
+    });
   };
+
+  if (!questionList.length || !question) {
+    return (
+      <div className="screen free-question-screen">
+        <header className="top-row">
+          <button className="icon-button" type="button" onClick={onClose} aria-label="탐구 닫기">
+            <ChevronLeft size={22} />
+          </button>
+          <span>탐구 완료</span>
+          <i />
+        </header>
+        <section className="question-copy">
+          <p className="eyebrow">U-Map</p>
+          <h1 className="question-heading">오늘의 기본 탐구를 모두 살펴봤어요.</h1>
+          <p>현재까지의 단서가 U-Map에 반영되는 중이에요. Diary를 남기면 다른 흐름도 더 선명해질 수 있어요.</p>
+        </section>
+        <button className="primary-button question-button" type="button" onClick={onClose}>
+          Home으로 돌아가기
+          <ArrowRight size={19} />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="screen free-question-screen">
@@ -4043,12 +4264,12 @@ function FreeQuestionLoop({ questions, onAnswer, onClose }) {
         <button className="icon-button" type="button" onClick={onClose} aria-label="탐구 닫기">
           <ChevronLeft size={22} />
         </button>
-        <span>탐구 질문 {displayIndex} / {Math.max(30, questionList.length)}</span>
+        <span>탐구 질문 {displayIndex} / {totalCount}</span>
         <i />
       </header>
 
       <div className="question-progress" aria-hidden="true">
-        <span style={{ width: `${(displayIndex / Math.max(30, questionList.length)) * 100}%` }} />
+        <span style={{ width: `${(displayIndex / totalCount) * 100}%` }} />
       </div>
       <section className="question-copy">
         <p className="eyebrow">이어지는 탐구</p>
@@ -4076,10 +4297,11 @@ function FreeQuestionLoop({ questions, onAnswer, onClose }) {
         </button>
       </section>
 
-      <button className="primary-button question-button" type="button" disabled={!selected} onClick={goNext}>
-        {displayIndex >= Math.max(30, questionList.length) ? "오늘은 여기까지" : "다음 질문"}
+      <button className="primary-button question-button" type="button" disabled={!selected || saving} onClick={goNext}>
+        {saving ? "저장 중" : displayIndex >= totalCount ? "오늘은 여기까지" : "다음 질문"}
         {selected && <ArrowRight size={19} />}
       </button>
+      {notice && <p className="legal-copy">{notice}</p>}
 
       {memoSheetOpen && (
         <div className="calendar-overlay onboarding-note-overlay" role="dialog" aria-modal="true" aria-label="선택 서술 입력">
