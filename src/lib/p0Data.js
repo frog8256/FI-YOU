@@ -22,7 +22,13 @@ function normalizeQuestion(question, options) {
 }
 
 export async function signInWithGoogle() {
-  const redirectTo = `${window.location.origin}${window.location.pathname}?screen=home`;
+  const productionSiteUrl = "https://fi-you.vercel.app";
+  const configuredSiteUrl = import.meta.env.VITE_SITE_URL || import.meta.env.VITE_APP_PUBLIC_URL;
+  const configuredIsLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|\[?::1\]?)(:\d+)?/i.test(configuredSiteUrl || "");
+  const siteUrl = import.meta.env.PROD
+    ? (configuredSiteUrl && !configuredIsLocalhost ? configuredSiteUrl : productionSiteUrl)
+    : (configuredSiteUrl || window.location.origin);
+  const redirectTo = new URL("/?screen=home", siteUrl).toString();
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo }
