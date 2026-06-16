@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Compass,
   Database,
+  FileText,
   Flame,
   Globe2,
   Heart,
@@ -29,11 +30,14 @@ import {
   User
 } from "lucide-react";
 import "./styles.css";
+import { kpiEvents, trackEvent } from "./lib/analytics";
+import { supportedLanguages, t } from "./lib/i18n";
 import {
   completeOnboarding,
   createRelation,
   ensureProfile,
   fetchAnsweredQuestionIds,
+  fetchCalendarDayStates,
   fetchDiaries,
   fetchEntitlements,
   fetchLatestUMapSnapshot,
@@ -44,7 +48,10 @@ import {
   grantDiaryStarOnce,
   isInsufficientStarError,
   onAuthStateChange,
-  revokeDiaryStarOnce,
+  recordAppEvent,
+  recordLegalConsent,
+  requestAccountDeletion,
+  requestDataExport,
   saveDiary,
   signInWithGoogle,
   signOut,
@@ -61,50 +68,50 @@ const chunk = (...chunks) => chunks;
 
 const firstQuestions = [
   {
-    question: "요즘 마음에 오래 남아 있는 장면이 있다면, 어디에서 온 걸까요?",
+    question: t("onboarding.q1.prompt"),
     options: [
-      "누군가와 나눈 말이나 관계에서",
-      "선택을 앞두고 망설였던 순간에서",
-      "혼자 있을 때 떠오른 생각에서",
-      "편해졌거나 복잡해졌던 감정에서",
-      "아직 잘 모르겠어요"
+      t("onboarding.q1.option1"),
+      t("onboarding.q1.option2"),
+      t("onboarding.q1.option3"),
+      t("onboarding.q1.option4"),
+      t("onboarding.q1.option5")
     ]
   },
   {
-    question: "최근 선택을 떠올렸을 때, 끝까지 지키고 싶었던 기준이 있었나요?",
+    question: t("onboarding.q2.prompt"),
     options: [
-      "내 마음이 납득되는 것",
-      "사람들과의 관계를 해치지 않는 것",
-      "나중에 후회가 적을 것 같은 것",
-      "새롭게 시도해볼 수 있는 것",
-      "아직 잘 모르겠어요"
+      t("onboarding.q2.option1"),
+      t("onboarding.q2.option2"),
+      t("onboarding.q2.option3"),
+      t("onboarding.q2.option4"),
+      t("onboarding.q2.option5")
     ]
   },
   {
-    question: "최근에 \"이건 한번 해보고 싶다\"고 느낀 순간이 있었나요?",
-    options: ["네, 그런 순간이 있었어요", "아직은 잘 떠오르지 않아요"]
+    question: t("onboarding.q3.prompt"),
+    options: [t("onboarding.q3.option1"), t("onboarding.q3.option2")]
   },
   {
-    question: "요즘 마음이 조금 편해지는 순간을 알아차린 적이 있나요?",
-    options: ["네, 떠오르는 순간이 있어요", "아직은 잘 모르겠어요"]
+    question: t("onboarding.q4.prompt"),
+    options: [t("onboarding.q4.option1"), t("onboarding.q4.option2")]
   },
   {
-    question: "앞으로 FI-YOU와 함께 가장 먼저 밝혀보고 싶은 영역은 어디인가요?",
+    question: t("onboarding.q5.prompt"),
     options: [
-      "내가 중요하게 여기는 기준",
-      "감정이 움직이는 방식",
-      "관계에서 반복되는 흐름",
-      "나를 움직이게 하는 힘",
-      "앞으로의 방향과 성장"
+      t("onboarding.q5.option1"),
+      t("onboarding.q5.option2"),
+      t("onboarding.q5.option3"),
+      t("onboarding.q5.option4"),
+      t("onboarding.q5.option5")
     ],
     note: true
   }
 ];
 
 const loadingMessages = [
-  "아직은 더 많은 단서가 필요해요.",
-  "질문과 기록이 쌓이면 윤곽이 선명해져요.",
-  "이제 Home 화면으로 이동할게요."
+  t("transition.message.moreSignals"),
+  t("transition.message.clearer"),
+  t("transition.message.home")
 ];
 
 const uMapAxisData = [
@@ -118,11 +125,27 @@ const uMapAxisData = [
   { key: "expression", label: "자기표현", initial: 30, clear: 58 }
 ];
 
-function buildRadarPoints(mode, scale = 1) {
+function getAxisValue(axis, mode, scores = null) {
+  const aliases = {
+    explore: ["explore", "exploration", "curiosity"],
+    independent: ["independent", "independence", "autonomy"],
+    relation: ["relation", "relationship", "relationship_orientation"],
+    growth: ["growth", "growth_orientation"],
+    emotion: ["emotion", "emotional_sensitivity"],
+    stability: ["stability", "stability_seeking"],
+    initiative: ["initiative", "action", "execution"],
+    expression: ["expression", "self_expression"]
+  };
+  const keys = aliases[axis.key] || [axis.key];
+  const fromSnapshot = scores && keys.map((key) => Number(scores[key])).find((value) => Number.isFinite(value));
+  return Number.isFinite(fromSnapshot) ? fromSnapshot : axis[mode];
+}
+
+function buildRadarPoints(mode, scale = 1, scores = null) {
   return uMapAxisData
     .map((axis, index) => {
       const angle = -Math.PI / 2 + (index / uMapAxisData.length) * Math.PI * 2;
-      const value = axis[mode] * scale;
+      const value = getAxisValue(axis, mode, scores) * scale;
       const radius = Math.min(44, Math.max(10, value * 0.44));
       const x = 50 + Math.cos(angle) * radius;
       const y = 50 + Math.sin(angle) * radius;
@@ -131,7 +154,7 @@ function buildRadarPoints(mode, scale = 1) {
     .join(" ");
 }
 
-function UMapPreview({ mode = "initial", size = "compact", showLabels = false }) {
+function UMapPreview({ mode = "initial", size = "compact", showLabels = false, scores = null }) {
   const axisPoints = uMapAxisData.map((axis, index) => {
     const angle = -Math.PI / 2 + (index / uMapAxisData.length) * Math.PI * 2;
     const x = 50 + Math.cos(angle) * 44;
@@ -140,7 +163,7 @@ function UMapPreview({ mode = "initial", size = "compact", showLabels = false })
     const labelY = 50 + Math.sin(angle) * 51;
     return { x, y, labelX, labelY, label: axis.label };
   });
-  const polygonPoints = buildRadarPoints(mode, mode === "clear" ? 1 : 0.92);
+  const polygonPoints = buildRadarPoints(mode, mode === "clear" ? 1 : 0.92, scores);
 
   return (
     <div className={`u-map-preview ${size === "large" ? "u-map-preview-large" : "u-map-preview-compact"} ${mode}`}>
@@ -177,14 +200,25 @@ function StarCostPill({ amount, suffix = "", className = "", as = "span", ...pro
 }
 
 function StarTopUpSheet({ balance = 150, onClose }) {
+  const [mode, setMode] = React.useState("purchase");
+  const [adNoticeOpen, setAdNoticeOpen] = React.useState(false);
+  const [purchaseNotice, setPurchaseNotice] = React.useState("");
+  const packages = [
+    [t("star.sheet.package.first"), 100, "$0.99", t("star.sheet.package.firstHint")],
+    [t("star.sheet.package.basic"), 120, "$1.99", ""],
+    [t("star.sheet.package.explore"), 350, "$4.99", t("star.sheet.package.recommended")],
+    [t("star.sheet.package.deep"), 800, "$9.99", ""],
+    [t("star.sheet.package.long"), 1800, "$19.99", ""]
+  ];
   const earnLoops = [
     ["Diary 기록", "+12 Star", "50자 이상 오늘의 단서를 남기면 하루 한 번 받을 수 있어요."],
     ["출석", "+10 Star", "앱에 들어와 오늘의 흐름을 이어가면 쌓여요."],
     ["광고 리워드", "+15 Star", "광고 리워드는 준비 중이며, 기록 루프 안에서 Star를 모으는 방식으로 연결할 예정이에요."]
   ];
+  const isEarnMode = mode === "earn";
 
   return (
-    <div className="calendar-overlay" role="dialog" aria-modal="true" aria-label="Star 모으기">
+    <div className="calendar-overlay" role="dialog" aria-modal="true" aria-label={isEarnMode ? t("star.sheet.earnTitle") : t("star.sheet.title")}>
       <div className="calendar-sheet star-topup-sheet">
         <header className="calendar-header">
           <button className="icon-button" type="button" onClick={onClose} aria-label="닫기">
@@ -192,29 +226,102 @@ function StarTopUpSheet({ balance = 150, onClose }) {
           </button>
           <div>
             <p className="eyebrow">Star</p>
-            <h2>Star 모으기</h2>
+            <h2>{isEarnMode ? t("star.sheet.earnTitle") : t("star.sheet.title")}</h2>
           </div>
           <span />
         </header>
         <div className="star-topup-balance">
-          <span>현재 보유</span>
+          <span>{t("star.sheet.balance")}</span>
           <StarCostPill amount={balance} />
         </div>
-        <p className="star-topup-copy">부족한 Star는 기록과 탐구 루프로 천천히 모을 수 있게 정리하고 있어요.</p>
-        <p className="star-topup-mock-note">지금은 외부 화면으로 이동하지 않고, 모을 수 있는 방법만 안내합니다.</p>
-        <div className="star-earn-list">
-          {earnLoops.map(([label, amount, copy]) => (
-            <article className="star-earn-row" key={label}>
-              <div>
-                <strong>{label}</strong>
-                <p>{copy}</p>
+        {!isEarnMode ? (
+          <>
+            <p className="star-topup-copy">{t("star.sheet.copy")}</p>
+            <p className="star-topup-status-note">{t("star.sheet.status")}</p>
+            <button
+              className="star-sheet-mode-cta"
+              type="button"
+              onClick={() => {
+                setPurchaseNotice("");
+                setMode("earn");
+              }}
+            >
+              <span>
+                <Sparkles size={15} />
+                {t("star.sheet.earnButton")}
+              </span>
+              <ChevronRight size={16} />
+            </button>
+            <div className="star-sheet-divider" aria-hidden="true" />
+            <div className="star-package-list" aria-label="Star 구매 준비 중 항목">
+              {packages.map(([label, amount, price, badge]) => (
+                <button
+                  className={`star-package-row pending ${badge === t("star.sheet.package.recommended") ? "recommended" : ""}`}
+                  type="button"
+                  key={label}
+                  onClick={() => setPurchaseNotice(t("star.sheet.package.notice"))}
+                  aria-disabled="true"
+                  aria-label={`${label} ${amount} Star ${price}`}
+                >
+                  <span>
+                    <strong>{label}</strong>
+                    {badge && <em>{badge}</em>}
+                  </span>
+                  <span className="star-package-value">
+                    <StarCostPill amount={amount} />
+                    <b>{price}</b>
+                    <small>준비 중</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+            {purchaseNotice && <div className="ad-reward-notice" role="status">{purchaseNotice}</div>}
+          </>
+        ) : (
+          <>
+            <p className="star-topup-copy">{t("star.sheet.earn.copy")}</p>
+            <button
+              className="star-sheet-mode-cta"
+              type="button"
+              onClick={() => {
+                setAdNoticeOpen(false);
+                setMode("purchase");
+              }}
+            >
+              <span>
+                <Sparkles size={15} />
+                {t("star.sheet.purchaseButton")}
+              </span>
+              <ChevronRight size={16} />
+            </button>
+            <div className="star-sheet-divider" aria-hidden="true" />
+            <button className="ad-reward-cta" type="button" onClick={() => setAdNoticeOpen(true)} aria-label="광고시청 후 Star 15 획득하기">
+              <span>
+                <Sparkles size={16} />
+                {t("star.sheet.ad.cta")}
+              </span>
+              <StarCostPill amount="+15" className="star-reward-pill" />
+            </button>
+            {adNoticeOpen && (
+              <div className="ad-reward-notice" role="status">
+                {t("star.sheet.ad.notice")}
               </div>
-              <span>{amount}</span>
-            </article>
-          ))}
-        </div>
+            )}
+            <div className="star-earn-list">
+              {earnLoops.map(([label, amount, copy]) => (
+                <article className="star-earn-row" key={label}>
+                  <div>
+                    <strong>{label}</strong>
+                    <p>{copy}</p>
+                  </div>
+                  <span>{amount}</span>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
         <button className="secondary-button star-topup-close-button" type="button" onClick={onClose}>
-          나중에 보기
+          {t("common.later")}
         </button>
       </div>
     </div>
@@ -224,7 +331,7 @@ function StarTopUpSheet({ balance = 150, onClose }) {
 const freeExploreQuestions = [
   {
     question: "오늘 가장 오래 마음에 남은 장면은 무엇이었나요?",
-    options: ["대화 속 한 문장", "혼자 있던 시간", "해야 할 일을 떠올린 순간", "몸이 먼저 반응한 감정"]
+    options: ["대화 속 한 문장", "혼자 있던 시간", "해야 할 일을 떠올린 순간", "몸이 먼저 반응한 감정", "아직 잘 모르겠어요"]
   },
   {
     question: "지금 나에게 조금 더 필요한 것은 무엇일까요?",
@@ -241,6 +348,106 @@ const freeExploreQuestions = [
   {
     question: "오늘의 나를 한 문장에 가깝게 고른다면요?",
     options: ["천천히 정리하는 중", "조금 지쳤지만 버티는 중", "다시 움직이고 싶은 중", "편안한 흐름을 찾는 중"]
+  },
+  {
+    question: "요즘 더 알고 싶어진 나의 모습은 어느 쪽인가요?",
+    options: ["왜 망설이는지", "무엇에 끌리는지", "어떤 관계가 편한지", "어떤 속도가 맞는지", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "혼자 있는 시간이 필요해지는 순간은 언제인가요?",
+    options: ["생각이 많아질 때", "관계가 복잡하게 느껴질 때", "선택을 앞두고 있을 때", "몸이 지쳐 있을 때"]
+  },
+  {
+    question: "관계 안에서 편안함이 생기는 조건은 무엇인가요?",
+    options: ["천천히 들어주는 태도", "서로의 선을 지키는 분위기", "부담 없는 대화", "예측 가능한 반응", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "최근 나를 작게라도 움직이게 한 것은 무엇인가요?",
+    options: ["해보고 싶은 마음", "해야 한다는 책임감", "누군가와의 약속", "나아지고 싶은 마음", "아직 떠오르지 않아요"]
+  },
+  {
+    question: "마음이 복잡해질 때 먼저 나타나는 반응은 무엇인가요?",
+    options: ["생각이 많아져요", "말수가 줄어요", "몸이 무거워져요", "누군가에게 말하고 싶어요", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "안정감을 느끼는 순간은 언제인가요?",
+    options: ["계획이 보일 때", "믿을 수 있는 사람이 있을 때", "혼자 정리할 시간이 있을 때", "해야 할 일이 줄었을 때"]
+  },
+  {
+    question: "새로운 일을 앞두고 가장 먼저 확인하는 것은 무엇인가요?",
+    options: ["내가 왜 하는지", "지금 감당 가능한지", "누구와 함께하는지", "작게 시작할 수 있는지"]
+  },
+  {
+    question: "내 생각을 표현하고 싶어지는 순간은 언제인가요?",
+    options: ["오해가 생겼을 때", "중요한 기준이 흔들릴 때", "좋은 아이디어가 떠올랐을 때", "고마움이 생겼을 때", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "요즘 반복되는 선택의 기준은 무엇인가요?",
+    options: ["후회가 적은 쪽", "내 마음이 납득되는 쪽", "관계를 해치지 않는 쪽", "새롭게 시도하는 쪽"]
+  },
+  {
+    question: "최근 좋았던 순간에는 어떤 조건이 있었나요?",
+    options: ["편한 사람", "조용한 환경", "분명한 목표", "자유로운 선택", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "맞지 않는다고 느낀 순간은 어디에서 왔나요?",
+    options: ["속도가 너무 빨라서", "기준이 흐려져서", "관계가 부담스러워서", "내 리듬을 잃어서"]
+  },
+  {
+    question: "요즘 나에게 필요한 회복 방식은 무엇인가요?",
+    options: ["혼자 정리하기", "가볍게 움직이기", "누군가와 나누기", "충분히 쉬기", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "어떤 상황에서 호기심이 살아나나요?",
+    options: ["새로운 관점을 만날 때", "이유를 파고들 때", "직접 해볼 수 있을 때", "사람들의 이야기를 들을 때"]
+  },
+  {
+    question: "내 리듬을 지키고 싶어지는 순간은 언제인가요?",
+    options: ["요구가 많아질 때", "말을 빨리 해야 할 때", "선택을 재촉받을 때", "혼자 생각할 시간이 없을 때"]
+  },
+  {
+    question: "사람들과 함께 있을 때 더 알고 싶어지는 것은 무엇인가요?",
+    options: ["내가 편해지는 조건", "내가 조심하는 이유", "내가 기대하는 태도", "내가 거리감을 느끼는 지점"]
+  },
+  {
+    question: "요즘 성장하고 싶다고 느낀 장면이 있었나요?",
+    options: ["작게 시작하고 싶었어요", "더 배우고 싶었어요", "반복을 바꾸고 싶었어요", "아직 떠오르지 않아요"]
+  },
+  {
+    question: "감정이 오래 남을 때 그 이유는 어디에 가까운가요?",
+    options: ["중요한 말이 있었어요", "기준이 흔들렸어요", "기대가 있었어요", "몸이 지쳐 있었어요", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "안정적인 선택이라고 느끼는 기준은 무엇인가요?",
+    options: ["예측 가능해요", "내가 납득돼요", "관계가 무리 없어요", "작게라도 이어갈 수 있어요"]
+  },
+  {
+    question: "실행으로 옮기기 쉬운 조건은 무엇인가요?",
+    options: ["작게 시작할 수 있을 때", "이유가 분명할 때", "누군가와 약속했을 때", "실패해도 괜찮을 때"]
+  },
+  {
+    question: "내 마음을 말하기 어려운 순간은 언제인가요?",
+    options: ["상대 반응이 걱정될 때", "생각이 정리되지 않았을 때", "관계가 어색해질까 봐", "내 기준이 확실하지 않을 때"]
+  },
+  {
+    question: "오늘의 기록에서 더 남기고 싶은 단서는 무엇인가요?",
+    options: ["좋았던 것", "맞지 않았던 것", "선택의 이유", "관계 속 장면", "회복에 도움 된 것"]
+  },
+  {
+    question: "내가 자주 확인하는 질문은 무엇인가요?",
+    options: ["이게 나에게 맞을까", "내가 감당할 수 있을까", "관계가 괜찮을까", "지금 시작해도 될까"]
+  },
+  {
+    question: "최근 나에게 맞았던 환경은 어떤 쪽이었나요?",
+    options: ["조용한 환경", "자율적인 환경", "함께 조율하는 환경", "목표가 분명한 환경", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "반복되는 미룸 뒤에는 무엇이 있었나요?",
+    options: ["기준을 더 확인하고 싶었어요", "부담이 컸어요", "시작 단위가 컸어요", "에너지가 부족했어요", "아직 잘 모르겠어요"]
+  },
+  {
+    question: "지금 U-Map에서 더 살펴보고 싶은 흐름은 무엇인가요?",
+    options: ["나를 움직이는 힘", "관계 안의 나", "회복과 리듬", "내 기준과 선택", "표현 방식"]
   }
 ];
 
@@ -278,7 +485,8 @@ const starLedgerItems = [
 
 function App() {
   const initialScreen = new URLSearchParams(window.location.search).get("screen")?.trim().toLowerCase();
-  const [step, setStep] = React.useState(initialScreen === "home" ? "home" : "intro");
+  const isAuthReturn = initialScreen === "home" || initialScreen === "auth";
+  const [step, setStep] = React.useState(isAuthReturn ? "auth-loading" : "intro");
   const [activeTab, setActiveTab] = React.useState("home");
   const [questionIndex, setQuestionIndex] = React.useState(0);
   const [answers, setAnswers] = React.useState({});
@@ -294,11 +502,20 @@ function App() {
   const [authNotice, setAuthNotice] = React.useState("");
   const userId = session?.user?.id;
 
+  React.useEffect(() => {
+    if (!window.sessionStorage.getItem("fiyou_session_id")) {
+      window.sessionStorage.setItem("fiyou_session_id", crypto.randomUUID());
+    }
+  }, []);
+
   const loadUserData = React.useCallback(async (nextSession) => {
     if (!nextSession?.user) return;
     try {
       const nextProfile = await ensureProfile(nextSession.user);
       setProfile(nextProfile);
+      await recordLegalConsent({ locale: nextProfile?.preferred_language || "ko" }).catch((error) => {
+        console.warn("Legal consent record skipped", error);
+      });
       await grantAttendanceStar().catch(() => null);
       const [requiredQuestions, basicQuestions, relationMapQuestions, answeredFreeIds, balance, snapshot, entitlementRows] = await Promise.all([
         fetchQuestions("onboarding_required"),
@@ -315,22 +532,29 @@ function App() {
       setStarBalance(balance);
       setLatestUMapSnapshot(snapshot);
       setEntitlements(entitlementRows);
-      if (nextProfile?.onboarding_completed && initialScreen !== "intro") {
+      if (initialScreen !== "intro" && nextProfile?.onboarding_completed) {
         setStep("home");
+      } else if (initialScreen !== "intro") {
+        const hasProfileBasics = Boolean(nextProfile?.nickname && nextProfile?.birthday);
+        setStep(hasProfileBasics ? "ready" : "profile");
       }
     } catch (error) {
-      console.warn("Supabase bootstrap failed, keeping mock fallback", error);
-      setAuthNotice("데이터를 불러오지 못해 기본 화면으로 이어가고 있어요.");
+      console.warn("Supabase bootstrap failed", error);
+      setAuthNotice("저장된 데이터를 불러오지 못했어요. 네트워크와 Supabase 설정을 확인해주세요.");
     }
   }, [initialScreen]);
 
   React.useEffect(() => {
     let alive = true;
     getSession()
-      .then((nextSession) => {
+      .then(async (nextSession) => {
         if (!alive) return;
         setSession(nextSession);
-        if (nextSession) loadUserData(nextSession);
+        if (nextSession) {
+          await loadUserData(nextSession);
+          return;
+        }
+        if (isAuthReturn) setStep("login");
       })
       .catch((error) => {
         console.warn("Supabase session failed", error);
@@ -338,7 +562,10 @@ function App() {
 
     const { data } = onAuthStateChange((nextSession) => {
       setSession(nextSession);
-      if (nextSession) loadUserData(nextSession);
+      if (nextSession) {
+        trackEvent(kpiEvents.googleLoginCompleted, { provider: "google" });
+        loadUserData(nextSession);
+      }
     });
 
     return () => {
@@ -346,6 +573,17 @@ function App() {
       data?.subscription?.unsubscribe?.();
     };
   }, [loadUserData]);
+
+  React.useEffect(() => {
+    const handler = (event) => {
+      if (!session?.user?.id || !event.detail?.name) return;
+      recordAppEvent(event.detail.name, event.detail.properties || {}).catch((error) => {
+        console.warn("KPI event record skipped", error);
+      });
+    };
+    window.addEventListener("fiyou:kpi", handler);
+    return () => window.removeEventListener("fiyou:kpi", handler);
+  }, [session?.user?.id]);
 
   const goHome = React.useCallback(() => {
     setActiveTab("home");
@@ -380,7 +618,8 @@ function App() {
       }
     }
 
-    if (questionIndex < firstQuestions.length - 1) {
+    const onboardingTotal = onboardingQuestions.length || firstQuestions.length;
+    if (questionIndex < onboardingTotal - 1) {
       setQuestionIndex((current) => current + 1);
       setNote("");
       return;
@@ -398,12 +637,13 @@ function App() {
 
   const handleGoogleLogin = async () => {
     setAuthNotice("");
+    trackEvent(kpiEvents.googleLoginStarted);
     try {
       const { error } = await signInWithGoogle();
       if (error) throw error;
     } catch (error) {
-      setAuthNotice("Google OAuth 설정을 확인해야 해요. 지금은 프로필 입력으로 이어갈게요.");
-      setStep("profile");
+      console.warn("Google OAuth failed", error);
+      setAuthNotice("Google 로그인 연결을 확인하지 못했어요. 잠시 후 다시 시도해주세요.");
     }
   };
 
@@ -427,6 +667,11 @@ function App() {
       questionId: question.id,
       selectedOptionId: selectedRecord?.id || null,
       optionalText
+    });
+    setFreeQuestions((current) => current.filter((item) => item.id !== question.id));
+    trackEvent(kpiEvents.questionAnswered, {
+      questionId: question.id,
+      hasOptionalText: Boolean(optionalText?.trim())
     });
     try {
       setLatestUMapSnapshot(await fetchLatestUMapSnapshot());
@@ -459,6 +704,7 @@ function App() {
       <div className="aurora aurora-two" />
       <section className="phone-frame" aria-label="FI-YOU first run">
         <StatusBar />
+        {step === "auth-loading" && <AuthReturnScreen />}
         {step === "intro" && <IntroScreen onNext={() => setStep("login")} />}
         {step === "login" && (
           <LoginScreen onBack={() => setStep("intro")} onContinue={handleGoogleLogin} notice={authNotice} />
@@ -520,14 +766,37 @@ function StatusBar() {
   );
 }
 
+function AuthReturnScreen() {
+  return (
+    <div className="screen feedback-screen auth-return-screen">
+      <div className="map-ghost" aria-hidden="true">
+        <Orbit size={32} />
+        <span /><span /><span />
+      </div>
+      <section className="feedback-copy">
+        <p className="eyebrow">FI-YOU</p>
+        <h1>{t("auth.return.title")}</h1>
+        <div className="loading-lines">
+          <p>{t("auth.return.copy")}</p>
+        </div>
+      </section>
+      <div className="loading-dots" aria-label="이어갈 화면 확인 중">
+        <span />
+        <span />
+        <span />
+      </div>
+    </div>
+  );
+}
+
 function IntroScreen({ onNext }) {
   return (
     <div className="screen intro-screen">
       <div className="brand-block">
         <div className="brand-mark"><Sparkles size={24} /></div>
-        <p className="eyebrow">AI Self Discovery Platform</p>
+        <p className="eyebrow">{t("onboarding.brand.eyebrow")}</p>
         <h1>FI-YOU</h1>
-        <p className="brand-subtitle">Figure Yourself</p>
+        <p className="brand-subtitle">{t("onboarding.brand.subtitle")}</p>
       </div>
 
       <div className="hero-orbit" aria-hidden="true">
@@ -538,18 +807,24 @@ function IntroScreen({ onNext }) {
       </div>
 
       <section className="glass-card intro-card">
-        <ChunkText as="h2" chunks={chunk("당신은 자기 스스로에 대해", "얼마나 이해하고 있나요?")} />
-        <p>FI-YOU는 질문과 기록을 통해 당신을 천천히 이해해요. 시간이 흐를수록 “나다운 나”를 더 선명하게 발견할 수 있어요.</p>
+        <ChunkText as="h2" chunks={chunk(t("onboarding.intro.title.line1"), t("onboarding.intro.title.line2"))} />
+        <p>{t("onboarding.intro.body")}</p>
       </section>
 
       <div className="principle-list">
-        <Principle icon={<MessageCircle size={18} />} text="대화와 기록을 통해 당신을 발견해요" />
-        <Principle icon={<Sparkles size={18} />} text="고정된 유형이 아닌 흐름을 보여줘요" />
-        <Principle icon={<LockKeyhole size={18} />} text="상담이나 진단이 아닌 자기이해를 도와요" />
+        <Principle icon={<MessageCircle size={18} />} text={t("onboarding.principle.discovery")} />
+        <Principle icon={<Sparkles size={18} />} text={t("onboarding.principle.flow")} />
+        <Principle icon={<LockKeyhole size={18} />} text={t("onboarding.principle.notice")} />
       </div>
 
-      <button className="primary-button" type="button" onClick={onNext}>
-        다음
+      <button
+        className="primary-button"
+        type="button"
+        onClick={onNext}
+        aria-label="온보딩 다음"
+        data-testid="intro-next-button"
+      >
+        {t("common.next")}
         <ArrowRight size={19} />
       </button>
     </div>
@@ -569,27 +844,33 @@ function LoginScreen({ onBack, onContinue, notice }) {
 
       <div className="login-copy">
         <p className="eyebrow">Welcome to FI-YOU</p>
-        <ChunkText as="h1" chunks={chunk("대화가 쌓일수록", "U-Map이 선명해져요")} />
-        <p>Google 계정으로 시작하고, 질문과 Diary로 나만의 U-Map을 만들어보세요.</p>
+        <ChunkText as="h1" chunks={chunk(t("auth.login.title.line1"), t("auth.login.title.line2"))} />
+        <p>{t("auth.login.body")}</p>
       </div>
 
       <section className="glass-card account-card">
         <div className="account-icon"><Sparkles size={24} /></div>
-        <h2>처음 탐구를 시작해요</h2>
+        <h2>{t("auth.login.card.title")}</h2>
         <ul>
-          <li><Check size={16} />첫 질문과 다이어리 기록</li>
-          <li><Check size={16} />U-Map 흐름 확인</li>
-          <li><Check size={16} />현재 보이는 경향 미리보기</li>
+          <li><Check size={16} />{t("auth.login.card.item.questions")}</li>
+          <li><Check size={16} />{t("auth.login.card.item.umap")}</li>
+          <li><Check size={16} />{t("auth.login.card.item.preview")}</li>
         </ul>
       </section>
 
-      <button className="google-button" type="button" onClick={onContinue}>
+      <button
+        className="google-button"
+        type="button"
+        onClick={onContinue}
+        aria-label="Google로 계속하기"
+        data-testid="google-login-button"
+      >
         <GoogleIcon />
-        Google로 계속하기
+        {t("auth.login.google")}
       </button>
 
       {notice && <p className="legal-copy">{notice}</p>}
-      <p className="legal-copy">계속하면 서비스 약관과 개인정보 처리방침에 동의하게 됩니다. FI-YOU는 의료적 진단이나 심리상담을 제공하지 않습니다.</p>
+      <p className="legal-copy">{t("auth.legal.notice")}</p>
     </div>
   );
 }
@@ -616,30 +897,30 @@ function ProfileSetupScreen({ onBack, onComplete }) {
         <button className="icon-button" type="button" onClick={onBack} aria-label="이전으로">
           <ChevronLeft size={22} />
         </button>
-        <span>기본 프로필</span>
+        <span>{t("profileSetup.header")}</span>
         <i />
       </header>
 
       <section className="profile-hero">
-        <p className="eyebrow">First step</p>
-        <h1>당신을 어떻게 부를까요?</h1>
+        <p className="eyebrow">{t("profileSetup.eyebrow")}</p>
+        <h1>{t("profileSetup.title")}</h1>
       </section>
 
       <section className="glass-card form-card">
-        <label className="field-label" htmlFor="nickname">이름 또는 닉네임</label>
+        <label className="field-label" htmlFor="nickname">{t("profileSetup.nickname")}</label>
         <input
           id="nickname"
           className="text-field"
           value={nickname}
           onChange={(event) => setNickname(event.target.value)}
-          placeholder="예: 유진"
+          placeholder={t("profileSetup.nickname.placeholder")}
           autoComplete="nickname"
         />
 
         <div className="birth-heading">
           <div>
-            <label className="field-label" htmlFor="birth-year">나이를 알려주세요.</label>
-            <p>생년월일</p>
+            <label className="field-label" htmlFor="birth-year">{t("profileSetup.birth.label")}</label>
+            <p>{t("profileSetup.birth.helper")}</p>
           </div>
         </div>
 
@@ -694,7 +975,7 @@ function ReadyScreen({ onBack, onStart }) {
           첫 질문 시작하기
           <ArrowRight size={19} />
         </button>
-        <p className="ready-terms-below">FI-YOU는 의료 진단이나 심리상담이 아닌 자기이해 서비스예요.</p>
+        <p className="ready-terms-below">FI-YOU는 전문적 판단을 대신하지 않는 자기이해 서비스예요.</p>
       </div>
     </div>
   );
@@ -825,8 +1106,8 @@ function FeedbackScreen({ onContinue }) {
         <span /><span /><span />
       </div>
       <section className="feedback-copy">
-        <p className="eyebrow">Building U-Map</p>
-        <h1>첫 단서를 U-Map에 남기는 중이에요</h1>
+        <p className="eyebrow">{t("transition.eyebrow")}</p>
+        <h1>{t("transition.title")}</h1>
         <div className="loading-lines">
           <p key={loadingMessages[messageIndex]}>{loadingMessages[messageIndex]}</p>
         </div>
@@ -894,15 +1175,17 @@ function MainAppShell({
         refType: "free_explore_session",
         refId: crypto.randomUUID()
       });
+      trackEvent(kpiEvents.starSpent, { reason: "free_explore", amount: 30 });
       await onStarBalanceRefresh?.();
       return true;
     } catch (error) {
       if (isInsufficientStarError(error)) {
+        trackEvent(kpiEvents.starShortageShown, { reason: "free_explore", amount: 30 });
         openStarTopUp("free_explore");
         return false;
       }
       console.warn("Failed to spend Star for free explore", error);
-      return true;
+      return false;
     }
   };
 
@@ -913,10 +1196,14 @@ function MainAppShell({
     }
     try {
       await unlockEntitlement({ type: "love_analysis", cost: 50, refId: null });
+      trackEvent(kpiEvents.starSpent, { reason: "love_analysis", amount: 50 });
       setLoveUnlocked(true);
       await onStarBalanceRefresh?.();
     } catch (error) {
-      if (isInsufficientStarError(error)) openStarTopUp("love");
+      if (isInsufficientStarError(error)) {
+        trackEvent(kpiEvents.starShortageShown, { reason: "love_analysis", amount: 50 });
+        openStarTopUp("love");
+      }
       else console.warn("Failed to unlock love analysis", error);
     }
   };
@@ -930,17 +1217,21 @@ function MainAppShell({
     try {
       if (pendingStarUse.kind === "compare") {
         await unlockEntitlement({ type: "past_compare", cost: 30, refId: null });
+        trackEvent(kpiEvents.starSpent, { reason: "past_compare", amount: 30 });
       }
       if (pendingStarUse.kind === "relation") {
         await unlockEntitlement({ type: "relation_map", cost: 80, refId: pendingStarUse.partner?.id || null });
+        trackEvent(kpiEvents.starSpent, { reason: "relation_map", amount: 80 });
       }
       await onStarBalanceRefresh?.();
       setMapFlow(pendingStarUse.after);
     } catch (error) {
-      if (isInsufficientStarError(error)) openStarTopUp(pendingStarUse.kind);
+      if (isInsufficientStarError(error)) {
+        trackEvent(kpiEvents.starShortageShown, { reason: pendingStarUse.kind, amount: pendingStarUse.cost });
+        openStarTopUp(pendingStarUse.kind);
+      }
       else {
         console.warn("Failed to unlock Star content", error);
-        setMapFlow(pendingStarUse.after);
       }
     }
   };
@@ -1023,17 +1314,8 @@ function MainAppShell({
                 setMapFlow("starConfirm");
               })
               .catch((error) => {
-                console.warn("Failed to create relation, using mock relation", error);
-                setPendingStarUse({
-                  kind: "relation",
-                  title: "Relation-Map",
-                  ctaLabel: "Relation-Map 열기",
-                  cost: 80,
-                  description: `${partner.name || "상대"}님과의 관계 안에서 내가 경험하는 흐름을 Relation-Map으로 정리해요.`,
-                  after: "relationQuestions",
-                  partner
-                });
-                setMapFlow("starConfirm");
+                console.warn("Failed to create relation", error);
+                setPendingStarUse(null);
               });
           }}
         />
@@ -1077,7 +1359,7 @@ function MainAppShell({
   return (
     <div className="main-app-screen">
       {activeTab === "home" && (
-        <HomeScreen onExplore={openFreeLoop} starBalance={starBalance} onOpenTopUp={() => openStarTopUp()} />
+        <HomeScreen onExplore={openFreeLoop} starBalance={starBalance} snapshot={latestUMapSnapshot} onOpenTopUp={() => openStarTopUp()} />
       )}
       {activeTab === "diary" && <DiaryScreen session={session} onStarBalanceRefresh={onStarBalanceRefresh} onUMapSnapshotRefresh={onUMapSnapshotRefresh} />}
       {activeTab === "explore" && <ExploreScreen onExplore={openFreeLoop} onStartFreeExplore={handleSpendFreeExplore} starBalance={starBalance} />}
@@ -1092,9 +1374,11 @@ function MainAppShell({
         <SettingsScreen
           loveUnlocked={loveUnlocked}
           profile={profile}
+          session={session}
           onUnlockLove={handleUnlockLove}
           starBalance={starBalance}
           onStarBalanceChange={setStarBalance}
+          onDataReset={onUMapSnapshotRefresh}
           onSignOut={() => signOut().catch((error) => console.warn("Sign out failed", error))}
         />
       )}
@@ -1109,14 +1393,15 @@ function MainAppShell({
   );
 }
 
-function HomeScreen({ onExplore, starBalance = 150, onOpenTopUp }) {
+function HomeScreen({ onExplore, starBalance = 150, snapshot, onOpenTopUp }) {
+  const hasSnapshot = Boolean(snapshot?.axis_scores && Object.keys(snapshot.axis_scores).length);
   return (
     <div className="screen home-screen with-bottom-nav">
       <header className="home-topbar app-page-header">
         <div className="home-title-only">
-          <h1>오늘의 탐구</h1>
+          <h1>{t("home.header")}</h1>
         </div>
-        <button className="status-pill" type="button" onClick={onOpenTopUp} aria-label={`Star 모으기, 보유 Star ${starBalance}`}>
+        <button className="status-pill" type="button" onClick={onOpenTopUp} aria-label={`Star 관리, 보유 Star ${starBalance}`}>
           <span className="status-pill-section point-section">
             <Sparkles size={14} />
             {starBalance}
@@ -1126,18 +1411,18 @@ function HomeScreen({ onExplore, starBalance = 150, onOpenTopUp }) {
       </header>
 
       <section className="glass-card next-question-card">
-        <p className="card-kicker">다음 행동</p>
-        <h2>오늘의 질문으로 U-Map을 밝혀볼까요?</h2>
-        <p>짧게 선택해도 다음 단서가 쌓입니다.</p>
+        <p className="card-kicker">{t("home.next.kicker")}</p>
+        <h2>{t("home.next.title")}</h2>
+        <p>{t("home.next.body")}</p>
         <div className="free-progress">
-          <span>탐구 진행</span>
+          <span>{t("home.progress.label")}</span>
           <strong>5 / 35</strong>
         </div>
         <div className="mini-progress" aria-hidden="true">
           <span style={{ width: "14%" }} />
         </div>
         <button className="primary-button" type="button" onClick={onExplore}>
-          오늘 질문 시작하기
+          {t("home.question.cta")}
           <ArrowRight size={19} />
         </button>
       </section>
@@ -1146,13 +1431,13 @@ function HomeScreen({ onExplore, starBalance = 150, onOpenTopUp }) {
         <div className="home-card-head">
           <div>
             <p className="card-kicker home-kicker-lockup"><Orbit size={14} />U-Map</p>
-            <h2>아직은 흐릿한 윤곽이에요</h2>
+            <h2>{hasSnapshot ? t("home.umap.ready") : t("home.umap.empty")}</h2>
           </div>
         </div>
-        <UMapPreview mode="initial" size="compact" showLabels />
+        <UMapPreview mode={hasSnapshot ? "clear" : "initial"} size="compact" showLabels scores={snapshot?.axis_scores} />
         <div className="u-map-home-status" aria-label="U-Map 현재 상태">
-          <span>첫 단서 반영</span>
-          <span>더 선명해지는 중</span>
+          <span>{t("home.umap.status.first")}</span>
+          <span>{t("home.umap.status.next")}</span>
         </div>
       </section>
 
@@ -1170,8 +1455,8 @@ function HomeScreen({ onExplore, starBalance = 150, onOpenTopUp }) {
       <section className="locked-content-card">
         <LockKeyhole size={17} />
         <div>
-          <strong>심화 기능은 Star로 열 수 있어요</strong>
-          <p>질문은 계속 이어가고, Star는 U-Map 심층 해석과 관계 흐름을 볼 때 사용됩니다.</p>
+          <strong>더 깊은 보기는 준비 중이에요</strong>
+          <p>기본 질문과 U-Map은 계속 이어지고, 일부 상세 흐름은 기록이 더 쌓인 뒤 열 수 있어요.</p>
         </div>
       </section>
 
@@ -1192,7 +1477,11 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
   const [deletedCards, setDeletedCards] = React.useState([]);
   const [deleteToast, setDeleteToast] = React.useState(false);
   const [dbDiaries, setDbDiaries] = React.useState([]);
+  const [calendarDays, setCalendarDays] = React.useState(null);
+  const [calendarDaysError, setCalendarDaysError] = React.useState(false);
   const [selectedEntry, setSelectedEntry] = React.useState(null);
+  const [diaryError, setDiaryError] = React.useState("");
+  const [diaryNotice, setDiaryNotice] = React.useState("");
   const userId = session?.user?.id;
 
   const diaryEntries = [
@@ -1249,25 +1538,45 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
     try {
       const rows = await fetchDiaries(userId);
       setDbDiaries(rows.map(toDiaryCard));
+      setDiaryError("");
     } catch (error) {
-      console.warn("Failed to fetch diaries, keeping mock list", error);
+      console.warn("Failed to fetch diaries", error);
+      setDiaryError("Diary 기록을 불러오지 못했어요. 잠시 후 다시 확인해주세요.");
     }
   }, [toDiaryCard, userId]);
 
+  const loadCalendarDays = React.useCallback(async () => {
+    if (!userId) {
+      setCalendarDays([]);
+      setCalendarDaysError(false);
+      return;
+    }
+    try {
+      const rows = await fetchCalendarDayStates(new Date());
+      setCalendarDays(rows);
+      setCalendarDaysError(false);
+    } catch (error) {
+      console.warn("Failed to fetch calendar day states", error);
+      setCalendarDays([]);
+      setCalendarDaysError(true);
+    }
+  }, [userId]);
+
   React.useEffect(() => {
     loadDiaries();
-  }, [loadDiaries]);
+    loadCalendarDays();
+  }, [loadDiaries, loadCalendarDays]);
 
-  const visibleDiaries = dbDiaries.length ? dbDiaries : diaryEntries;
+  const visibleDiaries = userId ? dbDiaries : [];
 
   const savedEntry = {
     id: selectedEntry?.id,
-    date: selectedEntry?.date || "6월 13일",
-    title: title || diaryEntries[0].title,
-    self: todaySelf || diaryEntries[0].self,
-    preview: body || diaryEntries[0].preview,
+    date: selectedEntry?.date || "오늘",
+    title: title || "오늘의 나",
+    self: todaySelf || "나를 이해하는 단서",
+    preview: body || "",
     mood: emotion,
-    tags: tags.length ? tags : diaryEntries[0].tags
+    tags: tags.length ? tags : []
   };
 
   const openEntry = (entry) => {
@@ -1287,8 +1596,13 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
   };
 
   const handleSaveDiary = async () => {
+    if (body.trim().length < 50) {
+      setDiaryError("본문을 50자 이상 남기면 Diary를 저장할 수 있어요.");
+      return false;
+    }
     if (userId) {
       try {
+        const isEditing = Boolean(selectedEntry?.id);
         const saved = await saveDiary({
           userId,
           id: selectedEntry?.id,
@@ -1298,42 +1612,54 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
         });
         const nextEntry = toDiaryCard(saved);
         setSelectedEntry(nextEntry);
-        if (!selectedEntry?.id && body.trim().length >= 50) {
+        if (!isEditing && body.trim().length >= 50) {
           try {
             await grantDiaryStarOnce(saved.id);
             await onStarBalanceRefresh?.();
+            trackEvent(kpiEvents.starEarned, { reason: "diary", amount: 12 });
           } catch (rewardError) {
             console.warn("Diary Star grant skipped or failed", rewardError);
           }
         }
         await onUMapSnapshotRefresh?.();
         await loadDiaries();
+        await loadCalendarDays();
+        setDiaryNotice(isEditing ? "수정된 내용이 저장되었어요. Star는 첫 작성 때만 반영돼요." : "이번 Diary에서 나를 이해하는 단서가 생겼어요. +12 Star");
+        trackEvent(isEditing ? kpiEvents.diaryUpdated : kpiEvents.diaryCreated, { diaryId: saved.id });
+        setDiaryError("");
       } catch (error) {
-        console.warn("Failed to save diary, keeping local mock state", error);
+        console.warn("Failed to save diary", error);
+        setDiaryError("Diary 저장에 실패했어요. 네트워크 상태를 확인하고 다시 시도해주세요.");
+        return false;
       }
+    } else {
+      setDiaryError("로그인 후 Diary를 저장할 수 있어요.");
+      return false;
     }
     setSavedToast(true);
     setMode("detail");
+    return true;
   };
 
   const handleDeleteDiary = async (entry) => {
     if (entry.id) {
       try {
-        try {
-          await revokeDiaryStarOnce(entry.id);
-          await onStarBalanceRefresh?.();
-        } catch (revokeError) {
-          console.warn("Diary Star revoke RPC unavailable or skipped", revokeError);
-        }
         await softDeleteDiary(entry.id);
+        await onStarBalanceRefresh?.();
         await onUMapSnapshotRefresh?.();
         await loadDiaries();
+        await loadCalendarDays();
+        setDiaryError("");
       } catch (error) {
         console.warn("Failed to delete diary", error);
+        setDiaryError("Diary 삭제에 실패했어요. 잠시 후 다시 시도해주세요.");
+        return false;
       }
     }
     setDeletedCards((current) => [...current, entry.title]);
     setDeleteToast(true);
+    trackEvent(kpiEvents.diaryDeleted, { diaryId: entry.id });
+    return true;
   };
 
   if (mode === "write") {
@@ -1347,6 +1673,7 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
         onBodyChange={setBody}
         onEmotionChange={setEmotion}
         onSave={handleSaveDiary}
+        error={diaryError}
       />
     );
   }
@@ -1361,6 +1688,7 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
         onBodyChange={setBody}
         onEmotionChange={setEmotion}
         savedToast={savedToast}
+        savedMessage={diaryNotice}
         onToastDone={() => setSavedToast(false)}
         onSaveEdit={handleSaveDiary}
         onDelete={handleDeleteDiary}
@@ -1404,14 +1732,14 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
             삭제하면 지급된 12 Star가 회수될 수 있어요.
           </button>
         )}
-        <DiaryYearCardsV3
+        {visibleDiaries.length > 0 && <DiaryYearCardsV3
           year="2026"
-          entries={visibleDiaries.slice(0, Math.max(2, visibleDiaries.length)).filter((entry) => !deletedCards.includes(entry.title))}
+          entries={visibleDiaries.filter((entry) => !deletedCards.includes(entry.title))}
           onOpen={openEntry}
           onEdit={editEntry}
           onDelete={handleDeleteDiary}
-        />
-        {!dbDiaries.length && (
+        />}
+        {false && !dbDiaries.length && (
           <DiaryYearCardsV3
             year="2025"
             entries={[diaryEntries[2], diaryEntries[3]].filter((entry) => !deletedCards.includes(entry.title))}
@@ -1420,11 +1748,23 @@ function DiaryScreen({ session, onStarBalanceRefresh, onUMapSnapshotRefresh }) {
             onDelete={handleDeleteDiary}
           />
         )}
+        {diaryError && <p className="diary-inline-error">{diaryError}</p>}
+        {!visibleDiaries.length && (
+          <section className="glass-card diary-empty-state">
+            <Sparkles size={18} />
+            <strong>아직 저장된 Diary가 없어요</strong>
+            <p>오늘의 장면과 기준을 남기면 이곳에 실제 기록이 쌓입니다.</p>
+          </section>
+        )}
       </section>
 
       {calendarOpen && (
         <CalendarModal
           selectedDay={selectedDay}
+          calendarDays={calendarDays}
+          calendarDaysError={calendarDaysError}
+          diaryEntries={visibleDiaries}
+          isAuthenticated={Boolean(userId)}
           onClose={() => setCalendarOpen(false)}
           onOpenDetail={() => {
             setCalendarOpen(false);
@@ -1476,6 +1816,7 @@ function DiaryWriteV2({ title, body, emotion, onBack, onTitleChange, onBodyChang
           <span>{rewardReady ? "오늘의 단서가 쌓였어요 · +12 Star" : "50자 이상 남기면 오늘의 단서가 쌓여요."}</span>
           <strong>{body.trim().length} / 50</strong>
         </div>
+        {error && <p className="diary-inline-error">{error}</p>}
       </section>
 
       <button className="primary-button setup-button diary-save-button" type="button" onClick={onSave}>
@@ -1601,7 +1942,7 @@ function DiaryYearCards({ year, entries, onOpen }) {
   );
 }
 
-function DiaryWriteV3({ title, body, emotion, onBack, onTitleChange, onBodyChange, onEmotionChange, onSave }) {
+function DiaryWriteV3({ title, body, emotion, onBack, onTitleChange, onBodyChange, onEmotionChange, onSave, error }) {
   const [emotionOpen, setEmotionOpen] = React.useState(false);
   const emotions = ["차분함", "복잡함", "기대감", "불편함", "편안함"];
   const rewardReady = body.trim().length >= 50;
@@ -1643,9 +1984,10 @@ function DiaryWriteV3({ title, body, emotion, onBack, onTitleChange, onBodyChang
           <span>{rewardReady ? "오늘의 단서가 쌓였어요 · +12 Star" : "50자 이상 남기면 오늘의 단서가 쌓여요."}</span>
           <strong>{body.trim().length} / 50</strong>
         </div>
+        {error && <p className="diary-inline-error">{error}</p>}
       </section>
 
-      <button className="primary-button setup-button diary-save-button" type="button" onClick={onSave}>
+      <button className="primary-button setup-button diary-save-button" type="button" onClick={onSave} disabled={!rewardReady}>
         저장하기
       </button>
 
@@ -1685,7 +2027,7 @@ function DiaryWriteV3({ title, body, emotion, onBack, onTitleChange, onBodyChang
   );
 }
 
-function DiaryDetailV3({ entry, body, emotion, onBack, onBodyChange, onEmotionChange, savedToast, onToastDone, onSaveEdit, onDelete }) {
+function DiaryDetailV3({ entry, body, emotion, onBack, onBodyChange, onEmotionChange, savedToast, savedMessage, onToastDone, onSaveEdit, onDelete }) {
   const [editing, setEditing] = React.useState(false);
   const [deleteNotice, setDeleteNotice] = React.useState(false);
   const emotions = ["차분함", "복잡함", "기대감", "불편함", "편안함"];
@@ -1702,7 +2044,7 @@ function DiaryDetailV3({ entry, body, emotion, onBack, onBodyChange, onEmotionCh
 
       {savedToast && (
         <button className="diary-toast" type="button" onClick={onToastDone}>
-          이번 Diary에서는 기준과 반응을 살펴볼 수 있는 단서가 생겼어요. +12 Star
+          {savedMessage || "Diary가 저장되었어요."}
         </button>
       )}
       {deleteNotice && (
@@ -1718,10 +2060,10 @@ function DiaryDetailV3({ entry, body, emotion, onBack, onBodyChange, onEmotionCh
             <button type="button" onClick={() => setEditing((value) => !value)} aria-label="수정하기">
               <Pencil size={14} />
             </button>
-            <button type="button" className="danger" onClick={() => {
+            <button type="button" className="danger" onClick={async () => {
               setDeleteNotice(true);
-              onDelete?.(entry);
-              onBack();
+              const deleted = await onDelete?.(entry);
+              if (deleted) onBack();
             }} aria-label="삭제하기">
               <Trash2 size={14} />
             </button>
@@ -1739,9 +2081,9 @@ function DiaryDetailV3({ entry, body, emotion, onBack, onBodyChange, onEmotionCh
             </div>
             <textarea value={body} onChange={(event) => onBodyChange(event.target.value)} />
             <p className="edit-reward-note">수정은 언제든 가능하지만 Star는 하루 첫 작성 때만 지급돼요.</p>
-            <button className="primary-button" type="button" onClick={() => {
-              onSaveEdit?.();
-              setEditing(false);
+            <button className="primary-button" type="button" onClick={async () => {
+              const saved = await onSaveEdit?.();
+              if (saved) setEditing(false);
             }}>수정 저장하기</button>
           </>
         ) : (
@@ -2029,7 +2371,7 @@ function DiaryDetailScreen({ title, body, emotion, tags, onBack, onTitleChange, 
             <div className="ai-mood-box">
               <div>
                 <label>기분 및 감정</label>
-                <p>본문에서 읽힌 분위기를 사용자가 직접 조정하는 mock 영역입니다.</p>
+                <p>본문에서 읽힌 분위기를 사용자가 직접 조정할 수 있어요.</p>
               </div>
               <div className="emotion-chip-list compact">
                 {emotions.map((item) => (
@@ -2095,10 +2437,67 @@ function DiaryYearGroup({ year, entries, onOpen }) {
   );
 }
 
-function CalendarModal({ selectedDay, onClose, onOpenDetail, onSelectDay }) {
-  const days = Array.from({ length: 30 }, (_, index) => index + 1);
-  const diaryDays = new Set([4, 9, 13, 21]);
-  const attendanceDays = new Set([1, 2, 4, 8, 9, 13, 18, 21, 27]);
+function CalendarModal({
+  selectedDay,
+  calendarDays = null,
+  calendarDaysError = false,
+  diaryEntries = [],
+  attendanceDays = null,
+  isAuthenticated = false,
+  onClose,
+  onOpenDetail,
+  onSelectDay
+}) {
+  const extractDay = (dateText = "") => {
+    const match = String(dateText).match(/(\d{1,2})\s*일/);
+    return match ? Number(match[1]) : null;
+  };
+  const extractCalendarDay = (row) => {
+    if (!row?.day_date) return null;
+    const day = new Date(`${row.day_date}T00:00:00`).getDate();
+    return Number.isFinite(day) ? day : null;
+  };
+  const compactPreview = (text = "") => (text.length > 42 ? `${text.slice(0, 42)}...` : text);
+  const backendCalendarRows = Array.isArray(calendarDays) ? calendarDays : [];
+  const hasBackendCalendar = backendCalendarRows.length > 0;
+  const calendarByDay = new Map(
+    backendCalendarRows
+      .map((row) => [extractCalendarDay(row), row])
+      .filter(([day]) => Number.isFinite(day))
+  );
+  const diaryByDay = new Map(
+    diaryEntries
+      .map((entry) => [extractDay(entry.date), entry])
+      .filter(([day]) => Number.isFinite(day))
+  );
+  const fallbackDiaryDays = [4, 9, 13, 21];
+  const useMockFallback = !hasBackendCalendar && !isAuthenticated && !calendarDaysError;
+  const days = hasBackendCalendar
+    ? Array.from(calendarByDay.keys()).sort((a, b) => a - b)
+    : Array.from({ length: 30 }, (_, index) => index + 1);
+  const diaryDays = new Set(
+    hasBackendCalendar
+      ? backendCalendarRows.filter((row) => row.diary_written).map(extractCalendarDay).filter((day) => Number.isFinite(day))
+      : useMockFallback
+        ? fallbackDiaryDays
+        : diaryByDay.keys()
+  );
+  const attendanceSet = new Set(
+    hasBackendCalendar
+      ? backendCalendarRows.filter((row) => row.attended).map(extractCalendarDay).filter((day) => Number.isFinite(day))
+      : attendanceDays || (useMockFallback ? [1, 2, 4, 8, 9, 13, 18, 21, 27] : [])
+  );
+  const starByDay = new Map(
+    hasBackendCalendar
+      ? backendCalendarRows
+          .map((row) => [extractCalendarDay(row), Number(row.star_earned || 0)])
+          .filter(([day]) => Number.isFinite(day))
+      : []
+  );
+  const activeCalendarDay = calendarByDay.get(selectedDay);
+  const activeEntry = diaryByDay.get(selectedDay);
+  const activeHasDiary = diaryDays.has(selectedDay);
+  const activeStarEarned = Number(activeCalendarDay?.star_earned || 0);
 
   return (
     <div className="calendar-overlay" role="dialog" aria-modal="true" aria-label="기록 캘린더">
@@ -2126,7 +2525,8 @@ function CalendarModal({ selectedDay, onClose, onOpenDetail, onSelectDay }) {
         <div className="calendar-grid">
           {days.map((day) => {
             const hasDiary = diaryDays.has(day);
-            const hasAttendance = attendanceDays.has(day);
+            const hasAttendance = attendanceSet.has(day);
+            const starEarned = Number(starByDay.get(day) || 0);
             const active = selectedDay === day;
             return (
               <button
@@ -2138,7 +2538,12 @@ function CalendarModal({ selectedDay, onClose, onOpenDetail, onSelectDay }) {
                 <strong>{day}</strong>
                 <span className="day-badges">
                   {hasDiary && <em aria-label="다이어리 작성"><Pencil size={11} /></em>}
-                  {hasAttendance && <i aria-label="Star 보상"><Sparkles size={10} />10</i>}
+                  {(hasAttendance || starEarned !== 0) && (
+                    <i aria-label={`Star ${starEarned || 10}`}>
+                      <Sparkles size={10} />
+                      {starEarned > 0 ? `+${starEarned}` : starEarned < 0 ? starEarned : "10"}
+                    </i>
+                  )}
                 </span>
               </button>
             );
@@ -2147,11 +2552,25 @@ function CalendarModal({ selectedDay, onClose, onOpenDetail, onSelectDay }) {
 
         <section className="calendar-preview">
           <p className="eyebrow">6월 {selectedDay}일</p>
-          <h3>{selectedDay === 13 ? "오늘 마음에 남은 장면" : "기록 미리보기"}</h3>
+          <h3>{activeEntry?.title || (activeHasDiary ? "기록이 남아 있어요" : "기록 미리보기")}</h3>
+          {hasBackendCalendar && (
+            <div className="calendar-preview-meta">
+              {activeCalendarDay?.attended && <span>출석</span>}
+              {activeCalendarDay?.diary_written && <span>Diary 작성</span>}
+              {activeStarEarned !== 0 && <span>{activeStarEarned > 0 ? `+${activeStarEarned}` : activeStarEarned} Star</span>}
+              {activeCalendarDay?.diary_id && <span>Diary 연결됨</span>}
+            </div>
+          )}
           <p>
-            {selectedDay === 13
-              ? "오늘의 기록이 U-Map에 단서로 남았어요. +12 Star"
-              : "이 날짜의 기록을 열람하거나 새 다이어리를 남길 수 있어요."}
+            {calendarDaysError
+              ? "캘린더 데이터를 불러오지 못했어요. 실제 기록은 잠시 후 다시 확인해주세요."
+              : activeEntry
+              ? compactPreview(activeEntry.preview)
+              : activeCalendarDay?.diary_written
+                ? "이 날짜에 남긴 Diary 기록이 있어요."
+                : activeHasDiary
+                ? "이 날짜의 기록이 U-Map에 단서로 남아 있어요."
+                : "이 날짜의 기록을 열람하거나 새 다이어리를 남길 수 있어요."}
           </p>
           <button className="small-cta" type="button" onClick={onOpenDetail}>
             기록 열람하기
@@ -2208,13 +2627,13 @@ function ExploreScreen({ onExplore, onStartFreeExplore, starBalance = 150 }) {
       </header>
 
       <section className="explore-intro">
-        <h1>스스로를 더 알아볼까요?</h1>
-        <p>오늘의 선택과 기록이 쌓이면 U-Map이 조금씩 선명해져요.</p>
+        <h1>{t("explore.title")}</h1>
+        <p>{t("explore.body")}</p>
       </section>
 
       <section className="explore-status-card glass-card" aria-label="현재 나의 탐구 현황">
         <div className="explore-section-head">
-          <strong>현재 나의 탐구 현황</strong>
+          <strong>{t("explore.status.title")}</strong>
           <span>조금 선명해지는 중</span>
         </div>
         <div className="explore-status-body">
@@ -2229,7 +2648,7 @@ function ExploreScreen({ onExplore, onStartFreeExplore, starBalance = 150 }) {
 
       <section className="explore-recommend-card glass-card">
         <div className="explore-section-head">
-          <strong>오늘의 탐구 추천</strong>
+          <strong>{t("explore.recommend.title")}</strong>
         </div>
         <p>오늘은 선택보다, 왜 그 선택이 마음에 남았는지 살펴볼까요?</p>
         <div className="explore-topic-tags">
@@ -2240,7 +2659,7 @@ function ExploreScreen({ onExplore, onStartFreeExplore, starBalance = 150 }) {
       </section>
 
       <section className="explore-topic-section">
-        <h2>주제별 탐구</h2>
+        <h2>{t("explore.topic.title")}</h2>
         <div className="explore-topic-list">
           {exploreTopics.map((item) => (
             <button type="button" key={item.id} onClick={() => setTopic(item)}>
@@ -2252,7 +2671,7 @@ function ExploreScreen({ onExplore, onStartFreeExplore, starBalance = 150 }) {
 
       <div className="explore-cta-stack">
         <button className="primary-button" type="button" onClick={onExplore}>
-          오늘 질문 시작하기
+          {t("home.question.cta")}
           <ArrowRight size={19} />
         </button>
         <button className="secondary-button explore-free-button" type="button" onClick={() => setFreeMode("confirm")}>
@@ -2398,7 +2817,9 @@ function FreeExploreChatScreen({ onBack, onClose }) {
 
 function UMapScreen({ onOpenGrowth, onOpenRelationship, snapshot }) {
   const [mapMode, setMapMode] = React.useState("initial");
-  const isClear = mapMode === "clear";
+  const hasSnapshot = Boolean(snapshot);
+  const dominantSignals = Array.isArray(snapshot?.dominant_signals) ? snapshot.dominant_signals : [];
+  const isClear = hasSnapshot && mapMode === "clear";
   const axisSummaries = isClear
     ? [
       ["탐구성", "새 가능성 탐색"],
@@ -2421,7 +2842,9 @@ function UMapScreen({ onOpenGrowth, onOpenRelationship, snapshot }) {
       ["Growth", "변화 흐름과 과거 비교", "active", ArrowRight],
       ["관계 연결", "1명당", "locked", MessageCircle]
     ];
-  const insightItems = isClear
+  const insightItems = dominantSignals.length
+    ? dominantSignals.slice(0, 5).map((signal) => signal.evidence || signal.axis || "현재까지의 기록에서 반복되는 단서가 보여요.")
+    : isClear
     ? [
       "새로운 가능성을 탐색하려는 흐름이 보여요.",
       "혼자 정리하는 시간이 회복과 연결되는 단서가 있어요.",
@@ -2450,24 +2873,26 @@ function UMapScreen({ onOpenGrowth, onOpenRelationship, snapshot }) {
         </div>
       </header>
 
-      <div className="u-map-mode-switch" role="tablist" aria-label="U-Map 상태 보기">
+      {hasSnapshot && <div className="u-map-mode-switch" role="tablist" aria-label="U-Map 상태 보기">
         <button className={!isClear ? "active" : ""} type="button" onClick={() => setMapMode("initial")} role="tab" aria-selected={!isClear}>
           현재 윤곽
         </button>
         <button className={isClear ? "active" : ""} type="button" onClick={() => setMapMode("clear")} role="tab" aria-selected={isClear}>
           선명한 예시
         </button>
-      </div>
+      </div>}
 
       <section className={`glass-card u-map-primary-card ${isClear ? "clear" : "initial"}`}>
-        <h1>{isClear ? "윤곽이 선명해졌어요" : "아직은 흐릿한 윤곽이에요"}</h1>
+        <h1>{hasSnapshot ? (isClear ? "윤곽이 선명해졌어요" : "현재 기록 기준으로 정리 중이에요") : "기록이 더 필요해요"}</h1>
         <p>
-          {snapshot?.summary || (isClear
+          {snapshot?.summary || (!hasSnapshot
+            ? "질문과 Diary가 조금 더 쌓이면 U-Map에 현재 흐름이 표시됩니다."
+            : isClear
             ? "질문과 Diary에서 반복된 단서가 쌓이면서 관계, 가치관, 감정 흐름이 더 또렷하게 보이고 있어요."
             : "첫 단서가 생겼고, 질문과 Diary가 쌓이면 감정, 관계, 가치관의 흐름이 더 선명해질 거예요.")}
         </p>
-        <UMapPreview mode={isClear ? "clear" : "initial"} size="large" />
-        <p className="u-map-helper-line">U-Map은 질문과 Diary에서 반복된 단서를 축으로 정리한 지도예요.</p>
+        <UMapPreview mode={isClear ? "clear" : "initial"} size="large" scores={snapshot?.axis_scores} />
+        <p className="u-map-helper-line">{t("umap.helper")}</p>
         <div className="u-map-axis-summary" aria-label="대표 U-Map 축">
           {axisSummaries.map(([label, value]) => (
             <span key={label}>
@@ -2476,13 +2901,13 @@ function UMapScreen({ onOpenGrowth, onOpenRelationship, snapshot }) {
             </span>
           ))}
         </div>
-        <small className="u-map-updated">Updated 2026.06.14</small>
+        <small className="u-map-updated">{snapshot?.created_at ? `Updated ${new Date(snapshot.created_at).toLocaleDateString("ko-KR")}` : "기록 대기 중"}</small>
       </section>
 
       <section className="u-map-detail-section">
         <div className="section-heading">
           <h2>FI-YOU가 분석한 당신</h2>
-          <span>{isClear ? "단서 5개" : "초기 단서"}</span>
+          <span>{hasSnapshot ? "현재 기록 기준" : "기록 부족"}</span>
         </div>
         <div className="u-map-insight-list">
           {insightItems.map((item) => (
@@ -2536,9 +2961,10 @@ function UMapScreen({ onOpenGrowth, onOpenRelationship, snapshot }) {
   );
 }
 
-function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150, onStarBalanceChange, onSignOut }) {
+function SettingsScreen({ loveUnlocked, onUnlockLove, profile, session, starBalance = 150, onStarBalanceChange, onDataReset, onSignOut }) {
   const [reportOpen, setReportOpen] = React.useState(false);
   const [settingsView, setSettingsView] = React.useState("main");
+  const [settingsNotice, setSettingsNotice] = React.useState("");
   const profileFlowNotes = [
     ["최근 발견된 단서", "혼자 정리하는 시간과 관계 안에서의 거리감 조절이 반복해서 보여요.", Sparkles],
     ["반복되는 흐름", "선택 전 내 기준을 확인하려는 흐름이 질문과 Diary에서 함께 나타납니다.", Orbit],
@@ -2559,8 +2985,12 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
     ["프로필 / 계정", "로그인, 기본 정보", User, "profile"],
     ["언어", "한국어", Globe2, "language"],
     ["알림", "질문과 기록 리마인드", Bell, "notifications"],
+    ["Star / 보상내역", "출석, Diary, Star 흐름", Sparkles, "star"],
+    ["리포트", "기록 흐름 전체보기", FileText, "report"],
     ["데이터 관리", "기록 내려받기와 삭제", Database, "data"],
-    ["로그아웃", "현재 계정에서 나가기", LogOut, "logout"]
+    ["서비스 약관", "약관, 개인정보, AI 한계", FileText, "legal"],
+    ["로그아웃", "현재 계정에서 나가기", LogOut, "logout"],
+    ["계정 삭제", "데이터 관리에서 요청", Trash2, "data"]
   ];
 
   if (settingsView === "star") {
@@ -2568,7 +2998,7 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
   }
 
   if (settingsView === "profile") {
-    return <ProfileEditScreen profile={profile} onSaveProfile={async (values) => {
+    return <ProfileEditScreen profile={profile} session={session} onSaveProfile={async (values) => {
       if (!profile?.user_id) return;
       try {
         await updateProfile(profile.user_id, values);
@@ -2579,7 +3009,11 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
   }
 
   if (settingsView === "language") {
-    return <LanguageSettingsScreen onBack={() => setSettingsView("settings")} />;
+    return <LanguageSettingsScreen profile={profile} onSelectLanguage={async (language) => {
+      if (!profile?.user_id) return;
+      await updateProfile(profile.user_id, { preferred_language: language });
+      trackEvent(kpiEvents.languageSelected, { language });
+    }} onBack={() => setSettingsView("settings")} />;
   }
 
   if (settingsView === "notifications") {
@@ -2587,7 +3021,28 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
   }
 
   if (settingsView === "data") {
-    return <DataManagementScreen onBack={() => setSettingsView("settings")} />;
+    return <DataManagementScreen
+      notice={settingsNotice}
+      onBack={() => setSettingsView("settings")}
+      onRequestExport={async () => {
+        await requestDataExport({ source: "settings" });
+        setSettingsNotice("데이터 내려받기 요청이 저장됐어요. 준비가 완료되면 이 화면에서 안내할게요.");
+        trackEvent(kpiEvents.dataExportRequested);
+      }}
+      onResetRecords={async () => {
+        setSettingsNotice(t("settings.data.reset.notice"));
+        trackEvent(kpiEvents.recordsResetRequested);
+      }}
+      onRequestAccountDeletion={async () => {
+        await requestAccountDeletion({ metadata: { source: "settings" } });
+        setSettingsNotice("계정 삭제 요청이 저장됐어요. 처리 전까지 로그인과 데이터 접근은 유지됩니다.");
+        trackEvent(kpiEvents.accountDeletionRequested);
+      }}
+    />;
+  }
+
+  if (settingsView === "legal") {
+    return <LegalNoticeScreen onBack={() => setSettingsView("settings")} />;
   }
 
   if (settingsView === "settings") {
@@ -2597,7 +3052,7 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
           <button className="icon-button" type="button" onClick={() => setSettingsView("main")} aria-label="Profile로 돌아가기">
             <ChevronLeft size={22} />
           </button>
-          <h1>설정</h1>
+          <h1>{t("settings.title")}</h1>
         </header>
 
         <section className="settings-section">
@@ -2606,7 +3061,7 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
               className="settings-row"
               type="button"
               key={title}
-              onClick={view === "logout" ? onSignOut : () => setSettingsView(view)}
+              onClick={view === "logout" ? onSignOut : view === "report" ? () => setReportOpen(true) : () => setSettingsView(view)}
             >
               <span className="settings-row-icon"><Icon size={18} /></span>
               <span>
@@ -2617,6 +3072,13 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
             </button>
           ))}
         </section>
+        {reportOpen && (
+          <ReportSheet
+            loveUnlocked={loveUnlocked}
+            onUnlockLove={onUnlockLove}
+            onClose={() => setReportOpen(false)}
+          />
+        )}
       </div>
     );
   }
@@ -2626,13 +3088,13 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
       <header className="diary-topbar settings-topbar app-page-header">
         <div className="diary-title-lockup">
           <span className="diary-title-icon"><User size={20} /></span>
-          <h1>Profile</h1>
+          <h1>{t("profile.title")}</h1>
         </div>
       </header>
 
       <section className="settings-profile-card">
         <div className="settings-profile-main">
-          <p className="settings-signal-line">아이디어를 현실화하고 싶어 하는</p>
+          <p className="settings-signal-line">{t("profile.signal")}</p>
           <h1>{profile?.nickname || "지우"}님</h1>
           <span>기록이 쌓이면 이 문장도 조금씩 달라져요.</span>
           <button className="profile-edit-button" type="button" onClick={() => setSettingsView("profile")}>
@@ -2660,7 +3122,7 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
       <section className="profile-flow-panel report-entry-panel" aria-labelledby="profile-flow-title">
         <div className="profile-section-heading">
           <span>Report</span>
-          <h2 id="profile-flow-title">최근 분석 요약</h2>
+          <h2 id="profile-flow-title">최근 흐름 요약</h2>
         </div>
         <div className="profile-flow-list">
           {profileFlowNotes.map(([title, copy, Icon]) => (
@@ -2673,9 +3135,9 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
             </article>
           ))}
         </div>
-        <button className="report-inline-button" type="button" onClick={() => setReportOpen(true)} aria-label="분석 내용 전체보기 열기">
+        <button className="report-inline-button" type="button" onClick={() => setReportOpen(true)} aria-label="기록 흐름 전체보기 열기">
           <span>
-            <strong>분석 내용 전체보기</strong>
+            <strong>기록 흐름 전체보기</strong>
             <em>현재까지 보이는 단서와 흐름</em>
           </span>
           <ChevronRight size={17} />
@@ -2687,10 +3149,11 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
           <span className="settings-row-icon"><Sparkles size={18} /></span>
           <span>
             <strong>Star / 보상내역</strong>
-            <em>출석, Diary, 분석 열기 흐름</em>
+            <em>출석, Diary, 깊은 보기 흐름</em>
           </span>
           <ChevronRight size={17} />
         </button>
+        <PwaInstallPrompt />
         <button className="settings-row" type="button" onClick={() => setSettingsView("settings")} aria-label="설정 상세 열기">
           <span className="settings-row-icon"><Settings size={18} /></span>
           <span>
@@ -2711,6 +3174,57 @@ function SettingsScreen({ loveUnlocked, onUnlockLove, profile, starBalance = 150
   );
 }
 
+function PwaInstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+  const [status, setStatus] = React.useState("");
+  const [installed, setInstalled] = React.useState(
+    () => window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone
+  );
+
+  React.useEffect(() => {
+    const handleBeforeInstall = (event) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+      setStatus("");
+    };
+    const handleInstalled = () => {
+      setInstalled(true);
+      setDeferredPrompt(null);
+      setStatus(t("settings.pwa.installed"));
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    window.addEventListener("appinstalled", handleInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (installed) {
+      setStatus(t("settings.pwa.installed"));
+      return;
+    }
+    if (!deferredPrompt) {
+      setStatus(t("settings.pwa.unavailable"));
+      return;
+    }
+    await deferredPrompt.prompt();
+    setDeferredPrompt(null);
+  };
+
+  return (
+    <button className="settings-row pwa-install-row" type="button" onClick={handleInstall} aria-label={t("settings.pwa.install")}>
+      <span className="settings-row-icon"><ShieldCheck size={18} /></span>
+      <span>
+        <strong>{installed ? t("settings.pwa.installed") : t("settings.pwa.install")}</strong>
+        <em>{status || t("settings.pwa.description")}</em>
+      </span>
+      <ChevronRight size={17} />
+    </button>
+  );
+}
+
 function StarLedgerScreen({ balance = 150, onBalanceChange, onBack }) {
   const [topUpOpen, setTopUpOpen] = React.useState(false);
 
@@ -2728,7 +3242,7 @@ function StarLedgerScreen({ balance = 150, onBalanceChange, onBack }) {
         <strong><Sparkles size={20} />{balance}</strong>
         <p>Star는 FI-YOU 안에서 더 깊은 탐구를 열 때 사용하는 단위예요.</p>
         <button className="secondary-button star-topup-entry-button" type="button" onClick={() => setTopUpOpen(true)}>
-          Star 모으기
+          Star 모으기 안내
         </button>
       </section>
 
@@ -2766,11 +3280,11 @@ function StarLedgerScreen({ balance = 150, onBalanceChange, onBack }) {
   );
 }
 
-function ProfileEditScreen({ profile, onSaveProfile, onBack }) {
+function ProfileEditScreen({ profile, session, onSaveProfile, onBack }) {
   const [nickname, setNickname] = React.useState(profile?.nickname || "지우");
   const [birthday, setBirthday] = React.useState(profile?.birthday || "1998-06-13");
   const accountInfo = [
-    ["이메일", "jiu@example.com"],
+    ["이메일", session?.user?.email || "Google 계정 확인 중"],
     ["로그인 방식", "Google"],
     ["가입일", profile?.created_at ? new Date(profile.created_at).toLocaleDateString("ko-KR") : "2026.06.13"]
   ];
@@ -2811,19 +3325,46 @@ function ProfileEditScreen({ profile, onSaveProfile, onBack }) {
   );
 }
 
-function LanguageSettingsScreen({ onBack }) {
-  const [selected, setSelected] = React.useState("ko");
-  const options = [
-    ["ko", "한국어"],
-    ["en", "영어"],
-    ["ja", "일본어"],
-    ["zh", "중국어"],
-    ["th", "태국어"],
-    ["es", "스페인어"],
-    ["pt", "포르투갈어"],
-    ["id", "인도네시아어"],
-    ["ms", "말레이시아어"]
+function LegalNoticeScreen({ onBack }) {
+  const notices = [
+    [t("legal.terms.title"), t("legal.terms.copy")],
+    [t("legal.privacy.title"), t("legal.privacy.copy")],
+    [t("legal.ai.title"), t("legal.ai.copy")]
   ];
+
+  return (
+    <div className="screen home-screen settings-subscreen">
+      <header className="settings-detail-header">
+        <button className="icon-button" type="button" onClick={onBack} aria-label="설정으로 돌아가기">
+          <ChevronLeft size={22} />
+        </button>
+        <h1>서비스 약관</h1>
+      </header>
+      <section className="settings-section legal-notice-section">
+        {notices.map(([title, copy]) => (
+          <article className="glass-card legal-notice-card" key={title}>
+            <strong>{title}</strong>
+            <p>{copy}</p>
+          </article>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function LanguageSettingsScreen({ profile, onSelectLanguage, onBack }) {
+  const [selected, setSelected] = React.useState(profile?.preferred_language || "ko");
+  const [notice, setNotice] = React.useState("");
+  const handleSelect = async (code) => {
+    setSelected(code);
+    try {
+      await onSelectLanguage?.(code);
+      setNotice("언어 설정이 저장됐어요. AI 응답 언어도 이 설정을 기준으로 맞춰갈게요.");
+    } catch (error) {
+      console.warn("Failed to save language", error);
+      setNotice("언어 설정을 저장하지 못했어요. 잠시 후 다시 시도해주세요.");
+    }
+  };
   return (
     <div className="screen home-screen settings-subscreen">
       <header className="settings-detail-header">
@@ -2833,12 +3374,13 @@ function LanguageSettingsScreen({ onBack }) {
         <h1>언어</h1>
       </header>
       <section className="settings-section">
-        {options.map(([value, label]) => (
-          <button className={`settings-choice-row ${selected === value ? "active" : ""}`} type="button" key={value} onClick={() => setSelected(value)}>
+        {supportedLanguages.map(({ code, label }) => (
+          <button className={`settings-choice-row ${selected === code ? "active" : ""}`} type="button" key={code} onClick={() => handleSelect(code)}>
             <span>{label}</span>
-            {selected === value && <Check size={18} />}
+            {selected === code && <Check size={18} />}
           </button>
         ))}
+        {notice && <p className="settings-inline-notice">{notice}</p>}
         <div className="language-suggest-card">
           <span>원하는 언어가 없나요?</span>
           <button type="button">언어 제안하기</button>
@@ -2899,12 +3441,14 @@ function NotificationSettingsScreen({ onBack }) {
   );
 }
 
-function DataManagementScreen({ onBack }) {
+function DataManagementScreen({ notice, onBack, onRequestExport, onResetRecords, onRequestAccountDeletion }) {
   const [sheet, setSheet] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
+  const [localNotice, setLocalNotice] = React.useState("");
   const actions = [
-    ["download", "내 데이터 내려받기", "내 데이터를 내려받을 수 있도록 준비할게요. 준비가 완료되면 이 화면에서 확인할 수 있습니다.", Database],
-    ["reset", "기록 초기화", "작성한 답변, Diary, 분석 기록이 초기화됩니다. Star 거래 내역과 계정 정보는 유지됩니다.", ShieldCheck],
-    ["delete", "계정 삭제", "계정과 개인 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.", Trash2]
+    ["download", t("settings.data.export.title"), t("settings.data.export.copy"), Database],
+    ["reset", t("settings.data.reset.title"), t("settings.data.reset.copy"), ShieldCheck],
+    ["delete", t("settings.data.delete.title"), t("settings.data.delete.copy"), Trash2]
   ];
 
   return (
@@ -2913,7 +3457,7 @@ function DataManagementScreen({ onBack }) {
         <button className="icon-button" type="button" onClick={onBack} aria-label="설정으로 돌아가기">
           <ChevronLeft size={22} />
         </button>
-        <h1>데이터 관리</h1>
+        <h1>{t("settings.data.title")}</h1>
       </header>
       <section className="settings-section">
         {actions.map(([key, title, copy, Icon]) => (
@@ -2937,12 +3481,41 @@ function DataManagementScreen({ onBack }) {
               </button>
             </header>
             <p>{sheet.copy}</p>
-            <button className={sheet.key === "delete" ? "secondary-button danger-soft" : "primary-button"} type="button" onClick={() => setSheet(null)}>
-              확인
+            <button className={sheet.key === "delete" ? "secondary-button danger-soft" : "primary-button"} type="button" disabled={busy} onClick={async () => {
+              if (sheet.key === "reset" && !sheet.confirmed) {
+                setSheet({
+                  ...sheet,
+                  confirmed: true,
+                  copy: t("settings.data.reset.confirmCopy")
+                });
+                return;
+              }
+              setBusy(true);
+              setLocalNotice("");
+              try {
+                if (sheet.key === "download") await onRequestExport?.();
+                if (sheet.key === "reset") await onResetRecords?.();
+                if (sheet.key === "delete") await onRequestAccountDeletion?.();
+                setSheet(null);
+              } catch (error) {
+                console.warn("Data management action failed", error);
+                setLocalNotice(t("settings.data.error"));
+              } finally {
+                setBusy(false);
+              }
+            }}>
+              {busy
+                ? "처리 중"
+                : sheet.key === "reset" && !sheet.confirmed
+                  ? t("settings.data.reset.firstCta")
+                  : sheet.key === "reset"
+                    ? t("settings.data.reset.finalCta")
+                    : "확인"}
             </button>
           </div>
         </div>
       )}
+      {(notice || localNotice) && <p className="settings-inline-notice data-management-notice">{localNotice || notice}</p>}
     </div>
   );
 }
@@ -2965,8 +3538,8 @@ function GrowthScreen({ onBack, onOpenCompare }) {
 
       <section className="glass-card growth-hero-card">
         <p className="eyebrow">최근 변화 요약</p>
-        <h1>조금씩 움직이는 방향이 보이고 있어요</h1>
-        <p>최근 질문과 Diary에서는 시작을 미루기보다, 작게라도 움직이려는 단서가 늘고 있습니다.</p>
+        <h1>{t("growth.hero.title")}</h1>
+        <p>{t("growth.hero.copy")}</p>
       </section>
 
       <section className="u-map-detail-section">
@@ -2986,7 +3559,7 @@ function GrowthScreen({ onBack, onOpenCompare }) {
 
       <section className="glass-card growth-ai-card">
         <Sparkles size={16} />
-        <p>AI 코멘트: 변화는 갑자기 확정되는 결과가 아니라, 반복된 기록에서 조금씩 보이는 방향입니다. 지금은 “내 기준을 확인하고 움직이는 흐름”이 눈에 띄어요.</p>
+        <p>{t("growth.comment")}</p>
       </section>
 
       <button className="glass-card growth-compare-card" type="button" onClick={onOpenCompare}>
@@ -3016,17 +3589,17 @@ function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, on
         <button className="icon-button" type="button" onClick={onBack} aria-label="이전으로">
           <ChevronLeft size={22} />
         </button>
-        <h1>Star 사용</h1>
+        <h1>Star 확인</h1>
       </header>
 
       <section className="glass-card star-confirm-card">
-        <p className="eyebrow">Star 사용 확인</p>
+        <p className="eyebrow">Star 열기 확인</p>
         <h1>{action.title}</h1>
         <p>{action.description}</p>
         <div className="star-confirm-grid">
           <span><em>보유 Star</em><strong>{balance}</strong></span>
-          <span><em>사용 Star</em><strong>{action.cost}</strong></span>
-          <span><em>사용 후</em><strong>{after}</strong></span>
+          <span><em>필요 Star</em><strong>{action.cost}</strong></span>
+          <span><em>열기 후</em><strong>{after}</strong></span>
         </div>
         <div className="star-confirm-notes">
           <span>한 번 연 내용은 다시 볼 수 있어요.</span>
@@ -3041,7 +3614,7 @@ function StarUseConfirmScreen({ action, balance: syncedBalance = 150, onBack, on
       <div className="free-confirm-actions">
         <button className="primary-button cost-cta-button" type="button" onClick={isShort ? () => setTopUpOpen(true) : onConfirm}>
           {isShort ? (
-            <span>Star 모으기</span>
+            <span>Star 모으기 안내</span>
           ) : (
             <>
               <span>{action.ctaLabel || action.title}</span>
@@ -3170,7 +3743,7 @@ function RelationQuestionScreen({ partner, questions, onBack, onAnswer, onComple
   const [index, setIndex] = React.useState(0);
   const [selected, setSelected] = React.useState("");
   const [memo, setMemo] = React.useState("");
-  const fallbackQuestions = [
+  const defaultRelationQuestions = [
     {
       question: "이 관계에서 가장 자주 떠오르는 장면은 무엇인가요?",
       options: ["편안한 대화", "답을 기다리는 시간", "거리감을 조절하는 순간", "내 마음을 숨기는 순간"]
@@ -3188,7 +3761,7 @@ function RelationQuestionScreen({ partner, questions, onBack, onAnswer, onComple
       options: ["먼저 정리하기", "조심스럽게 묻기", "잠시 거리두기", "바로 표현하기"]
     }
   ];
-  const questionList = questions?.length ? questions : fallbackQuestions;
+  const questionList = questions?.length ? questions : defaultRelationQuestions;
   const current = questionList[index % questionList.length];
   const progress = index + 1;
 
@@ -3261,7 +3834,7 @@ function RelationMapResultScreen({ partner, onBack }) {
         <p className="eyebrow">{name}</p>
         <h1>이 관계에서 경험하는 흐름</h1>
         <UMapPreview mode="clear" size="large" />
-        <p className="relation-map-helper">Relation-Map은 상대를 판단하지 않고, 이 관계 안에서 내가 경험한 흐름을 정리해요.</p>
+        <p className="relation-map-helper">{t("relation.helper")}</p>
         <p>상대의 마음을 단정하지 않고, 내가 이 관계 안에서 반복해서 경험하는 반응과 조절 방식을 정리했어요.</p>
       </section>
 
@@ -3282,7 +3855,7 @@ function RelationMapResultScreen({ partner, onBack }) {
 
       <section className="glass-card relation-caution-card">
         <strong>주의할 해석 패턴</strong>
-        <p>상대의 진짜 마음을 추측하기보다, 내가 불편함과 편안함을 느끼는 조건을 먼저 살펴보는 것이 좋아요.</p>
+        <p>상대의 마음을 단정하기보다, 내가 불편함과 편안함을 느끼는 조건을 먼저 살펴보는 것이 좋아요.</p>
       </section>
     </div>
   );
@@ -3337,15 +3910,15 @@ function RelationshipScreen({ onBack }) {
 function ReportSheet({ loveUnlocked, onUnlockLove, onClose }) {
   const [expandedSections, setExpandedSections] = React.useState({});
   const reportContent = [
-    ["전체 요약", "현재까지의 질문과 Diary에서는 새로운 가능성을 탐색하려는 마음과 현실적인 기준으로 정리하려는 흐름이 함께 보입니다. 단정된 성격이 아니라, 반복된 단서들이 만든 현재의 윤곽이에요."],
-    ["자기 이해", "선택을 앞둘 때 외부의 기대만 따르기보다 내 기준이 납득되는지를 확인하려는 경향이 보입니다. 이 기준은 기록이 쌓일수록 더 선명해질 수 있습니다."],
-    ["감정과 회복", "혼자 생각을 정리하는 시간이 회복과 연결되는 단서가 보입니다. 감정은 결론이 아니라, 어떤 환경에서 편안해지는지 알려주는 작은 신호로 다룹니다."],
-    ["관계지향", "관계에서는 진정성을 중요하게 보면서도 나의 속도를 지키려는 흐름이 함께 나타납니다. 가까움과 거리감 사이의 균형을 더 살펴보면 좋아요."],
-    ["자기표현", "생각을 바로 드러내기보다 충분히 정리한 뒤 표현하려는 단서가 있습니다. 표현 방식은 상황과 관계에 따라 조금씩 달라지는 흐름으로 보입니다."],
-    ["안정 추구", "낯선 변화 속에서도 스스로 납득할 수 있는 기준을 찾으려는 경향이 있습니다. 안정은 멈춤이 아니라, 다음 행동을 가능하게 하는 바탕으로 작동해요."],
-    ["탐색성", "새로운 가능성을 탐색하려는 흐름이 꾸준히 보입니다. 아직 확정하지 않고 여러 단서를 비교해보려는 태도가 U-Map에 남고 있어요."],
-    ["실행력", "아이디어를 실제 행동으로 옮기려는 단서가 보입니다. 다만 속도보다 방향이 맞는지 먼저 확인하려는 흐름도 함께 나타납니다."],
-    ["독립성", "혼자 정리하고 판단하는 시간이 중요하게 작동하는 편입니다. 독립성은 관계를 피하는 의미가 아니라, 나의 기준을 회복하는 방식으로 보입니다."]
+    ["전체 요약", t("report.section.summary")],
+    ["자기 이해", t("report.section.self")],
+    ["감정과 회복", t("report.section.recovery")],
+    ["관계지향", t("report.section.relation")],
+    ["자기표현", t("report.section.expression")],
+    ["안정 추구", t("report.section.stability")],
+    ["탐색성", t("report.section.exploration")],
+    ["실행력", t("report.section.action")],
+    ["독립성", t("report.section.independence")]
   ];
   const toggleSection = (title) => {
     setExpandedSections((current) => ({
@@ -3362,15 +3935,15 @@ function ReportSheet({ loveUnlocked, onUnlockLove, onClose }) {
             <button className="icon-button" type="button" onClick={onClose} aria-label="닫기">
               <ChevronLeft size={21} />
             </button>
-            <h2>리포트</h2>
+        <h2>{t("report.title")}</h2>
           </div>
           <span />
         </header>
-        <p className="report-sheet-copy">현재까지의 질문과 Diary 기록을 바탕으로 정리했어요.</p>
+        <p className="report-sheet-copy">{t("report.copy")}</p>
         <div className="report-content-heading report-content-heading-row">
           <div>
             <span>Report</span>
-            <h3>분석 내용</h3>
+            <h3>{t("report.content.title")}</h3>
           </div>
           <button className="report-action-button" type="button" aria-label="결과 공유">
             <Share2 size={15} />
@@ -3420,8 +3993,8 @@ function ReportSheet({ loveUnlocked, onUnlockLove, onClose }) {
                   </ul>
                 ) : (
                   <>
-                    <p>연애 유형을 정하는 기능이 아니에요. 현재까지의 기록에서 친밀감, 표현, 거리감, 안정감이 어떻게 나타나는지 더 깊게 살펴봅니다.</p>
-                    <p>Star를 사용하면 이미 쌓인 기록을 연애와 친밀감 관점에서 더 자세히 펼쳐볼 수 있어요.</p>
+                    <p>연애를 고정된 이름으로 나누지 않아요. 현재까지의 기록에서 친밀감, 표현, 거리감, 안정감이 어떻게 나타나는지 살펴봅니다.</p>
+                    <p>기록이 더 쌓이면 연애와 친밀감 관점의 흐름을 더 자세히 펼쳐볼 수 있어요.</p>
                   </>
                 )}
               </div>
@@ -3470,7 +4043,7 @@ function FreeQuestionLoop({ questions, onAnswer, onClose }) {
         <button className="icon-button" type="button" onClick={onClose} aria-label="탐구 닫기">
           <ChevronLeft size={22} />
         </button>
-        <span>기본 질문 {displayIndex} / {Math.max(30, questionList.length)}</span>
+        <span>탐구 질문 {displayIndex} / {Math.max(30, questionList.length)}</span>
         <i />
       </header>
 

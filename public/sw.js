@@ -1,5 +1,6 @@
-const CACHE_NAME = "fi-you-pwa-v1";
+const CACHE_NAME = "fi-you-pwa-v3";
 const APP_SHELL = ["/", "/index.html", "/offline.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
+const CACHEABLE_DESTINATIONS = new Set(["document", "script", "style", "image", "font", "manifest"]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -17,6 +18,11 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const requestUrl = new URL(event.request.url);
+
+  if (requestUrl.origin !== self.location.origin || !CACHEABLE_DESTINATIONS.has(event.request.destination)) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)

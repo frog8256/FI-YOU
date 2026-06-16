@@ -1,14 +1,18 @@
 {
   "name": "FI-YOU",
   "short_name": "FI-YOU",
+  "id": "/",
+  "lang": "ko",
+  "dir": "ltr",
   "description": "AI Self Discovery platform for understanding your current flow.",
-  "start_url": "/?screen=home",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#12072f",
   "theme_color": "#7c4dff",
-  "categories": ["health", "lifestyle", "productivity"],
+  "categories": ["lifestyle", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",

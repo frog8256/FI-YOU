@@ -44,6 +44,28 @@ export async function signOut() {
   throwIf(error);
 }
 
+export async function recordLegalConsent({ locale = "ko", userAgent = window.navigator.userAgent } = {}) {
+  const { data, error } = await supabase.rpc("record_legal_consent", {
+    p_terms_version: "2026-06-16",
+    p_privacy_version: "2026-06-16",
+    p_ai_notice_version: "2026-06-16",
+    p_locale: locale,
+    p_user_agent: userAgent
+  });
+  throwIf(error);
+  return data;
+}
+
+export async function recordAppEvent(eventName, properties = {}) {
+  const { data, error } = await supabase.rpc("record_app_event", {
+    p_event_name: eventName,
+    p_properties: properties,
+    p_session_id: window.sessionStorage.getItem("fiyou_session_id") || null
+  });
+  throwIf(error);
+  return data;
+}
+
 export async function ensureProfile(user) {
   if (!user?.id) return null;
   const { data, error } = await supabase
@@ -164,6 +186,16 @@ export async function fetchDiaries(userId) {
   return data || [];
 }
 
+export async function fetchCalendarDayStates(monthDate = new Date()) {
+  const month =
+    typeof monthDate === "string"
+      ? monthDate
+      : monthDate.toISOString().slice(0, 10);
+  const { data, error } = await supabase.rpc("get_calendar_day_states", { p_month: month });
+  throwIf(error);
+  return data || [];
+}
+
 export async function saveDiary({ userId, id, title, body, moodLabel }) {
   const payload = {
     user_id: userId,
@@ -183,10 +215,7 @@ export async function saveDiary({ userId, id, title, body, moodLabel }) {
 }
 
 export async function softDeleteDiary(id) {
-  const { error } = await supabase
-    .from("diaries")
-    .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const { error } = await supabase.rpc("delete_diary_with_star_revoke", { p_diary_id: id });
   throwIf(error);
 }
 
@@ -277,6 +306,27 @@ export async function upsertRelationAnswer({ relationId, questionId, selectedOpt
     p_question_id: questionId,
     p_selected_option_id: selectedOptionId || null,
     p_optional_text: optionalText || null
+  });
+  throwIf(error);
+  return data;
+}
+
+export async function requestDataExport(metadata = {}) {
+  const { data, error } = await supabase.rpc("request_data_export", { p_metadata: metadata });
+  throwIf(error);
+  return data;
+}
+
+export async function resetMyRecords() {
+  const { data, error } = await supabase.rpc("reset_my_records");
+  throwIf(error);
+  return data;
+}
+
+export async function requestAccountDeletion({ reason = null, metadata = {} } = {}) {
+  const { data, error } = await supabase.rpc("request_account_deletion", {
+    p_reason: reason,
+    p_metadata: metadata
   });
   throwIf(error);
   return data;
