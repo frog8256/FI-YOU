@@ -253,7 +253,7 @@ function StarTopUpSheet({ balance = 150, onClose }) {
               <ChevronRight size={16} />
             </button>
             <div className="star-sheet-divider" aria-hidden="true" />
-            <div className="star-package-list" aria-label="Star 구매 준비 중 항목">
+            <div className="star-package-list" aria-label="Star 연결 준비 중 항목">
               {packages.map(([label, amount, price, badge]) => (
                 <button
                   className={`star-package-row pending ${badge === t("star.sheet.package.recommended") ? "recommended" : ""}`}
