@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FI-YOU Phase 3 AI Logic Output Schemas",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "uMapAnalysis": { "$ref": "#/$defs/uMapAnalysis" },
+    "signature": { "$ref": "#/$defs/signature" },
+    "relationInsight": { "$ref": "#/$defs/relationInsight" },
+    "report": { "$ref": "#/$defs/report" },
+    "safetyFindings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/safetyFinding" }
+    }
+  },
+  "$defs": {
+    "uMapAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uMap", "uMapClarity", "nextQuestion"],
+      "properties": {
+        "uMap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "energyRhythm",
+            "emotionAwareness",
+            "valuesCompass",
+            "decisionStyle",
+            "relationshipPattern",
+            "stressRecovery",
+            "growthMotivation",
+            "lifeDirection"
+          ],
+          "properties": {
+            "energyRhythm": { "$ref": "#/$defs/uMapAxis" },
+            "emotionAwareness": { "$ref": "#/$defs/uMapAxis" },
+            "valuesCompass": { "$ref": "#/$defs/uMapAxis" },
+            "decisionStyle": { "$ref": "#/$defs/uMapAxis" },
+            "relationshipPattern": { "$ref": "#/$defs/uMapAxis" },
+            "stressRecovery": { "$ref": "#/$defs/uMapAxis" },
+            "growthMotivation": { "$ref": "#/$defs/uMapAxis" },
+            "lifeDirection": { "$ref": "#/$defs/uMapAxis" }
+          }
+        },
+        "uMapClarity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["overallScore", "clearAreas", "unclearAreas", "nextQuestionFocus"],
+          "properties": {
+            "overallScore": { "type": "number", "minimum": 0, "maximum": 100 },
+            "clearAreas": { "type": "array", "items": { "type": "string" } },
+            "unclearAreas": { "type": "array", "items": { "type": "string" } },
+            "nextQuestionFocus": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "nextQuestion": { "$ref": "#/$defs/nextQuestion" }
+      }
+    },
+    "uMapAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "summary", "signals", "clarity", "flow", "evidenceCount", "nextDepth"],
+      "properties": {
+        "label": { "type": "string" },
+        "summary": { "type": "string" },
+        "signals": { "type": "array", "items": { "type": "string" } },
+        "clarity": { "type": "number", "minimum": 0, "maximum": 100 },
+        "flow": { "type": "string", "enum": ["emerging", "forming", "clearer", "active"] },
+        "evidenceCount": { "type": "number", "minimum": 0 },
+        "nextDepth": { "type": "string" }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "summary", "evidence", "confidenceNote"],
+      "properties": {
+        "name": { "type": "string" },
+        "summary": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "confidenceNote": { "type": "string" }
+      }
+    },
+    "relationInsight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "myExperienceFlow",
+        "comfortSignals",
+        "tensionSignals",
+        "nextReflection",
+        "boundaryNote",
+        "safetyNote",
+        "evidence"
+      ],
+      "properties": {
+        "relationId": { "type": "string" },
+        "displayLabel": { "type": "string" },
+        "summary": { "type": "string" },
+        "myExperienceFlow": { "type": "string" },
+        "comfortSignals": { "type": "array", "items": { "type": "string" } },
+        "tensionSignals": { "type": "array", "items": { "type": "string" } },
+        "nextReflection": { "type": "string" },
+        "boundaryNote": { "type": "string" },
+        "safetyNote": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reportId", "tier", "title", "summary", "sections", "sourceSummary", "refreshPolicy", "paymentToneNote"],
+      "properties": {
+        "reportId": { "type": "string" },
+        "tier": { "type": "string", "enum": ["free", "paid"] },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title", "body", "basis"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "body": { "type": "string" },
+              "basis": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "sourceSummary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["answerCount", "diaryCount", "clearAreas", "unclearAreas"],
+          "properties": {
+            "answerCount": { "type": "number", "minimum": 0 },
+            "diaryCount": { "type": "number", "minimum": 0 },
+            "clearAreas": { "type": "array", "items": { "type": "string" } },
+            "unclearAreas": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "refreshPolicy": { "type": "string" },
+        "paymentToneNote": { "type": "string" }
+      }
+    },
+    "nextQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["questionId", "stage", "axis", "area", "areaLabel", "question", "choices", "optionalTextPrompt", "whyThisQuestion"],
+      "properties": {
+        "questionId": { "type": "string" },
+        "stage": { "type": "string", "enum": ["onboarding", "initial", "repeat"] },
+        "axis": { "type": "string" },
+        "area": { "type": "string" },
+        "areaLabel": { "type": "string" },
+        "question": { "type": "string" },
+        "choices": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "signalHints"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "signalHints": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "optionalTextPrompt": { "type": "string" },
+        "whyThisQuestion": { "type": "string" }
+      }
+    },
+    "safetyFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "matched", "replacement"],
+      "properties": {
+        "ruleId": { "type": "string" },
+        "matched": { "type": "string" },
+        "replacement": { "type": "string" }
+      }
+    }
+  }
+}

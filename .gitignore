@@ -1,9 +1,27 @@
-node_modules/
-dist/
-.vercel/
+.vercel
+.vscode
+node_modules
+dist
+supabase/.temp
+mobile/fi_you/.dart_tool
+mobile/fi_you/build
+
+# Local secrets and Android release signing
 .env
 .env.*
-*.local
-client_secret_*.json
-.DS_Store
-Thumbs.db
+!.env.example
+android/key.properties
+**/key.properties
+*.jks
+*.keystore
+*.pem
+
+# Build artifacts
+release/**/*.aab
+*.aab
+*.apk
+*.apks
+*.idsig
+**/build/app/outputs/
+**/build/outputs/
+**/mapping/

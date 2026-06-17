@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FI-YOU Android Release AI Analysis Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signature",
+    "uMap",
+    "uMapClarity",
+    "nextQuestion",
+    "detailAnalysis"
+  ],
+  "properties": {
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "summary", "evidence", "confidenceNote"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "A non-diagnostic current-flow signature name."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Current tendency summary based on records so far."
+        },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "confidenceNote": {
+          "type": "string",
+          "description": "Reminder that Signature can evolve with more records."
+        }
+      }
+    },
+    "uMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "energyRhythm",
+        "emotionAwareness",
+        "valuesCompass",
+        "decisionStyle",
+        "relationshipPattern",
+        "stressRecovery",
+        "growthMotivation",
+        "lifeDirection"
+      ],
+      "properties": {
+        "energyRhythm": { "$ref": "#/$defs/uMapAxis" },
+        "emotionAwareness": { "$ref": "#/$defs/uMapAxis" },
+        "valuesCompass": { "$ref": "#/$defs/uMapAxis" },
+        "decisionStyle": { "$ref": "#/$defs/uMapAxis" },
+        "relationshipPattern": { "$ref": "#/$defs/uMapAxis" },
+        "stressRecovery": { "$ref": "#/$defs/uMapAxis" },
+        "growthMotivation": { "$ref": "#/$defs/uMapAxis" },
+        "lifeDirection": { "$ref": "#/$defs/uMapAxis" }
+      }
+    },
+    "uMapClarity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overallScore", "clearAreas", "unclearAreas", "nextQuestionFocus"],
+      "properties": {
+        "overallScore": { "type": "number", "minimum": 0, "maximum": 100 },
+        "clearAreas": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "unclearAreas": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "nextQuestionFocus": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "nextQuestion": {
+      "$ref": "#/$defs/nextQuestion"
+    },
+    "detailAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selfCare", "workStyle", "relationshipCue", "growthDirection", "watchPoints"],
+      "properties": {
+        "selfCare": { "$ref": "#/$defs/detailBlock" },
+        "workStyle": { "$ref": "#/$defs/detailBlock" },
+        "relationshipCue": { "$ref": "#/$defs/detailBlock" },
+        "growthDirection": { "$ref": "#/$defs/detailBlock" },
+        "watchPoints": { "$ref": "#/$defs/detailBlock" }
+      }
+    }
+  },
+  "$defs": {
+    "uMapAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "summary", "signals", "clarity", "flow", "evidenceCount", "nextDepth"],
+      "properties": {
+        "label": { "type": "string" },
+        "summary": { "type": "string" },
+        "signals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "clarity": { "type": "number", "minimum": 0, "maximum": 100 },
+        "flow": {
+          "type": "string",
+          "enum": ["emerging", "forming", "clearer", "active"]
+        },
+        "evidenceCount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "nextDepth": { "type": "string" }
+      }
+    },
+    "nextQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "questionId",
+        "stage",
+        "axis",
+        "area",
+        "areaLabel",
+        "question",
+        "choices",
+        "optionalTextPrompt",
+        "whyThisQuestion"
+      ],
+      "properties": {
+        "questionId": { "type": "string" },
+        "stage": {
+          "type": "string",
+          "enum": ["onboarding", "initial", "repeat"]
+        },
+        "axis": { "type": "string" },
+        "area": { "type": "string" },
+        "areaLabel": { "type": "string" },
+        "question": { "type": "string" },
+        "choices": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "signalHints"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "signalHints": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "optionalTextPrompt": { "type": "string" },
+        "whyThisQuestion": { "type": "string" }
+      }
+    },
+    "detailBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "summary", "suggestions", "basis"],
+      "properties": {
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "suggestions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "basis": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
