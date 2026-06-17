@@ -5,6 +5,7 @@ dist
 supabase/.temp
 mobile/fi_you/.dart_tool
 mobile/fi_you/build
+mobile/fi_you/android/build
 
 # Local secrets and Android release signing
 .env
