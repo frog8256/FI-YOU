@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/theme/app_theme.dart';
 import '../../core/widgets/app_background.dart';
 
 class AppShell extends StatelessWidget {
@@ -20,17 +21,18 @@ class AppShell extends StatelessWidget {
           top: false,
           child: NavigationBar(
             selectedIndex: _indexFor(location),
-            height: 68,
-            backgroundColor: const Color(0xFF100E21),
-            indicatorColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18),
+            height: 70,
+            backgroundColor: FiYouColors.panelDeep.withValues(alpha: 0.96),
+            indicatorColor: FiYouColors.violet.withValues(alpha: 0.20),
+            surfaceTintColor: Colors.transparent,
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             onDestinationSelected: (index) => context.go(_pathFor(index)),
             destinations: const [
               NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), label: 'Today'),
               NavigationDestination(icon: Icon(Icons.edit_note_outlined), label: 'Diary'),
               NavigationDestination(icon: Icon(Icons.hub_outlined), label: 'U-Map'),
-              NavigationDestination(icon: Icon(Icons.waves_outlined), label: '흐름'),
-              NavigationDestination(icon: Icon(Icons.settings_outlined), label: '설정'),
+              NavigationDestination(icon: Icon(Icons.waves_outlined), label: 'Signature'),
+              NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Settings'),
             ],
           ),
         ),

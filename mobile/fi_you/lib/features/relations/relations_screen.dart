@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/screen_state.dart';
 import '../../data/repositories/repository_providers.dart';
@@ -34,39 +35,40 @@ class _RelationsScreenState extends ConsumerState<RelationsScreen> {
         actionLabel: '다시 시도',
         onAction: () => ref.invalidate(relationsProvider),
       ),
-      data: (items) => ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      data: (items) => FiYouPage(
         children: [
-          Text(
-            '관계 탐험',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+          const FiYouHeader(
+            overline: 'Relations',
+            title: '관계도 판단하지 않고\n흐름으로 살펴봐요',
+            subtitle: '상대방을 분석하지 않습니다. 내 기록 안에서 반복되는 관계의 감각만 탐구합니다.',
           ),
-          const SizedBox(height: 6),
-          Text(
-            '상대방을 단정하지 않고, 내 기록에서 보이는 관계의 흐름만 살펴봐요.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 14),
           GlassCard(
+            emphasis: true,
             child: Column(
               children: [
                 TextField(
                   controller: _labelController,
-                  decoration: const InputDecoration(labelText: '내가 알아볼 별칭'),
+                  decoration: const InputDecoration(
+                    labelText: '살펴볼 관계 이름',
+                    hintText: '예: 가족, 동료, 친구',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _noteController,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: const InputDecoration(labelText: '남기고 싶은 메모'),
+                  minLines: 3,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    labelText: '남기고 싶은 메모',
+                    hintText: '그 관계에서 자주 남는 느낌을 적어보세요.',
+                  ),
                 ),
                 const SizedBox(height: 14),
-                FilledButton(
+                FiYouGradientButton(
+                  label: '관계 흐름 만들기',
+                  icon: Icons.hub_outlined,
+                  loading: _saving,
                   onPressed: _saving ? null : _save,
-                  child: Text(_saving ? '저장 중...' : '관계 흐름 만들기'),
                 ),
               ],
             ),
@@ -82,11 +84,13 @@ class _RelationsScreenState extends ConsumerState<RelationsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      FiYouPill(label: item.status, icon: Icons.waves_outlined),
+                      const SizedBox(height: 12),
                       Text(item.label, style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
-                        item.note ?? '기록이 쌓이면 더 살펴볼 수 있어요.',
-                        style: const TextStyle(color: Colors.white70),
+                        item.note ?? '기록이 쌓이면 이 관계에서 느껴지는 흐름을 더 살펴볼 수 있어요.',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app/theme/app_theme.dart';
 import '../../core/config/app_config.dart';
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../data/repositories/repository_providers.dart';
 import '../auth/session_controller.dart';
@@ -13,22 +15,19 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+    return FiYouPage(
       children: [
-        Text(
-          '설정',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+        const FiYouHeader(
+          overline: 'Settings',
+          title: '앱과 기록 관리',
+          subtitle: '내 기록과 결제, 정책 문서를 한곳에서 확인합니다.',
         ),
-        const SizedBox(height: 14),
         GlassCard(
           child: Column(
             children: [
-              _RowButton(label: '관계 탐험', onTap: () => context.push('/relations')),
-              _RowButton(label: '리포트', onTap: () => context.push('/reports')),
-              _RowButton(label: 'Star와 결제', onTap: () => context.push('/store')),
+              _RowButton(label: '관계 흐름', icon: Icons.hub_outlined, onTap: () => context.push('/relations')),
+              _RowButton(label: '리포트', icon: Icons.article_outlined, onTap: () => context.push('/reports')),
+              _RowButton(label: 'Star와 결제', icon: Icons.stars_rounded, onTap: () => context.push('/store')),
             ],
           ),
         ),
@@ -36,12 +35,13 @@ class SettingsScreen extends ConsumerWidget {
         GlassCard(
           child: Column(
             children: [
-              _RowButton(label: '약관', onTap: () => context.push('/legal/terms')),
+              _RowButton(label: '약관', icon: Icons.description_outlined, onTap: () => context.push('/legal/terms')),
               _RowButton(
                 label: '개인정보처리방침',
+                icon: Icons.privacy_tip_outlined,
                 onTap: () => launchUrl(Uri.parse(AppConfig.privacyPolicyUrl)),
               ),
-              _RowButton(label: '주의 및 면책', onTap: () => context.push('/legal/disclaimer')),
+              _RowButton(label: '주의 및 면책', icon: Icons.info_outline, onTap: () => context.push('/legal/disclaimer')),
             ],
           ),
         ),
@@ -51,10 +51,12 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _RowButton(
                 label: '로그아웃',
+                icon: Icons.logout_outlined,
                 onTap: () => ref.read(appSessionProvider.notifier).signOut(),
               ),
               _RowButton(
-                label: '탈퇴하기',
+                label: '계정 삭제 요청',
+                icon: Icons.delete_outline,
                 danger: true,
                 onTap: () => _confirmDeletion(context, ref),
               ),
@@ -69,8 +71,8 @@ class SettingsScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('탈퇴 요청'),
-        content: const Text('계정과 개인 데이터 삭제 요청을 보낼까요?'),
+        title: const Text('계정 삭제 요청'),
+        content: const Text('계정과 개인 데이터 삭제 요청을 보낼까요? 이 요청은 되돌리기 어렵습니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -87,7 +89,7 @@ class SettingsScreen extends ConsumerWidget {
     await ref.read(selfDiscoveryRepositoryProvider).requestAccountDeletion();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('탈퇴 요청을 보냈어요.')),
+        const SnackBar(content: Text('계정 삭제 요청을 보냈어요.')),
       );
     }
   }
@@ -96,11 +98,13 @@ class SettingsScreen extends ConsumerWidget {
 class _RowButton extends StatelessWidget {
   const _RowButton({
     required this.label,
+    required this.icon,
     required this.onTap,
     this.danger = false,
   });
 
   final String label;
+  final IconData icon;
   final VoidCallback onTap;
   final bool danger;
 
@@ -108,16 +112,17 @@ class _RowButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 52),
+        constraints: const BoxConstraints(minHeight: 54),
         child: Row(
           children: [
+            Icon(icon, color: danger ? Theme.of(context).colorScheme.error : FiYouColors.cyan),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(
-                  color: danger ? Theme.of(context).colorScheme.error : null,
-                ),
+                style: TextStyle(color: danger ? Theme.of(context).colorScheme.error : null),
               ),
             ),
             const Icon(Icons.chevron_right),

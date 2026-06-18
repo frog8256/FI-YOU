@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/theme/app_theme.dart';
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/screen_state.dart';
 import '../../data/repositories/repository_providers.dart';
@@ -22,30 +24,22 @@ class DiaryListScreen extends ConsumerWidget {
         actionLabel: '다시 시도',
         onAction: () => ref.invalidate(diariesProvider),
       ),
-      data: (items) => ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      data: (items) => FiYouPage(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Diary',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-              ),
-              IconButton.filledTonal(
-                onPressed: () => context.push('/diary/new'),
-                icon: const Icon(Icons.add),
-              ),
-            ],
+          FiYouHeader(
+            overline: 'Diary',
+            title: '흐름이 남는 곳',
+            subtitle: '긴 글이 아니어도 괜찮아요. 오늘의 장면 하나가 U-Map의 단서가 됩니다.',
+            trailing: IconButton.filledTonal(
+              tooltip: '새 Diary',
+              onPressed: () => context.push('/diary/new'),
+              icon: const Icon(Icons.add),
+            ),
           ),
-          const SizedBox(height: 12),
           if (items.isEmpty)
             ScreenState.message(
               title: '아직 남긴 기록이 없어요',
-              body: '오늘의 생각을 짧게 남겨보세요.',
+              body: '오늘의 생각이나 장면을 짧게 남겨보세요.',
               actionLabel: '작성하기',
               onAction: () => context.push('/diary/new'),
             )
@@ -58,18 +52,19 @@ class DiaryListScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        DateFormat('M월 d일').format(entry.entryDate),
-                        style: const TextStyle(color: Colors.white54),
+                      FiYouPill(
+                        label: DateFormat('M월 d일').format(entry.entryDate),
+                        icon: Icons.calendar_today_outlined,
+                        color: FiYouColors.blue,
                       ),
-                      const SizedBox(height: 6),
-                      Text(entry.title ?? '오늘의 기록'),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 12),
+                      Text(entry.title ?? '오늘의 기록', style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 8),
                       Text(
                         entry.body,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white70),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),

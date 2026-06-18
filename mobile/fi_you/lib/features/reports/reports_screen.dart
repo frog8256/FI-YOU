@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/screen_state.dart';
 import '../../data/repositories/repository_providers.dart';
@@ -20,23 +21,15 @@ class ReportsScreen extends ConsumerWidget {
         actionLabel: '다시 시도',
         onAction: () => ref.invalidate(reportsProvider),
       ),
-      data: (items) => ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      data: (items) => FiYouPage(
         children: [
-          Text(
-            '리포트',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+          const FiYouHeader(
+            overline: 'Reports',
+            title: '기록을 더 깊게\n읽어보는 공간',
+            subtitle: '리포트는 지금까지 보이는 흐름을 정리하는 참고 자료이며, 고정된 판단이 아닙니다.',
           ),
-          const SizedBox(height: 6),
-          Text(
-            '현재 기록에서 보이는 흐름을 더 길게 살펴보는 공간이에요.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 14),
           if (items.isEmpty)
-            const GlassCard(child: Text('아직 준비된 리포트가 없어요.'))
+            const GlassCard(child: Text('아직 준비된 리포트가 없어요. 기록이 쌓이면 열 수 있어요.'))
           else
             for (final item in items)
               Padding(
@@ -45,17 +38,23 @@ class ReportsScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      FiYouPill(
+                        label: item.status == 'unlocked' ? '열림' : '잠김',
+                        icon: item.status == 'unlocked' ? Icons.lock_open_outlined : Icons.lock_outline,
+                      ),
+                      const SizedBox(height: 12),
                       Text(item.title, style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
-                        item.summary ?? '기록이 쌓이면 리포트를 만들 수 있어요.',
-                        style: const TextStyle(color: Colors.white70),
+                        item.summary ?? '기록이 쌓이면 이 흐름을 더 자세히 읽어볼 수 있어요.',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       if (item.requiredProductId != null) ...[
-                        const SizedBox(height: 12),
-                        FilledButton.tonal(
+                        const SizedBox(height: 14),
+                        FiYouGradientButton(
+                          label: '확장 보기 열기',
+                          icon: Icons.stars_rounded,
                           onPressed: () => context.push('/store'),
-                          child: const Text('확장 보기 열기'),
                         ),
                       ],
                     ],

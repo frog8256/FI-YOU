@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/theme/app_theme.dart';
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/screen_state.dart';
 import '../../data/repositories/repository_providers.dart';
@@ -23,41 +25,40 @@ class DiaryDetailScreen extends ConsumerWidget {
         if (entry == null) {
           return const ScreenState.message(title: '기록을 찾을 수 없어요');
         }
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+        return FiYouPage(
           children: [
             Row(
               children: [
                 IconButton(
+                  tooltip: '뒤로',
                   onPressed: () => context.canPop() ? context.pop() : context.go('/diary'),
                   icon: const Icon(Icons.arrow_back),
                 ),
                 const Spacer(),
                 IconButton.filledTonal(
+                  tooltip: '수정',
                   onPressed: () => context.push('/diary/$id/edit'),
                   icon: const Icon(Icons.edit_outlined),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
             GlassCard(
+              emphasis: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    DateFormat('yyyy년 M월 d일').format(entry.entryDate),
-                    style: const TextStyle(color: Colors.white54),
+                  FiYouPill(
+                    label: DateFormat('yyyy년 M월 d일').format(entry.entryDate),
+                    icon: Icons.calendar_today_outlined,
+                    color: FiYouColors.blue,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    entry.title ?? '오늘의 기록',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
+                  const SizedBox(height: 14),
+                  Text(entry.title ?? '오늘의 기록', style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 16),
                   Text(
                     entry.body,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.55),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.62),
                   ),
                 ],
               ),

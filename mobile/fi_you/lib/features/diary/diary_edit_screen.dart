@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/screen_state.dart';
 import '../../data/models/fiyou_models.dart';
@@ -50,42 +51,49 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
   }
 
   Widget _form(DiaryEntry? existing) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+    return FiYouPage(
       children: [
-        Text(
-          widget.id == 'new' ? 'Diary 작성' : 'Diary 수정',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+        FiYouHeader(
+          overline: 'Diary',
+          title: widget.id == 'new' ? '오늘의 기록을 남겨요' : '기록을 다듬어요',
+          subtitle: '정리된 글이 아니어도 괜찮아요. 지금 남는 감각을 그대로 적어도 충분합니다.',
         ),
-        const SizedBox(height: 14),
         GlassCard(
+          emphasis: true,
           child: Column(
             children: [
               TextField(
                 controller: _titleController,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(labelText: '제목'),
+                decoration: const InputDecoration(
+                  labelText: '제목',
+                  hintText: '예: 오늘 유난히 마음에 남은 일',
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _bodyController,
-                minLines: 7,
-                maxLines: 12,
+                minLines: 8,
+                maxLines: 14,
                 textInputAction: TextInputAction.newline,
-                decoration: const InputDecoration(labelText: '오늘의 기록'),
+                decoration: const InputDecoration(
+                  labelText: '오늘의 기록',
+                  hintText: '무슨 일이 있었고, 그때 어떤 느낌이 남았나요?',
+                ),
               ),
               const SizedBox(height: 16),
-              FilledButton(
+              FiYouGradientButton(
+                label: '저장하기',
+                icon: Icons.check_rounded,
+                loading: _saving,
                 onPressed: _saving ? null : () => _save(existing),
-                child: Text(_saving ? '저장 중...' : '저장하기'),
               ),
               if (existing != null) ...[
                 const SizedBox(height: 10),
-                TextButton(
+                TextButton.icon(
                   onPressed: _saving ? null : () => _delete(existing.id),
-                  child: const Text('삭제하기'),
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('삭제하기'),
                 ),
               ],
             ],
@@ -121,7 +129,7 @@ class _DiaryEditScreenState extends ConsumerState<DiaryEditScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('저장하지 못했어요. 다시 시도해주세요.')),
+          const SnackBar(content: Text('저장하지 못했어요. 다시 시도해 주세요.')),
         );
       }
     } finally {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/widgets/app_background.dart';
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../auth/session_controller.dart';
 
@@ -29,45 +30,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(24),
+          child: FiYouPage(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
             children: [
+              const BrandMark(size: 62),
               const SizedBox(height: 24),
-              Text(
-                '처음 탐험을 시작해요',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+              const FiYouHeader(
+                overline: '처음 여는 U-Map',
+                title: '나를 분류하지 않고\n흐름을 살펴볼게요',
+                subtitle: '몇 가지 기록이 쌓이면 U-Map과 Signature가 조금씩 선명해집니다.',
               ),
-              const SizedBox(height: 12),
-              Text(
-                '짧은 질문과 Diary가 쌓이면 U-Map이 조금씩 선명해져요.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white70,
-                    ),
-              ),
-              const SizedBox(height: 28),
               GlassCard(
+                emphasis: true,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _Principle(text: '고정된 유형으로 단정하지 않아요.'),
-                    const _Principle(text: '현재 기록에서 보이는 흐름만 보여줘요.'),
-                    const _Principle(text: '원하지 않는 답은 건너뛰어도 괜찮아요.'),
-                    const SizedBox(height: 18),
+                    const FiYouInfoRow(text: '고정된 유형으로 판단하지 않아요.'),
+                    const FiYouInfoRow(text: '현재까지의 기록을 바탕으로 보이는 흐름만 보여줘요.'),
+                    const FiYouInfoRow(text: '답하기 어려운 질문은 건너뛰어도 괜찮아요.'),
+                    const FiYouInfoRow(text: '결과는 시간이 지나며 달라질 수 있어요.'),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: _nameController,
                       textInputAction: TextInputAction.done,
-                      decoration: const InputDecoration(labelText: '앱에서 부를 이름'),
+                      decoration: const InputDecoration(
+                        labelText: '앱에서 부를 이름',
+                        hintText: '예: FI-YOU',
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    FilledButton(
+                    FiYouGradientButton(
+                      label: '오늘의 질문 보기',
+                      icon: Icons.auto_awesome_outlined,
+                      loading: session.isLoading,
                       onPressed: session.isLoading
                           ? null
                           : () => ref
                               .read(appSessionProvider.notifier)
                               .completeOnboarding(_nameController.text.trim()),
-                      child: Text(session.isLoading ? '저장 중...' : '오늘의 질문 보기'),
                     ),
                     if (session.errorMessage != null) ...[
                       const SizedBox(height: 12),
@@ -82,31 +82,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _Principle extends StatelessWidget {
-  const _Principle({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            color: Theme.of(context).colorScheme.secondary,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text)),
-        ],
       ),
     );
   }

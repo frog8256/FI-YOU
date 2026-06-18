@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+import '../../app/theme/app_theme.dart';
+import '../../core/widgets/fi_you_components.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/screen_state.dart';
 import '../../data/billing/billing_service.dart';
@@ -20,9 +22,7 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   void initState() {
     super.initState();
     Future.microtask(
-      () => ref.read(billingControllerProvider.notifier).loadProducts(
-            androidBillingProductIds,
-          ),
+      () => ref.read(billingControllerProvider.notifier).loadProducts(androidBillingProductIds),
     );
   }
 
@@ -35,28 +35,20 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
       loading: () => const ScreenState.loading(),
       error: (_, __) => ScreenState.message(
         title: '상품 정보를 불러오지 못했어요',
-        body: 'Google Play 상품 연결을 확인하고 다시 시도해주세요.',
+        body: 'Google Play 상품 연결을 확인한 뒤 다시 시도해 주세요.',
         actionLabel: '다시 시도',
         onAction: () {
           ref.invalidate(storeProductsProvider);
           ref.read(billingControllerProvider.notifier).loadProducts(androidBillingProductIds);
         },
       ),
-      data: (items) => ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      data: (items) => FiYouPage(
         children: [
-          Text(
-            'Star와 리포트',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+          const FiYouHeader(
+            overline: 'Store',
+            title: '더 깊은 탐구가\n필요할 때만',
+            subtitle: '기본 질문과 Diary는 FI-YOU의 중심입니다. Star와 리포트는 추가로 보고 싶은 흐름을 여는 선택지예요.',
           ),
-          const SizedBox(height: 6),
-          Text(
-            '질문은 판매하지 않아요. 추가 탐색 상품만 이곳에서 볼 수 있어요.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-          ),
-          const SizedBox(height: 14),
           if (billing.loading || billing.verifying)
             const Padding(
               padding: EdgeInsets.only(bottom: 12),
@@ -84,6 +76,11 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   onBuy: () => _buy(item),
                 ),
               ),
+          const SizedBox(height: 8),
+          Text(
+            'Android 앱 내부 결제는 Google Play Billing으로 처리됩니다.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: FiYouColors.muted),
+          ),
         ],
       ),
     );
@@ -116,16 +113,24 @@ class _ProductCard extends StatelessWidget {
     final playDetails = _playDetailsFor(item.id);
     final price = playDetails?.price ?? item.priceLabel;
     return GlassCard(
+      emphasis: item.id == 'fiyou_plus',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(item.title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 6),
-          Text(item.description, style: const TextStyle(color: Colors.white70)),
-          const SizedBox(height: 12),
-          FilledButton.tonal(
+          Row(
+            children: [
+              const Icon(Icons.stars_rounded, color: FiYouColors.gold),
+              const SizedBox(width: 10),
+              Expanded(child: Text(item.title, style: Theme.of(context).textTheme.titleMedium)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(item.description, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 14),
+          FiYouGradientButton(
+            label: '${_ctaFor(item)} · $price',
+            icon: Icons.lock_open_outlined,
             onPressed: billing.loading || billing.verifying ? null : onBuy,
-            child: Text('${_ctaFor(item)} · $price'),
           ),
         ],
       ),
@@ -140,7 +145,7 @@ class _ProductCard extends StatelessWidget {
   String _ctaFor(StoreProduct item) {
     if (item.id == 'fiyou_plus') return 'FI-YOU Plus 보기';
     if (item.kind == 'consumable' && item.starAmount != null) {
-      return 'Google Play로 Star 구매';
+      return 'Star 충전';
     }
     return '확장 리포트 열기';
   }
