@@ -16,6 +16,8 @@ android/key.properties
 *.jks
 *.keystore
 *.pem
+client_secret*.json
+google-services.json
 
 # Build artifacts
 release/**/*.aab
