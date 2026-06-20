@@ -1,0 +1,4 @@
+storeFile=C:\\path\\to\\fi-you-release.jks
+storePassword=REPLACE_WITH_LOCAL_OR_CI_SECRET
+keyAlias=fi-you-release
+keyPassword=REPLACE_WITH_LOCAL_OR_CI_SECRET
