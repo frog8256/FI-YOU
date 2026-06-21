@@ -140,7 +140,10 @@ class SupabaseFiYouRepository extends FiYouRepository {
         if (_diaryEntries.isNotEmpty) _diaryEntries.first.title,
       ],
     );
-    await _callOptionalRpc('record_question_answers', params: {'answers': answers});
+    await _callOptionalRpc(
+      'record_question_answers',
+      params: {'answers': answers},
+    );
     notifyListeners();
     return _todayInsight;
   }
@@ -148,21 +151,30 @@ class SupabaseFiYouRepository extends FiYouRepository {
   @override
   Future<void> updateInsightNote(String note) async {
     _todayInsight = _todayInsight.copyWith(userNote: note.trim());
-    await _callOptionalRpc('update_insight_note', params: {'note': note.trim()});
+    await _callOptionalRpc(
+      'update_insight_note',
+      params: {'note': note.trim()},
+    );
     notifyListeners();
   }
 
   @override
   Future<void> hideInsight() async {
     _todayInsight = _todayInsight.copyWith(hidden: true);
-    await _callOptionalRpc('hide_insight', params: {'insight_id': todayInsight.id});
+    await _callOptionalRpc(
+      'hide_insight',
+      params: {'insight_id': todayInsight.id},
+    );
     notifyListeners();
   }
 
   @override
   Future<void> disagreeInsight() async {
     _todayInsight = _todayInsight.copyWith(disagreed: true);
-    await _callOptionalRpc('disagree_insight', params: {'insight_id': todayInsight.id});
+    await _callOptionalRpc(
+      'disagree_insight',
+      params: {'insight_id': todayInsight.id},
+    );
     notifyListeners();
   }
 
@@ -183,7 +195,9 @@ class SupabaseFiYouRepository extends FiYouRepository {
   Future<LaunchSnapshot> _loadLaunchGateState() async {
     try {
       final data = await client.rpc('get_launch_gate_state');
-      final gate = data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
+      final gate = data is Map
+          ? Map<String, dynamic>.from(data)
+          : <String, dynamic>{};
       final onboardingComplete = gate['onboarding_complete'] == true;
       _profile = UserProfile(
         name: (gate['display_name'] as String?)?.trim().isNotEmpty == true
@@ -197,7 +211,9 @@ class SupabaseFiYouRepository extends FiYouRepository {
       );
       notifyListeners();
       return LaunchSnapshot(
-        status: onboardingComplete ? LaunchStatus.ready : LaunchStatus.onboardingRequired,
+        status: onboardingComplete
+            ? LaunchStatus.ready
+            : LaunchStatus.onboardingRequired,
       );
     } catch (_) {
       _profile = _baseProfile().copyWith(onboardingComplete: false);

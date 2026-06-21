@@ -1,16 +1,58 @@
 import 'dart:ui';
 
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
-const _background = Color(0xFF050714);
 const _surface = Color(0xFF0D1424);
 const _line = Color(0xFF25334E);
 const _gold = Color(0xFFF7C948);
 const _mint = Color(0xFF6EE7B7);
+const _primarySoft = Color(0xFFC4B5FD);
 const _text = Color(0xFFF8FAFC);
 const _softText = Color(0xFFB7C0D7);
 const _mutedText = Color(0xFF7F8AA6);
 const _headerTitleSize = 19.0;
+
+BoxDecoration _liquidGlassDecoration({
+  double radius = 22,
+  Color borderColor = _line,
+  double surfaceAlpha = 0.78,
+}) {
+  final effectiveBorder = borderColor == _line
+      ? Colors.white.withValues(alpha: 0.13)
+      : borderColor.withValues(alpha: 0.22);
+  return BoxDecoration(
+    color: _surface.withValues(alpha: surfaceAlpha),
+    borderRadius: BorderRadius.circular(radius),
+    border: Border.all(color: effectiveBorder),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.22),
+        blurRadius: 18,
+        offset: const Offset(0, 10),
+      ),
+    ],
+  );
+}
+
+ButtonStyle _liquidGlassButtonStyle({
+  Color foregroundColor = _text,
+  Color borderColor = _line,
+  double radius = 16,
+}) {
+  return FilledButton.styleFrom(
+    backgroundColor: _surface.withValues(alpha: 0.78),
+    foregroundColor: foregroundColor,
+    disabledBackgroundColor: _surface.withValues(alpha: 0.72),
+    disabledForegroundColor: _mutedText,
+    shadowColor: Colors.transparent,
+    minimumSize: const Size(0, 46),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(radius),
+      side: BorderSide(color: borderColor.withValues(alpha: 0.26)),
+    ),
+  );
+}
 
 typedef DiaryEntrySaveCallback = Future<void> Function(DiaryDraft draft);
 
@@ -114,22 +156,33 @@ class _DiaryScreenState extends State<DiaryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: _background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         titleSpacing: 20,
-        title: const _DiaryHeaderTitle(),
+        title: _DiaryHeaderTitle(onSearch: _openSearch),
       ),
       body: SafeArea(child: _buildBody()),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 84),
-        child: FloatingActionButton.extended(
-          backgroundColor: _gold,
-          foregroundColor: const Color(0xFF171104),
-          onPressed: () => _openEditor(),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('작성하기'),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: FloatingActionButton.extended(
+              backgroundColor: _surface.withValues(alpha: 0.78),
+              foregroundColor: _text,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+              ),
+              onPressed: () => _openEditor(),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('작성하기'),
+            ),
+          ),
         ),
       ),
     );
@@ -148,7 +201,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
     return RefreshIndicator(
       color: _gold,
-      backgroundColor: _surface,
+      backgroundColor: _surface.withValues(alpha: 0.78),
       onRefresh: _load,
       child: ListView(
         physics: const BouncingScrollPhysics(),
@@ -231,6 +284,28 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
+  Future<void> _openSearch() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return _DiarySearchSheet(
+          entries: _entries,
+          onEntrySelected: (entry) {
+            Navigator.of(context).pop();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                _showEntryDetail(entry);
+              }
+            });
+          },
+        );
+      },
+    );
+  }
+
   void _insertEntry(DiaryDraft draft) {
     setState(() {
       _entries.insert(
@@ -265,22 +340,58 @@ class _DiaryScreenState extends State<DiaryScreen> {
 }
 
 class _DiaryHeaderTitle extends StatelessWidget {
-  const _DiaryHeaderTitle();
+  const _DiaryHeaderTitle({required this.onSearch});
+
+  final VoidCallback onSearch;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
       children: [
-        Icon(Icons.edit_note_rounded, color: _gold, size: 25),
-        SizedBox(width: 8),
-        Text(
+        Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _surface.withValues(alpha: 0.78),
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          ),
+          child: const Icon(
+            Icons.edit_note_rounded,
+            color: _primarySoft,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 10),
+        const Text(
           'Diary',
           style: TextStyle(
             color: _text,
             fontSize: _headerTitleSize,
             fontWeight: FontWeight.w800,
             height: 1,
+          ),
+        ),
+        const Spacer(),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: IconButton(
+              onPressed: onSearch,
+              tooltip: 'Diary 검색',
+              style: IconButton.styleFrom(
+                backgroundColor: _surface.withValues(alpha: 0.78),
+                foregroundColor: _text,
+                fixedSize: const Size(40, 40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.14)),
+                ),
+              ),
+              icon: const Icon(Icons.search_rounded, size: 20),
+            ),
           ),
         ),
       ],
@@ -325,9 +436,9 @@ class _DiaryWriteScreenState extends State<DiaryWriteScreen> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return Scaffold(
-      backgroundColor: _background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: _background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(widget.entry == null ? 'Diary 작성' : 'Diary 보기'),
       ),
@@ -383,16 +494,41 @@ class _DiaryWriteScreenState extends State<DiaryWriteScreen> {
                       fontSize: 16,
                       height: 1.58,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: _surface.withValues(alpha: 0.76),
                       hintText:
                           '오늘 있었던 상황과 나의 행동, 결정, 생각, 감정 등을 적어주면 당신을 탐구하는데에 도움이 돼요!',
                       hintMaxLines: 4,
-                      hintStyle: TextStyle(color: _mutedText, height: 1.45),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+                      hintStyle: const TextStyle(
+                        color: _mutedText,
+                        height: 1.45,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        borderSide: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        borderSide: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.12),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        borderSide: BorderSide(
+                          color: _gold.withValues(alpha: 0.42),
+                        ),
+                      ),
+                      disabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        borderSide: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
                     ),
                   ),
                 ],
@@ -471,35 +607,16 @@ class _DiaryEntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
             onTap: onTap,
             child: Ink(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: _line.withValues(alpha: 0.64)),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.075),
-                    _surface.withValues(alpha: 0.42),
-                    _surface.withValues(alpha: 0.34),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 24,
-                    offset: const Offset(0, 14),
-                  ),
-                ],
-              ),
+              decoration: _liquidGlassDecoration(radius: 22),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -585,9 +702,16 @@ class _DiaryEntryCard extends StatelessWidget {
                             onPressed: onEdit,
                             style: TextButton.styleFrom(
                               foregroundColor: _gold,
+                              backgroundColor: _surface.withValues(alpha: 0.76),
                               minimumSize: const Size(0, 34),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
+                                horizontal: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                side: BorderSide(
+                                  color: _gold.withValues(alpha: 0.3),
+                                ),
                               ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -596,6 +720,217 @@ class _DiaryEntryCard extends StatelessWidget {
                           ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DiarySearchSheet extends StatefulWidget {
+  const _DiarySearchSheet({
+    required this.entries,
+    required this.onEntrySelected,
+  });
+
+  final List<DiaryEntryData> entries;
+  final ValueChanged<DiaryEntryData> onEntrySelected;
+
+  @override
+  State<_DiarySearchSheet> createState() => _DiarySearchSheetState();
+}
+
+class _DiarySearchSheetState extends State<_DiarySearchSheet> {
+  late final TextEditingController _controller;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController()..addListener(_onQueryChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeListener(_onQueryChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  List<DiaryEntryData> get _filteredEntries {
+    final normalizedQuery = _query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) {
+      return widget.entries;
+    }
+
+    return widget.entries.where((entry) {
+      final people = entry.people ?? '';
+      return entry.title.toLowerCase().contains(normalizedQuery) ||
+          entry.body.toLowerCase().contains(normalizedQuery) ||
+          people.toLowerCase().contains(normalizedQuery);
+    }).toList();
+  }
+
+  void _onQueryChanged() {
+    setState(() => _query = _controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = _filteredEntries;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.72,
+      minChildSize: 0.42,
+      maxChildSize: 0.92,
+      builder: (context, scrollController) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _surface.withValues(alpha: 0.78),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(26),
+                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.24),
+                    blurRadius: 20,
+                    offset: const Offset(0, -8),
+                  ),
+                ],
+              ),
+              child: ListView(
+                controller: scrollController,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _line,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Diary 검색',
+                    style: TextStyle(
+                      color: _text,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _PlainTextField(
+                    controller: _controller,
+                    hintText: '제목, 본문, 사람으로 검색',
+                    prefixIcon: Icons.search_rounded,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    _query.trim().isEmpty
+                        ? '전체 ${entries.length}개'
+                        : '검색 결과 ${entries.length}개',
+                    style: const TextStyle(
+                      color: _mutedText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (entries.isEmpty)
+                    const _SoftNotice(text: '검색 결과가 없어요.')
+                  else
+                    for (final entry in entries) ...[
+                      _DiarySearchResultTile(
+                        entry: entry,
+                        onTap: () => widget.onEntrySelected(entry),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DiarySearchResultTile extends StatelessWidget {
+  const _DiarySearchResultTile({required this.entry, required this.onTap});
+
+  final DiaryEntryData entry;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: onTap,
+            child: Ink(
+              decoration: _liquidGlassDecoration(radius: 18),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${entry.yearLabel} ${entry.dateLabel}',
+                      style: const TextStyle(color: _mutedText, fontSize: 12),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      entry.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _text,
+                        fontSize: 16,
+                        height: 1.25,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      entry.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _softText,
+                        fontSize: 13,
+                        height: 1.45,
+                      ),
+                    ),
+                    if (entry.people?.isNotEmpty == true) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        '함께 있었던 사람 · ${entry.people}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: _mutedText, fontSize: 12),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -620,123 +955,137 @@ class _DiaryEntryDetailSheet extends StatelessWidget {
       minChildSize: 0.48,
       maxChildSize: 0.94,
       builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: _background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-            border: Border.fromBorderSide(BorderSide(color: _line)),
-          ),
-          child: ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: _line,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: Container(
+              decoration: BoxDecoration(
+                color: _surface.withValues(alpha: 0.78),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(26),
                 ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${entry.yearLabel} ${entry.dateLabel}',
-                      style: const TextStyle(
-                        color: _mutedText,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    entry.canEdit
-                        ? Icons.schedule_rounded
-                        : Icons.lock_outline_rounded,
-                    color: entry.canEdit ? _mint : _mutedText,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 5),
-                  Flexible(
-                    child: Text(
-                      entry.editWindowLabel,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: entry.canEdit ? _mint : _mutedText,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.13)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.24),
+                    blurRadius: 20,
+                    offset: const Offset(0, -8),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                entry.title,
-                style: const TextStyle(
-                  color: _text,
-                  fontSize: 22,
-                  height: 1.25,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              if (entry.people?.isNotEmpty == true) ...[
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.group_outlined,
-                      color: _mutedText,
-                      size: 17,
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _line,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
                     ),
-                    const SizedBox(width: 7),
-                    Expanded(
-                      child: Text(
-                        '함께 있었던 사람 · ${entry.people}',
-                        style: const TextStyle(
-                          color: _softText,
-                          fontSize: 13,
-                          height: 1.35,
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${entry.yearLabel} ${entry.dateLabel}',
+                          style: const TextStyle(
+                            color: _mutedText,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
+                      Icon(
+                        entry.canEdit
+                            ? Icons.schedule_rounded
+                            : Icons.lock_outline_rounded,
+                        color: entry.canEdit ? _mint : _mutedText,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          entry.editWindowLabel,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: entry.canEdit ? _mint : _mutedText,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    entry.title,
+                    style: const TextStyle(
+                      color: _text,
+                      fontSize: 22,
+                      height: 1.25,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (entry.people?.isNotEmpty == true) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.group_outlined,
+                          color: _mutedText,
+                          size: 17,
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            '함께 있었던 사람 · ${entry.people}',
+                            style: const TextStyle(
+                              color: _softText,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-              const SizedBox(height: 22),
-              Text(
-                entry.body,
-                style: const TextStyle(
-                  color: _text,
-                  fontSize: 15,
-                  height: 1.62,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              const SizedBox(height: 26),
-              if (onEdit == null)
-                const _SoftNotice(text: '이 기록은 수정 마감되었고, U-Map 단서로 반영되어 있어요.')
-              else
-                SizedBox(
-                  height: 48,
-                  child: FilledButton.icon(
-                    onPressed: onEdit,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _gold,
-                      foregroundColor: const Color(0xFF171104),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 22),
+                  Text(
+                    entry.body,
+                    style: const TextStyle(
+                      color: _text,
+                      fontSize: 15,
+                      height: 1.62,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  if (onEdit == null)
+                    const _SoftNotice(
+                      text: '이 기록은 수정 마감되었고, U-Map 단서로 반영되어 있어요.',
+                    )
+                  else
+                    SizedBox(
+                      height: 48,
+                      child: FilledButton.icon(
+                        onPressed: onEdit,
+                        style: _liquidGlassButtonStyle(
+                          borderColor: _gold,
+                          radius: 16,
+                        ),
+                        icon: const Icon(Icons.edit_rounded),
+                        label: const Text('수정'),
                       ),
                     ),
-                    icon: const Icon(Icons.edit_rounded),
-                    label: const Text('수정'),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -769,6 +1118,8 @@ class _PlainTextField extends StatelessWidget {
           textStyle ??
           const TextStyle(color: _text, fontSize: 16, height: 1.35),
       decoration: InputDecoration(
+        filled: true,
+        fillColor: _surface.withValues(alpha: 0.76),
         hintText: hintText,
         hintStyle: TextStyle(
           color: _mutedText.withValues(alpha: 0.82),
@@ -778,19 +1129,26 @@ class _PlainTextField extends StatelessWidget {
         prefixIcon: prefixIcon == null
             ? null
             : Icon(prefixIcon, color: _mutedText, size: 20),
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(color: _line),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
         ),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: _line),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: _gold),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: _gold.withValues(alpha: 0.42)),
         ),
-        disabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: _line),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -804,40 +1162,51 @@ class _DiaryWriteFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-      decoration: const BoxDecoration(
-        color: _background,
-        border: Border(top: BorderSide(color: _line)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Diary 내용은 나를 더 잘 이해하는 단서로 활용돼요.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: _mutedText, fontSize: 12, height: 1.35),
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          decoration: BoxDecoration(
+            color: FiYouGlass.background.withValues(alpha: 0.74),
+            border: Border(
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 18,
+                offset: const Offset(0, -8),
+              ),
+            ],
           ),
-          if (canEdit) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton.icon(
-                onPressed: onSave,
-                style: FilledButton.styleFrom(
-                  backgroundColor: _gold,
-                  foregroundColor: const Color(0xFF171104),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Diary 내용은 나를 더 잘 이해하는 단서로 활용돼요.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: _mutedText, fontSize: 12, height: 1.35),
+              ),
+              if (canEdit) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: FilledButton.icon(
+                    onPressed: onSave,
+                    style: _liquidGlassButtonStyle(
+                      borderColor: _gold,
+                      radius: 16,
+                    ),
+                    icon: const Icon(Icons.check_rounded),
+                    label: const Text('Diary 저장'),
                   ),
                 ),
-                icon: const Icon(Icons.check_rounded),
-                label: const Text('Diary 저장'),
-              ),
-            ),
-          ],
-        ],
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -850,25 +1219,35 @@ class _SoftNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF102238),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF24415E)),
-      ),
-      child: Row(
-        children: [
-          const DiarySparkIcon(color: _gold, size: 19),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(color: _text, fontSize: 13, height: 1.35),
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: _liquidGlassDecoration(
+            radius: 18,
+            borderColor: _primarySoft,
+            surfaceAlpha: 0.58,
           ),
-        ],
+          child: Row(
+            children: [
+              const DiarySparkIcon(color: _primarySoft, size: 19),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -898,40 +1277,22 @@ class _DiarySparkIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final shortest = size.shortestSide;
     final center = Offset(size.width * 0.48, size.height * 0.52);
-    final bright = Color.lerp(color, Colors.white, 0.55)!;
+    final stroke = Color.lerp(color, Colors.white, 0.28)!;
     final main = _sparkPath(center, shortest * 0.36, shortest * 0.12);
-    canvas.drawPath(
-      main,
-      Paint()
-        ..color = color.withValues(alpha: 0.22)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, shortest * 0.12),
-    );
-    canvas.drawPath(
-      main,
-      Paint()
-        ..shader =
-            RadialGradient(
-              center: const Alignment(-0.35, -0.45),
-              radius: 0.9,
-              colors: [Colors.white, bright, color],
-              stops: const [0.0, 0.22, 1.0],
-            ).createShader(
-              Rect.fromCircle(center: center, radius: shortest * 0.42),
-            ),
-    );
+    canvas.drawPath(main, Paint()..color = color);
     canvas.drawPath(
       main,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.1
         ..strokeJoin = StrokeJoin.round
-        ..color = bright.withValues(alpha: 0.72),
+        ..color = stroke.withValues(alpha: 0.66),
     );
     _drawSmall(
       canvas,
       Offset(size.width * 0.76, size.height * 0.24),
       shortest * 0.12,
-      bright,
+      stroke,
     );
     _drawSmall(
       canvas,
@@ -1015,7 +1376,7 @@ class _DiaryEmptyState extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 80, 20, 148),
       children: [
-        const Icon(Icons.edit_note_rounded, color: _gold, size: 44),
+        const Icon(Icons.edit_note_rounded, color: _primarySoft, size: 44),
         const SizedBox(height: 18),
         const Text(
           '아직 남긴 Diary가 없어요.',
@@ -1035,6 +1396,7 @@ class _DiaryEmptyState extends StatelessWidget {
         const SizedBox(height: 22),
         FilledButton.icon(
           onPressed: onWrite,
+          style: _liquidGlassButtonStyle(borderColor: _primarySoft),
           icon: const Icon(Icons.add_rounded),
           label: const Text('첫 Diary 작성'),
         ),
@@ -1053,7 +1415,7 @@ class _DiaryErrorState extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 80, 20, 148),
       children: [
-        const Icon(Icons.error_outline_rounded, color: _gold, size: 42),
+        const Icon(Icons.error_outline_rounded, color: _primarySoft, size: 42),
         const SizedBox(height: 16),
         const Text(
           'Diary를 불러오지 못했어요.',
@@ -1073,6 +1435,15 @@ class _DiaryErrorState extends StatelessWidget {
         const SizedBox(height: 22),
         OutlinedButton.icon(
           onPressed: onRetry,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _text,
+            backgroundColor: _surface.withValues(alpha: 0.78),
+            minimumSize: const Size(0, 46),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.13)),
+          ),
           icon: const Icon(Icons.refresh_rounded),
           label: const Text('다시 불러오기'),
         ),

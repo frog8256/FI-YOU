@@ -36,22 +36,13 @@ class MyPageScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyColors.background,
+      backgroundColor: Colors.transparent,
       appBar: appBar,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [MyColors.background, MyColors.depth, MyColors.background],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: child,
-          ),
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomPadding),
+          child: child,
         ),
       ),
     );
@@ -63,48 +54,42 @@ class MySurface extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(18),
     this.borderColor,
-    this.gradient,
     this.onTap,
+    this.radius = 22,
+    this.blurSigma = 20,
+    this.alpha = 0.78,
     super.key,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
   final Color? borderColor;
-  final Gradient? gradient;
   final VoidCallback? onTap;
+  final double radius;
+  final double blurSigma;
+  final double alpha;
 
   @override
   Widget build(BuildContext context) {
     final decoration = BoxDecoration(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(radius),
       border: Border.all(
-        color: (borderColor ?? MyColors.border).withValues(alpha: 0.64),
+        color: borderColor ?? Colors.white.withValues(alpha: 0.12),
       ),
-      gradient:
-          gradient ??
-          LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: 0.075),
-              MyColors.surfaceSoft.withValues(alpha: 0.42),
-              MyColors.surface.withValues(alpha: 0.34),
-            ],
-          ),
+      color: MyColors.surface.withValues(alpha: alpha),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.2),
-          blurRadius: 24,
-          offset: const Offset(0, 14),
+          color: Colors.black.withValues(alpha: 0.22),
+          blurRadius: 22,
+          offset: const Offset(0, 12),
         ),
       ],
     );
 
     final content = ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
         child: Ink(
           decoration: decoration,
           child: Padding(padding: padding, child: child),
@@ -120,7 +105,7 @@ class MySurface extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(radius),
         child: content,
       ),
     );
@@ -168,7 +153,7 @@ class MySectionTitle extends StatelessWidget {
 
 AppBar myPlainAppBar(BuildContext context, String title) {
   return AppBar(
-    backgroundColor: MyColors.background,
+    backgroundColor: Colors.transparent,
     foregroundColor: MyColors.text,
     surfaceTintColor: Colors.transparent,
     elevation: 0,

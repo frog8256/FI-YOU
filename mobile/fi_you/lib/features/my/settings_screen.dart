@@ -99,26 +99,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 28),
-          SizedBox(
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: widget.onLogout ?? () => _showMockMessage('로그아웃'),
-              icon: const Icon(Icons.logout_rounded, size: 20),
-              label: const Text('로그아웃'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: MyColors.danger,
-                side: BorderSide(
-                  color: MyColors.danger.withValues(alpha: 0.36),
+          MySurface(
+            onTap: widget.onLogout ?? () => _showMockMessage('로그아웃'),
+            radius: 18,
+            alpha: 0.76,
+            borderColor: MyColors.danger.withValues(alpha: 0.24),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout_rounded, color: MyColors.danger, size: 20),
+                SizedBox(width: 10),
+                Text(
+                  '로그아웃',
+                  style: TextStyle(
+                    color: MyColors.danger,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0,
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0,
-                ),
-              ),
+              ],
             ),
           ),
         ],
@@ -154,12 +155,10 @@ class _SettingsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        Container(
-          decoration: BoxDecoration(
-            color: MyColors.surface.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: MyColors.border),
-          ),
+        MySurface(
+          padding: EdgeInsets.zero,
+          radius: 24,
+          alpha: 0.78,
           child: Column(
             children: [
               for (var index = 0; index < children.length; index++) ...[

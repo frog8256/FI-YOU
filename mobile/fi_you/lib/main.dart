@@ -1,3 +1,6 @@
+﻿import 'dart:ui';
+
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:fi_you/data/fi_you_repository.dart';
 import 'package:fi_you/features/diary/diary.dart' as diary;
 import 'package:fi_you/features/explore/explore_screen.dart' as explore;
@@ -43,6 +46,38 @@ class FiYouApp extends StatelessWidget {
             primary: FiYouColors.primary,
             secondary: FiYouColors.cyan,
             surface: FiYouColors.surface,
+          ),
+          filledButtonTheme: FilledButtonThemeData(
+            style: FiYouGlass.filledButtonStyle(),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: FiYouColors.cyan,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.22)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: FiYouColors.cyan,
+              backgroundColor: Colors.white.withValues(alpha: 0.06),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+          iconButtonTheme: IconButtonThemeData(
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              foregroundColor: FiYouColors.text,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
+              ),
+            ),
           ),
           textTheme: const TextTheme(
             headlineMedium: TextStyle(
@@ -133,10 +168,7 @@ class _FiYouShellState extends State<FiYouShell> {
               explore.ExploreScreen(
                 onOpenUMap: () => _select(FiYouTab.uMap),
                 onAnswersSaved: (_) async {
-                  _showMessage(
-                    context,
-                    '응답이 기록되었어요. U-Map 단서에 반영될 준비가 되었어요.',
-                  );
+                  _showMessage(context, '답변이 기록되었어요. U-Map 단서에 반영할 준비가 되었어요.');
                 },
               ),
               umap.FiYouUMapScreen(
@@ -187,17 +219,8 @@ class FiYouBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            FiYouColors.background,
-            FiYouColors.depth,
-            FiYouColors.background,
-          ],
-        ),
-      ),
+      decoration: BoxDecoration(),
+      child: FiYouStarryBackground(),
     );
   }
 }
@@ -219,34 +242,47 @@ class FiYouNavBar extends StatelessWidget {
       _NavItem(FiYouTab.diary, Icons.edit_note_rounded, 'Diary'),
       _NavItem(FiYouTab.explore, Icons.auto_awesome_rounded, '탐구'),
       _NavItem(FiYouTab.uMap, Icons.bubble_chart_outlined, 'U-Map'),
-      _NavItem(FiYouTab.my, Icons.person_outline_rounded, 'My'),
+      _NavItem(FiYouTab.my, Icons.person_rounded, 'My'),
     ];
 
-    return Container(
-      height: 72,
-      decoration: BoxDecoration(
-        color: const Color(0xF2070B18),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: FiYouColors.primary.withValues(alpha: 0.24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.42),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          for (final item in items)
-            Expanded(
-              child: _NavButton(
-                item: item,
-                active: current == item.tab,
-                onTap: () => onChanged(item.tab),
-              ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          height: 72,
+          decoration: BoxDecoration(
+            color: FiYouColors.depth.withValues(alpha: 0.68),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.18),
             ),
-        ],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.28),
+                blurRadius: 30,
+                offset: const Offset(0, 18),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.05),
+                blurRadius: 1,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              for (final item in items)
+                Expanded(
+                  child: _NavButton(
+                    item: item,
+                    active: current == item.tab,
+                    onTap: () => onChanged(item.tab),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -265,13 +301,14 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor =
-        item.tab == FiYouTab.explore ? FiYouColors.gold : FiYouColors.cyan;
+    final activeColor = item.tab == FiYouTab.explore
+        ? FiYouColors.gold
+        : FiYouColors.cyan;
     final color = item.tab == FiYouTab.explore
         ? FiYouColors.gold
         : active
-            ? activeColor
-            : FiYouColors.textMuted;
+        ? activeColor
+        : FiYouColors.textMuted;
 
     return InkWell(
       onTap: onTap,
@@ -285,9 +322,11 @@ class _NavButton extends StatelessWidget {
             alignment: Alignment.center,
             decoration: active
                 ? BoxDecoration(
-                    color: activeColor.withValues(alpha: 0.16),
+                    color: Colors.white.withValues(alpha: 0.09),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: activeColor.withValues(alpha: 0.24)),
+                    border: Border.all(
+                      color: activeColor.withValues(alpha: 0.30),
+                    ),
                   )
                 : null,
             child: item.tab == FiYouTab.explore
@@ -412,7 +451,12 @@ class _SparkNavIconPainter extends CustomPainter {
       ..close();
   }
 
-  void _drawSmallSpark(Canvas canvas, Offset center, double radius, Color color) {
+  void _drawSmallSpark(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Color color,
+  ) {
     canvas.drawPath(
       _sparkPath(center, radius, radius * 0.35),
       Paint()..color = color,

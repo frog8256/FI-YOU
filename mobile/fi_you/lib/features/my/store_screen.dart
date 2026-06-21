@@ -27,12 +27,9 @@ class StoreScreen extends StatelessWidget {
         children: [
           MySurface(
             padding: const EdgeInsets.all(20),
-            borderColor: MyColors.gold.withValues(alpha: 0.42),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1A1724), Color(0xFF090E1E)],
-            ),
+            borderColor: MyColors.gold.withValues(alpha: 0.22),
+            radius: 24,
+            alpha: 0.8,
             child: Row(
               children: [
                 Container(
@@ -40,10 +37,10 @@ class StoreScreen extends StatelessWidget {
                   height: 58,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: MyColors.gold.withValues(alpha: 0.1),
+                    color: MyColors.surface.withValues(alpha: 0.76),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: MyColors.gold.withValues(alpha: 0.28),
+                      color: MyColors.gold.withValues(alpha: 0.2),
                     ),
                   ),
                   child: const Icon(
@@ -108,12 +105,10 @@ class StoreScreen extends StatelessWidget {
           const SizedBox(height: 18),
           const MySectionTitle(title: '사용 내역', subtitle: '최근 Star 흐름'),
           const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: MyColors.surface.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: MyColors.border),
-            ),
+          MySurface(
+            padding: EdgeInsets.zero,
+            radius: 22,
+            alpha: 0.78,
             child: Column(
               children: [
                 for (var index = 0; index < history.length; index++) ...[
@@ -151,8 +146,9 @@ class _PackageTile extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: MyColors.gold.withValues(alpha: 0.12),
+              color: MyColors.surface.withValues(alpha: 0.76),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: const Icon(
               Icons.star_rounded,

@@ -215,9 +215,9 @@ class MockFiYouRepository extends FiYouRepository {
                   profileLine: '관찰과 탐구를 좋아하는',
                 ))
             .copyWith(
-      name: name.trim().isEmpty ? 'User' : name.trim(),
-      onboardingComplete: true,
-    );
+              name: name.trim().isEmpty ? 'User' : name.trim(),
+              onboardingComplete: true,
+            );
     await _persistProfile();
     notifyListeners();
   }
@@ -347,8 +347,8 @@ class FiYouRepositoryScope extends InheritedNotifier<FiYouRepository> {
   }) : super(notifier: repository);
 
   static FiYouRepository of(BuildContext context) {
-    final scope =
-        context.dependOnInheritedWidgetOfExactType<FiYouRepositoryScope>();
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<FiYouRepositoryScope>();
     assert(scope != null, 'FiYouRepositoryScope is missing.');
     return scope!.notifier!;
   }

@@ -244,9 +244,24 @@ class StorePackage {
 }
 
 const storePackages = [
-  StorePackage(title: 'Small', stars: '30 Star', price: 'Google Play 연결 전', note: '자기탐구 1회에 적합해요.'),
-  StorePackage(title: 'Plus', stars: '100 Star', price: 'Google Play 연결 전', note: '리포트와 확장 질문을 준비할 때 좋아요.'),
-  StorePackage(title: 'Deep', stars: '300 Star', price: 'Google Play 연결 전', note: '여러 대화 콘텐츠를 여유 있게 사용할 수 있어요.'),
+  StorePackage(
+    title: 'Small',
+    stars: '30 Star',
+    price: 'Google Play 연결 전',
+    note: '자기탐구 1회에 적합해요.',
+  ),
+  StorePackage(
+    title: 'Plus',
+    stars: '100 Star',
+    price: 'Google Play 연결 전',
+    note: '리포트와 확장 질문을 준비할 때 좋아요.',
+  ),
+  StorePackage(
+    title: 'Deep',
+    stars: '300 Star',
+    price: 'Google Play 연결 전',
+    note: '여러 대화 콘텐츠를 여유 있게 사용할 수 있어요.',
+  ),
 ];
 
 const starHistory = [
@@ -257,10 +272,34 @@ const starHistory = [
 ];
 
 final settingItems = [
-  const SettingItem(title: '알림', subtitle: '질문과 Diary 리마인더', icon: Icons.notifications_none_rounded),
-  const SettingItem(title: '프로필', subtitle: '이름과 기본 정보 관리', icon: Icons.person_outline_rounded),
-  const SettingItem(title: '개인정보 / 데이터 삭제', subtitle: '기록과 U-Map 데이터 확인', icon: Icons.folder_open_rounded),
-  const SettingItem(title: '이용약관 / 개인정보처리방침', subtitle: '서비스 이용 기준 확인', icon: Icons.privacy_tip_outlined),
-  const SettingItem(title: 'AI 안내', subtitle: 'FI-YOU는 진단하거나 확정하지 않아요', icon: Icons.info_outline_rounded),
-  const SettingItem(title: '로그아웃', subtitle: '현재 기기에서 세션 종료', icon: Icons.logout_rounded),
+  const SettingItem(
+    title: '알림',
+    subtitle: '질문과 Diary 리마인더',
+    icon: Icons.notifications_none_rounded,
+  ),
+  const SettingItem(
+    title: '프로필',
+    subtitle: '이름과 기본 정보 관리',
+    icon: Icons.person_outline_rounded,
+  ),
+  const SettingItem(
+    title: '개인정보 / 데이터 삭제',
+    subtitle: '기록과 U-Map 데이터 확인',
+    icon: Icons.folder_open_rounded,
+  ),
+  const SettingItem(
+    title: '이용약관 / 개인정보처리방침',
+    subtitle: '서비스 이용 기준 확인',
+    icon: Icons.privacy_tip_outlined,
+  ),
+  const SettingItem(
+    title: 'AI 안내',
+    subtitle: 'FI-YOU는 진단하거나 확정하지 않아요',
+    icon: Icons.info_outline_rounded,
+  ),
+  const SettingItem(
+    title: '로그아웃',
+    subtitle: '현재 기기에서 세션 종료',
+    icon: Icons.logout_rounded,
+  ),
 ];

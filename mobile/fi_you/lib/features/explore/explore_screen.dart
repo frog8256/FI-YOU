@@ -1,21 +1,20 @@
 import 'dart:ui';
 
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
 typedef ExploreAnswersSaved = Future<void> Function(List<String> answers);
 
-const _bg = Color(0xFF050714);
-const _surface = Color(0xFF0E1325);
-const _surfaceSoft = Color(0xFF141B30);
-const _line = Color(0xFF1E2945);
-const _lineStrong = Color(0xFF2D3B62);
-const _text = Color(0xFFFFFFFF);
-const _textSoft = Color(0xFFB7C0D7);
-const _textMuted = Color(0xFF7F8AA6);
-const _primarySoft = Color(0xFFC4B5FD);
-const _cyan = Color(0xFF7DD3FC);
+const _surface = FiYouGlass.surface;
+const _surfaceSoft = FiYouGlass.surfaceSoft;
+const _line = Color(0xFF2D3B62);
+const _text = FiYouGlass.text;
+const _textSoft = FiYouGlass.textSoft;
+const _textMuted = FiYouGlass.textMuted;
+const _primarySoft = FiYouGlass.primarySoft;
+const _cyan = FiYouGlass.cyan;
 const _mint = Color(0xFF6EE7B7);
-const _gold = Color(0xFFF7C948);
+const _gold = FiYouGlass.gold;
 
 class ExploreScreen extends ExploreHomeScreen {
   const ExploreScreen({
@@ -53,7 +52,9 @@ class ExploreHomeScreen extends StatelessWidget {
           children: [
             const _ExploreHeader(),
             const SizedBox(height: 18),
-            const _FlowCard(),
+            _FlowCard(
+              onStartQuestion: () => _startTodayRecommendation(context),
+            ),
             const SizedBox(height: 14),
             _FreeExploreCard(onStart: () => _startFreeExplore(context)),
             const SizedBox(height: 18),
@@ -68,7 +69,7 @@ class ExploreHomeScreen extends StatelessWidget {
 
   void _startFreeExplore(BuildContext context) {
     onStartFreeExplore?.call();
-    _openQuestionFlow(context, initialTitle: '지금 떠오르는 주제로 나를 살펴볼까요?');
+    _openQuestionFlow(context, initialTitle: '지금 떠오르는 주제로 나를 탐구해볼까요?');
   }
 
   void _startTodayRecommendation(BuildContext context) {
@@ -95,11 +96,25 @@ class _ExploreHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 1),
-          child: ExploreSparkIcon(color: _gold, size: 24),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: _surfaceSoft.withValues(alpha: 0.68),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _gold.withValues(alpha: 0.26)),
+              ),
+              child: const Center(
+                child: ExploreSparkIcon(color: _gold, size: 23),
+              ),
+            ),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -117,11 +132,13 @@ class _ExploreHeader extends StatelessWidget {
 }
 
 class _FlowCard extends StatelessWidget {
-  const _FlowCard();
+  const _FlowCard({required this.onStartQuestion});
+
+  final VoidCallback onStartQuestion;
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
+    return _GlassPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -161,7 +178,7 @@ class _FlowCard extends StatelessWidget {
               ),
               SizedBox(width: 9),
               Expanded(
-                child: _Metric(label: '살펴볼 영역', value: '3'),
+                child: _Metric(label: '탐구 영역', value: '3'),
               ),
             ],
           ),
@@ -174,8 +191,17 @@ class _FlowCard extends StatelessWidget {
           const SizedBox(height: 12),
           const _FlowListItem(
             icon: Icons.map_outlined,
-            title: '다음 살펴볼 영역',
+            title: '다음 탐구 영역',
             body: '갈등 상황의 첫 반응과 회복 방식은 아직 기록이 더 필요해요.',
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: _GlassButton(
+              label: '질문 시작',
+              icon: Icons.play_arrow_rounded,
+              onPressed: onStartQuestion,
+            ),
           ),
         ],
       ),
@@ -190,56 +216,17 @@ class _FreeExploreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
-      borderColor: _gold.withValues(alpha: 0.26),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 310;
-          final content = Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _IconBadge(
-                icon: Icons.auto_awesome_rounded,
-                color: _gold,
-                background: Color(0x1AF7C948),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(child: _FreeExploreCopy()),
-            ],
-          );
-
-          if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                content,
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: _ActionButton(
-                    label: '시작',
-                    icon: Icons.arrow_forward_rounded,
-                    onPressed: onStart,
-                    compact: true,
-                  ),
-                ),
-              ],
-            );
-          }
-
-          return Row(
-            children: [
-              Expanded(child: content),
-              const SizedBox(width: 12),
-              _ActionButton(
-                label: '시작',
-                icon: Icons.arrow_forward_rounded,
-                onPressed: onStart,
-                compact: true,
-              ),
-            ],
-          );
-        },
+    return _GlassPanel(
+      onTap: onStart,
+      borderColor: _gold.withValues(alpha: 0.34),
+      child: const Row(
+        children: [
+          ExploreSparkIcon(color: _gold, size: 32),
+          SizedBox(width: 14),
+          Expanded(child: _FreeExploreCopy()),
+          SizedBox(width: 12),
+          _StarPrice(label: '30 Star'),
+        ],
       ),
     );
   }
@@ -266,8 +253,6 @@ class _FreeExploreCopy extends StatelessWidget {
           '지금 떠오르는 주제를 질문으로 이어가요.',
           style: TextStyle(color: _textSoft, fontSize: 13, height: 1.4),
         ),
-        SizedBox(height: 10),
-        _StarPrice(label: '30 Star'),
       ],
     );
   }
@@ -292,7 +277,7 @@ class _TodayRecommendationCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _Panel(
+        _GlassPanel(
           borderColor: _primarySoft.withValues(alpha: 0.28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +305,7 @@ class _TodayRecommendationCard extends StatelessWidget {
               const SizedBox(height: 17),
               SizedBox(
                 width: double.infinity,
-                child: _ActionButton(
+                child: _GlassButton(
                   label: '질문 시작',
                   icon: Icons.play_arrow_rounded,
                   onPressed: onStart,
@@ -441,7 +426,7 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
         _selectedChoice!,
         if (_mixedTextController.text.trim().isNotEmpty)
           _mixedTextController.text.trim(),
-      ].join(' · '),
+      ].join(' / '),
     };
   }
 
@@ -450,9 +435,9 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
     final progress = (_stepIndex + 1) / _steps.length;
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: _bg,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: _text,
         title: const Text('오늘의 질문'),
@@ -489,7 +474,7 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 5,
-                      backgroundColor: _surfaceSoft,
+                      backgroundColor: _surfaceSoft.withValues(alpha: 0.7),
                       valueColor: const AlwaysStoppedAnimation(_cyan),
                     ),
                   ),
@@ -516,9 +501,9 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
               ),
               child: SizedBox(
                 width: double.infinity,
-                child: _ActionButton(
+                child: _GlassButton(
                   label: _saving
-                      ? '기록으로 남기는 중'
+                      ? '기록하는 중'
                       : _stepIndex == _steps.length - 1
                       ? '답변 저장'
                       : '다음 질문',
@@ -551,19 +536,13 @@ class QuestionCompleteScreen extends StatelessWidget {
     final firstAnswer = answers.isEmpty ? '오늘의 반응' : answers.first;
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: ListView(
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
           children: [
-            const _IconBadge(
-              icon: Icons.auto_awesome_rounded,
-              color: _mint,
-              background: Color(0x1A6EE7B7),
-              size: 58,
-              iconSize: 30,
-            ),
+            const ExploreSparkIcon(color: _mint, size: 52),
             const SizedBox(height: 20),
             const Text(
               '단서 발견',
@@ -575,12 +554,12 @@ class QuestionCompleteScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              '오늘의 답변을 기록으로 남겼어요. 아직 확정된 분석은 아니고, 다음 기록과 함께 더 살펴볼 수 있는 작은 단서예요.',
+              '오늘의 답변이 기록으로 남았어요. 아직 확정된 분석은 아니고, 다음 기록과 함께 더 살펴볼 작은 단서예요.',
               style: TextStyle(color: _textSoft, fontSize: 14, height: 1.55),
             ),
             const SizedBox(height: 22),
-            _Panel(
-              borderColor: _mint.withValues(alpha: 0.26),
+            _GlassPanel(
+              borderColor: _mint.withValues(alpha: 0.28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -604,7 +583,7 @@ class QuestionCompleteScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    '갈등 장면에서 어떤 기준을 먼저 붙잡는지 살펴볼 작은 단서가 남았어요.',
+                    '갈등 장면에서 어떤 기준을 먼저 붙잡는지 탐구해볼 작은 단서가 남았어요.',
                     style: TextStyle(
                       color: _textSoft,
                       fontSize: 13,
@@ -617,7 +596,7 @@ class QuestionCompleteScreen extends StatelessWidget {
             const SizedBox(height: 14),
             const _ReflectionStrip(),
             const SizedBox(height: 24),
-            _ActionButton(
+            _GlassButton(
               label: '다른 질문 이어가기',
               icon: Icons.refresh_rounded,
               onPressed: () {
@@ -635,7 +614,7 @@ class QuestionCompleteScreen extends StatelessWidget {
                 Navigator.of(context).pop();
               },
               icon: const Icon(Icons.map_outlined),
-              label: const Text('U-Map에 반영됨'),
+              label: const Text('U-Map에 반영'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _cyan,
                 side: BorderSide(color: _cyan.withValues(alpha: 0.36)),
@@ -664,7 +643,7 @@ class _QuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
+    return _GlassPanel(
       borderColor: _cyan.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -802,12 +781,9 @@ class _ChoiceTile extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           constraints: const BoxConstraints(minHeight: 58),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: selected ? _cyan.withValues(alpha: 0.1) : _surfaceSoft,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? _cyan.withValues(alpha: 0.52) : _line,
-            ),
+          decoration: _glassDecoration(
+            radius: 16,
+            borderColor: selected ? _cyan : _line,
           ),
           child: Row(
             children: [
@@ -863,24 +839,30 @@ class _TextAnswer extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        TextField(
-          controller: controller,
-          minLines: minLines,
-          maxLines: 10,
-          style: const TextStyle(color: _text, fontSize: 14, height: 1.45),
-          cursorColor: _cyan,
-          decoration: InputDecoration(
-            hintText: '떠오르는 장면이나 감정을 편하게 남겨주세요.',
-            hintStyle: const TextStyle(color: _textMuted),
-            filled: true,
-            fillColor: _surfaceSoft,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: _line),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: _cyan.withValues(alpha: 0.55)),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: TextField(
+              controller: controller,
+              minLines: minLines,
+              maxLines: 10,
+              style: const TextStyle(color: _text, fontSize: 14, height: 1.45),
+              cursorColor: _cyan,
+              decoration: InputDecoration(
+                hintText: '떠오르는 장면이나 감정을 편하게 남겨주세요.',
+                hintStyle: const TextStyle(color: _textMuted),
+                filled: true,
+                fillColor: _surface.withValues(alpha: 0.78),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: _line.withValues(alpha: 0.54)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: _cyan.withValues(alpha: 0.55)),
+                ),
+              ),
             ),
           ),
         ),
@@ -889,42 +871,40 @@ class _TextAnswer extends StatelessWidget {
   }
 }
 
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child, this.borderColor = _line});
+class _GlassPanel extends StatelessWidget {
+  const _GlassPanel({required this.child, this.borderColor, this.onTap});
 
   final Widget child;
-  final Color borderColor;
+  final Color? borderColor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    final panel = ClipRRect(
       borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor.withValues(alpha: 0.64)),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withValues(alpha: 0.075),
-                _surfaceSoft.withValues(alpha: 0.42),
-                _surface.withValues(alpha: 0.34),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 24,
-                offset: const Offset(0, 14),
-              ),
-            ],
+          decoration: _glassDecoration(
+            radius: 18,
+            borderColor: borderColor ?? _line,
           ),
           child: child,
         ),
+      ),
+    );
+
+    if (onTap == null) {
+      return panel;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: panel,
       ),
     );
   }
@@ -941,11 +921,7 @@ class _Metric extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minHeight: 70),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
-        color: _bg.withValues(alpha: 0.32),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _line),
-      ),
+      decoration: _glassDecoration(radius: 12, borderColor: _line),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1029,10 +1005,9 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: _primarySoft.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _primarySoft.withValues(alpha: 0.28)),
+      decoration: _glassDecoration(
+        radius: 999,
+        borderColor: _primarySoft.withValues(alpha: 0.62),
       ),
       child: Text(
         label,
@@ -1054,14 +1029,15 @@ class _StarPrice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: _gold.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _gold.withValues(alpha: 0.24)),
+      constraints: const BoxConstraints(minWidth: 82),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: _glassDecoration(
+        radius: 999,
+        borderColor: _gold.withValues(alpha: 0.62),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.star_rounded, color: _gold, size: 15),
           const SizedBox(width: 5),
@@ -1079,83 +1055,51 @@ class _StarPrice extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
+class _GlassButton extends StatelessWidget {
+  const _GlassButton({
     required this.label,
     required this.icon,
     required this.onPressed,
-    this.compact = false,
   });
 
   final String label;
   final IconData icon;
   final VoidCallback? onPressed;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: enabled
-            ? const LinearGradient(colors: [_cyan, _primarySoft])
-            : null,
-        color: enabled ? null : _surfaceSoft,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: FilledButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 18),
-        label: Text(label, overflow: TextOverflow.ellipsis),
-        style: FilledButton.styleFrom(
-          disabledBackgroundColor: Colors.transparent,
-          disabledForegroundColor: _textMuted,
-          backgroundColor: Colors.transparent,
-          foregroundColor: _bg,
-          shadowColor: Colors.transparent,
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 14 : 18,
-            vertical: compact ? 13 : 16,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: DecoratedBox(
+          decoration: _glassDecoration(
+            radius: 16,
+            borderColor: enabled ? _primarySoft : _line,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+          child: FilledButton.icon(
+            onPressed: onPressed,
+            icon: Icon(icon, size: 18),
+            label: Text(label, overflow: TextOverflow.ellipsis),
+            style: FilledButton.styleFrom(
+              disabledBackgroundColor: Colors.transparent,
+              disabledForegroundColor: _textMuted,
+              backgroundColor: Colors.transparent,
+              foregroundColor: enabled ? _text : _textMuted,
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
         ),
       ),
-    );
-  }
-}
-
-class _IconBadge extends StatelessWidget {
-  const _IconBadge({
-    required this.icon,
-    required this.color,
-    required this.background,
-    this.size = 42,
-    this.iconSize = 22,
-  });
-
-  final IconData icon;
-  final Color color;
-  final Color background;
-  final double size;
-  final double iconSize;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: background,
-        border: Border.all(color: color.withValues(alpha: 0.28)),
-      ),
-      child: icon == Icons.auto_awesome_rounded
-          ? ExploreSparkIcon(color: color, size: iconSize)
-          : Icon(icon, color: color, size: iconSize),
     );
   }
 }
@@ -1189,29 +1133,17 @@ class _ExploreSparkIconPainter extends CustomPainter {
     canvas.drawPath(
       main,
       Paint()
-        ..color = color.withValues(alpha: 0.22)
+        ..color = color.withValues(alpha: 0.2)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, shortest * 0.12),
     );
-    canvas.drawPath(
-      main,
-      Paint()
-        ..shader =
-            RadialGradient(
-              center: const Alignment(-0.35, -0.45),
-              radius: 0.9,
-              colors: [Colors.white, bright, color],
-              stops: const [0.0, 0.22, 1.0],
-            ).createShader(
-              Rect.fromCircle(center: center, radius: shortest * 0.42),
-            ),
-    );
+    canvas.drawPath(main, Paint()..color = color);
     canvas.drawPath(
       main,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.1
         ..strokeJoin = StrokeJoin.round
-        ..color = bright.withValues(alpha: 0.72),
+        ..color = bright.withValues(alpha: 0.7),
     );
     _drawSmall(
       canvas,
@@ -1275,20 +1207,14 @@ class _ReflectionStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _surfaceSoft,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _lineStrong.withValues(alpha: 0.7)),
-      ),
-      child: const Row(
+    return const _GlassPanel(
+      child: Row(
         children: [
           Icon(Icons.map_outlined, color: _cyan),
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'U-Map에 반영됨 · 질문과 Diary가 더 쌓이면 자기이해 영역의 흐름이 선명해져요.',
+              'U-Map에 반영돼요. 질문과 Diary가 쌓이면 자기이해 영역의 흐름이 선명해져요.',
               style: TextStyle(color: _textSoft, fontSize: 13, height: 1.4),
             ),
           ),
@@ -1296,6 +1222,24 @@ class _ReflectionStrip extends StatelessWidget {
       ),
     );
   }
+}
+
+BoxDecoration _glassDecoration({
+  required double radius,
+  required Color borderColor,
+}) {
+  return BoxDecoration(
+    borderRadius: BorderRadius.circular(radius),
+    color: _surface.withValues(alpha: 0.78),
+    border: Border.all(color: borderColor.withValues(alpha: 0.3), width: 1),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.22),
+        blurRadius: 18,
+        offset: const Offset(0, 10),
+      ),
+    ],
+  );
 }
 
 enum _AnswerType { choice, text, mixed }
@@ -1343,7 +1287,7 @@ const _questionSteps = [
   _QuestionStep(
     type: _AnswerType.mixed,
     title: '그때 나에게 가장 가까웠던 마음은 무엇인가요?',
-    description: '선택은 흐름의 방향을 잡고, 짧은 문장은 그 이유를 더 선명하게 남겨줘요.',
+    description: '선택은 흐름의 방향을 돕고, 짧은 문장은 그 이유를 더 선명하게 남겨줘요.',
     options: ['정리하고 싶었어요', '이해하고 싶었어요', '확인하고 싶었어요', '표현하고 싶었어요'],
   ),
 ];

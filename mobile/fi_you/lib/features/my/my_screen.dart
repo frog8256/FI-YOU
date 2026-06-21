@@ -1,6 +1,5 @@
 import 'package:fi_you/features/my/my_models.dart';
 import 'package:fi_you/features/my/my_theme.dart';
-import 'package:fi_you/features/my/settings_screen.dart';
 import 'package:flutter/material.dart';
 
 class MyScreen extends StatelessWidget {
@@ -35,19 +34,14 @@ class MyScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _InsightList(insights: insights),
           const SizedBox(height: 22),
-          _SettingsButton(onTap: () => _openSettings(context)),
+          const MySectionTitle(
+            title: '설정',
+            subtitle: '계정, 알림, 개인정보 항목을 바로 확인하고 관리합니다.',
+          ),
+          const SizedBox(height: 12),
+          _InlineSettingsList(profile: profile),
         ],
       ),
-    );
-  }
-
-  void _openSettings(BuildContext context) {
-    if (onOpenSettings != null) {
-      onOpenSettings!();
-      return;
-    }
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => SettingsScreen(profile: profile)),
     );
   }
 }
@@ -60,18 +54,17 @@ class _Header extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 38,
-          height: 38,
-          padding: const EdgeInsets.all(7),
+          width: 42,
+          height: 42,
           decoration: BoxDecoration(
-            color: MyColors.surfaceSoft.withValues(alpha: 0.82),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: MyColors.borderStrong),
+            color: MyColors.surface.withValues(alpha: 0.78),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
           child: const Icon(
-            Icons.person_outline_rounded,
+            Icons.person_rounded,
             color: MyColors.primarySoft,
-            size: 22,
+            size: 23,
           ),
         ),
         const SizedBox(width: 10),
@@ -97,13 +90,9 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MySurface(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-      borderColor: MyColors.gold.withValues(alpha: 0.34),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFF171A2D), Color(0xFF090D1C)],
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+      radius: 28,
+      alpha: 0.8,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -157,11 +146,9 @@ class _MetricBox extends StatelessWidget {
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.045),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: MyColors.borderStrong.withValues(alpha: 0.6),
-          ),
+          color: MyColors.surface.withValues(alpha: 0.76),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
@@ -200,6 +187,8 @@ class _InsightList extends StatelessWidget {
   Widget build(BuildContext context) {
     return MySurface(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      radius: 24,
+      alpha: 0.78,
       child: Column(
         children: [
           for (var index = 0; index < insights.length; index++) ...[
@@ -233,8 +222,9 @@ class _InsightRow extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: insight.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              color: MyColors.surface.withValues(alpha: 0.76),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: insight.icon == Icons.auto_awesome_rounded
                 ? MySparkIcon(color: insight.color, size: 21)
@@ -297,40 +287,13 @@ class _MySparkIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final shortest = size.shortestSide;
     final center = Offset(size.width * 0.48, size.height * 0.52);
-    final bright = Color.lerp(color, Colors.white, 0.55)!;
     final main = _sparkPath(center, shortest * 0.36, shortest * 0.12);
-    canvas.drawPath(
-      main,
-      Paint()
-        ..color = color.withValues(alpha: 0.22)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, shortest * 0.12),
-    );
-    canvas.drawPath(
-      main,
-      Paint()
-        ..shader =
-            RadialGradient(
-              center: const Alignment(-0.35, -0.45),
-              radius: 0.9,
-              colors: [Colors.white, bright, color],
-              stops: const [0.0, 0.22, 1.0],
-            ).createShader(
-              Rect.fromCircle(center: center, radius: shortest * 0.42),
-            ),
-    );
-    canvas.drawPath(
-      main,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.1
-        ..strokeJoin = StrokeJoin.round
-        ..color = bright.withValues(alpha: 0.72),
-    );
+    canvas.drawPath(main, Paint()..color = color);
     _drawSmall(
       canvas,
       Offset(size.width * 0.76, size.height * 0.24),
       shortest * 0.12,
-      bright,
+      color,
     );
     _drawSmall(
       canvas,
@@ -383,38 +346,172 @@ class _MySparkIconPainter extends CustomPainter {
   }
 }
 
-class _SettingsButton extends StatelessWidget {
-  const _SettingsButton({required this.onTap});
+class _InlineSettingsList extends StatefulWidget {
+  const _InlineSettingsList({required this.profile});
 
-  final VoidCallback onTap;
+  final MyProfileData profile;
+
+  @override
+  State<_InlineSettingsList> createState() => _InlineSettingsListState();
+}
+
+class _InlineSettingsListState extends State<_InlineSettingsList> {
+  bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
-    return MySurface(
-      onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: const Row(
-        children: [
-          Icon(Icons.settings_outlined, color: MyColors.primarySoft, size: 22),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              '설정',
-              style: TextStyle(
-                color: MyColors.text,
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0,
+    return Column(
+      children: [
+        MySurface(
+          padding: EdgeInsets.zero,
+          radius: 24,
+          alpha: 0.78,
+          child: Column(
+            children: [
+              _SettingsListTile(
+                icon: Icons.person_outline_rounded,
+                title: '프로필',
+                subtitle: '${widget.profile.name} · ${widget.profile.email}',
+                onTap: () => _showMockMessage('프로필 편집'),
               ),
-            ),
+              const _SettingsDivider(),
+              _SettingsListTile(
+                icon: Icons.notifications_none_rounded,
+                title: '알림 설정',
+                subtitle: '질문, Diary, 탐구 흐름 업데이트 알림',
+                trailing: Switch(
+                  value: _notificationsEnabled,
+                  activeThumbColor: MyColors.gold,
+                  onChanged: (value) {
+                    setState(() => _notificationsEnabled = value);
+                  },
+                ),
+              ),
+            ],
           ),
-          Icon(
-            Icons.chevron_right_rounded,
-            color: MyColors.textMuted,
-            size: 22,
+        ),
+        const SizedBox(height: 14),
+        MySurface(
+          padding: EdgeInsets.zero,
+          radius: 24,
+          alpha: 0.78,
+          child: Column(
+            children: [
+              _SettingsListTile(
+                icon: Icons.folder_delete_outlined,
+                title: '개인정보 / 데이터 삭제',
+                subtitle: '기록과 U-Map 데이터 삭제 요청',
+                onTap: () => _showMockMessage('데이터 삭제 요청'),
+              ),
+              const _SettingsDivider(),
+              _SettingsListTile(
+                icon: Icons.description_outlined,
+                title: '이용약관',
+                subtitle: 'FI-YOU 서비스 이용 기준',
+                onTap: () => _showMockMessage('이용약관'),
+              ),
+              const _SettingsDivider(),
+              _SettingsListTile(
+                icon: Icons.privacy_tip_outlined,
+                title: '개인정보처리방침',
+                subtitle: '기록 데이터 처리와 보관 기준',
+                onTap: () => _showMockMessage('개인정보처리방침'),
+              ),
+            ],
           ),
-        ],
+        ),
+        const SizedBox(height: 14),
+        MySurface(
+          onTap: () => _showMockMessage('로그아웃'),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          radius: 18,
+          alpha: 0.76,
+          borderColor: MyColors.danger.withValues(alpha: 0.24),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.logout_rounded, color: MyColors.danger, size: 20),
+              SizedBox(width: 10),
+              Text(
+                '로그아웃',
+                style: TextStyle(
+                  color: MyColors.danger,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showMockMessage(String label) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$label 기능은 연결 준비 중입니다.')));
+  }
+}
+
+class _SettingsListTile extends StatelessWidget {
+  const _SettingsListTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      minLeadingWidth: 28,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: Icon(icon, color: MyColors.primarySoft, size: 22),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: MyColors.text,
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0,
+        ),
       ),
+      subtitle: Text(
+        subtitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: MyColors.textMuted,
+          fontSize: 12,
+          letterSpacing: 0,
+        ),
+      ),
+      trailing:
+          trailing ??
+          const Icon(Icons.chevron_right_rounded, color: MyColors.textMuted),
+      onTap: onTap,
+    );
+  }
+}
+
+class _SettingsDivider extends StatelessWidget {
+  const _SettingsDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      color: MyColors.border.withValues(alpha: 0.75),
+      indent: 58,
     );
   }
 }

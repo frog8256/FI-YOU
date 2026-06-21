@@ -44,57 +44,41 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: FiYouHomeColors.backgroundBase,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0B1023),
-              FiYouHomeColors.backgroundBase,
-              Color(0xFF070A16),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
-                sliver: SliverList.list(
-                  children: [
-                    HomeHeader(data: data, onStoreTap: onStoreTap),
-                    const SizedBox(height: 20),
-                    GreetingSection(data: data),
-                    const SizedBox(height: 15),
-                    NextQuestionCard(
-                      question: data.nextQuestion,
-                      estimatedTime: data.estimatedQuestionTime,
-                      onTap: onQuestionTap,
-                    ),
-                    const SizedBox(height: 14),
-                    UMapCard(data: data, onTap: onUMapTap),
-                    const SizedBox(height: 14),
-                    DiaryPromptCard(
-                      prompt: data.diaryPrompt,
-                      onTap: onDiaryTap,
-                    ),
-                    const SizedBox(height: 14),
-                    TodayClueCard(clue: data.todayClue, onTap: onStatusTap),
-                    const SizedBox(height: 14),
-                    ExplorationStatusCard(
-                      metrics: data.activityMetrics,
-                      latestUpdateLabel: data.latestUpdateLabel,
-                      onTap: onStatusTap,
-                    ),
-                  ],
-                ),
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
+              sliver: SliverList.list(
+                children: [
+                  HomeHeader(data: data, onStoreTap: onStoreTap),
+                  const SizedBox(height: 20),
+                  GreetingSection(data: data),
+                  const SizedBox(height: 15),
+                  NextQuestionCard(
+                    question: data.nextQuestion,
+                    estimatedTime: data.estimatedQuestionTime,
+                    onTap: onQuestionTap,
+                  ),
+                  const SizedBox(height: 14),
+                  UMapCard(data: data, onTap: onUMapTap),
+                  const SizedBox(height: 14),
+                  DiaryPromptCard(prompt: data.diaryPrompt, onTap: onDiaryTap),
+                  const SizedBox(height: 14),
+                  TodayClueCard(clue: data.todayClue, onTap: onStatusTap),
+                  const SizedBox(height: 14),
+                  ExplorationStatusCard(
+                    metrics: data.activityMetrics,
+                    latestUpdateLabel: data.latestUpdateLabel,
+                    onTap: onStatusTap,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -111,22 +95,11 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
+        const SizedBox(
           width: 38,
           height: 38,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: FiYouHomeColors.primaryPurple.withValues(alpha: 0.24),
-                blurRadius: 18,
-              ),
-            ],
-          ),
-          child: Image.asset(
-            'assets/images/fi_you_logo_mark.png',
-            fit: BoxFit.cover,
+          child: Center(
+            child: HomeSparkIcon(color: FiYouHomeColors.primarySoft, size: 32),
           ),
         ),
         const SizedBox(width: 10),
@@ -175,11 +148,9 @@ class HeaderIconButton extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: FiYouHomeColors.surfaceBase.withValues(alpha: 0.82),
+              color: FiYouHomeColors.surfaceGlass,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: FiYouHomeColors.borderVisible.withValues(alpha: 0.68),
-              ),
+              border: Border.all(color: FiYouHomeColors.glassBorder),
             ),
             child: Icon(icon, color: FiYouHomeColors.textSecondary, size: 21),
           ),
@@ -249,15 +220,13 @@ class StarLevelBadge extends StatelessWidget {
             height: 42,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: FiYouHomeColors.accentGold.withValues(alpha: 0.08),
+              color: FiYouHomeColors.surfaceGlass,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: FiYouHomeColors.accentGold.withValues(alpha: 0.34),
-              ),
+              border: Border.all(color: FiYouHomeColors.glassBorder),
               boxShadow: [
                 BoxShadow(
-                  color: FiYouHomeColors.accentGold.withValues(alpha: 0.08),
-                  blurRadius: 18,
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -272,7 +241,7 @@ class StarLevelBadge extends StatelessWidget {
                   width: 1,
                   height: 16,
                   margin: const EdgeInsets.symmetric(horizontal: 10),
-                  color: FiYouHomeColors.accentGold.withValues(alpha: 0.44),
+                  color: Colors.white.withValues(alpha: 0.14),
                 ),
                 Text(levelLabel, style: _badgeTextStyle),
               ],
@@ -373,64 +342,99 @@ class NextQuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return FiYouSurface(
       onTap: onTap,
-      padding: const EdgeInsets.fromLTRB(16, 14, 15, 15),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 15),
       fillColor: FiYouHomeColors.surfaceAction,
-      borderColor: const Color(0xFF27405A),
+      borderColor: FiYouHomeColors.borderSubtle,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SignalIconPanel(
-            icon: Icons.auto_awesome_rounded,
-            color: FiYouHomeColors.primarySoft,
+            icon: Icons.lightbulb_rounded,
+            color: FiYouHomeColors.accentGold,
           ),
           const SizedBox(width: 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        '오늘 할 일 · 다음 질문',
-                        style: TextStyle(
-                          color: FiYouHomeColors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      estimatedTime,
-                      style: const TextStyle(
-                        color: FiYouHomeColors.textMuted,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  question,
-                  style: const TextStyle(
-                    color: FiYouHomeColors.textSecondary,
-                    fontSize: 12.5,
-                    height: 1.38,
+                const Text(
+                  '오늘 할 일',
+                  style: TextStyle(
+                    color: FiYouHomeColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 0,
                   ),
+                ),
+                const SizedBox(height: 10),
+                _TaskLine(
+                  icon: Icons.edit_note_rounded,
+                  label: 'Diary 작성하기',
+                  color: FiYouHomeColors.accentCyan,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          const _TinyActionPill(
-            label: '시작',
-            color: FiYouHomeColors.primarySoft,
+          const SizedBox(width: 8),
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: FiYouHomeColors.surfaceGlass,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: FiYouHomeColors.glassBorder),
+            ),
+            child: const Icon(
+              Icons.chevron_right_rounded,
+              color: FiYouHomeColors.textSecondary,
+              size: 20,
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TaskLine extends StatelessWidget {
+  const _TaskLine({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            color: FiYouHomeColors.surfaceGlass,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: FiYouHomeColors.glassBorder),
+          ),
+          child: icon == Icons.auto_awesome_rounded
+              ? HomeSparkIcon(color: color, size: 13)
+              : Icon(icon, color: color, size: 13),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            color: FiYouHomeColors.textSecondary,
+            fontSize: 12.3,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+            letterSpacing: 0,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -446,16 +450,8 @@ class UMapCard extends StatelessWidget {
     return FiYouSurface(
       onTap: onTap,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          const Color(0xFF1B2140).withValues(alpha: 0.86),
-          const Color(0xFF0E1325).withValues(alpha: 0.94),
-          const Color(0xFF080C1A),
-        ],
-      ),
-      borderColor: FiYouHomeColors.primaryPurple.withValues(alpha: 0.28),
+      fillColor: FiYouHomeColors.surfaceBase,
+      borderColor: FiYouHomeColors.borderVisible,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 350;
@@ -481,30 +477,13 @@ class UMapCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: FiYouHomeColors.primaryPurple.withValues(
-                        alpha: 0.12,
-                      ),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: FiYouHomeColors.primarySoft.withValues(
-                          alpha: 0.24,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      data.uMapLevelLabel,
-                      style: const TextStyle(
-                        color: FiYouHomeColors.primarySoft,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0,
-                      ),
+                  Text(
+                    data.latestUpdateLabel,
+                    style: const TextStyle(
+                      color: FiYouHomeColors.textMuted,
+                      fontSize: 10.8,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0,
                     ),
                   ),
                 ],
@@ -912,7 +891,6 @@ class DiaryPromptCard extends StatelessWidget {
     return FiYouActionTile(
       title: 'Diary 작성하기',
       body: prompt,
-      actionLabel: '짧게 기록',
       icon: Icons.edit_note_rounded,
       accentColor: FiYouHomeColors.accentCyan,
       onTap: onTap,
@@ -1020,7 +998,23 @@ class ExplorationStatusCard extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton(onPressed: onTap, child: const Text('자세히')),
+              IconButton(
+                onPressed: onTap,
+                tooltip: '자세히',
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(
+                  backgroundColor: FiYouHomeColors.surfaceGlass,
+                  side: const BorderSide(color: FiYouHomeColors.glassBorder),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: FiYouHomeColors.textSecondary,
+                  size: 20,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1037,13 +1031,16 @@ class ExplorationStatusCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            latestUpdateLabel,
-            style: const TextStyle(
-              color: FiYouHomeColors.textMuted,
-              fontSize: 11.5,
-              letterSpacing: 0,
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              latestUpdateLabel,
+              style: const TextStyle(
+                color: FiYouHomeColors.textMuted,
+                fontSize: 11.5,
+                letterSpacing: 0,
+              ),
             ),
           ),
         ],
@@ -1066,7 +1063,8 @@ class ActivityMetricItem extends StatelessWidget {
           height: 30,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: metric.color.withValues(alpha: 0.12),
+            color: FiYouHomeColors.surfaceGlass,
+            border: Border.all(color: FiYouHomeColors.glassBorder),
           ),
           child: metric.icon == Icons.auto_awesome_rounded
               ? HomeSparkIcon(color: metric.color, size: 18)
@@ -1103,7 +1101,6 @@ class FiYouActionTile extends StatelessWidget {
     super.key,
     required this.title,
     required this.body,
-    required this.actionLabel,
     required this.icon,
     required this.accentColor,
     this.onTap,
@@ -1111,7 +1108,6 @@ class FiYouActionTile extends StatelessWidget {
 
   final String title;
   final String body;
-  final String actionLabel;
   final IconData icon;
   final Color accentColor;
   final VoidCallback? onTap;
@@ -1149,9 +1145,19 @@ class FiYouActionTile extends StatelessWidget {
               ),
             ],
           );
-          final action = _TinyActionPill(
-            label: actionLabel,
-            color: accentColor,
+          final action = Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: FiYouHomeColors.surfaceGlass,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: FiYouHomeColors.glassBorder),
+            ),
+            child: Icon(
+              Icons.chevron_right_rounded,
+              color: accentColor,
+              size: 20,
+            ),
           );
 
           if (constraints.maxWidth < 312) {
@@ -1187,42 +1193,6 @@ class FiYouActionTile extends StatelessWidget {
   }
 }
 
-class _TinyActionPill extends StatelessWidget {
-  const _TinyActionPill({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 30,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.11),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.24)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0,
-            ),
-          ),
-          const SizedBox(width: 2),
-          Icon(Icons.chevron_right_rounded, color: color, size: 17),
-        ],
-      ),
-    );
-  }
-}
-
 class SignalIconPanel extends StatelessWidget {
   const SignalIconPanel({super.key, required this.icon, required this.color});
 
@@ -1235,9 +1205,9 @@ class SignalIconPanel extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: FiYouHomeColors.surfaceGlass,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
+        border: Border.all(color: FiYouHomeColors.glassBorder),
       ),
       child: icon == Icons.auto_awesome_rounded
           ? HomeSparkIcon(color: color, size: 22)
@@ -1358,7 +1328,6 @@ class FiYouSurface extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.fillColor = FiYouHomeColors.surfaceBase,
     this.borderColor = FiYouHomeColors.borderSubtle,
-    this.gradient,
   });
 
   final Widget child;
@@ -1366,36 +1335,24 @@ class FiYouSurface extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final Color fillColor;
   final Color borderColor;
-  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
     final content = ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: gradient == null ? fillColor.withValues(alpha: 0.56) : null,
-            gradient:
-                gradient ??
-                LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.075),
-                    fillColor.withValues(alpha: 0.38),
-                    Colors.black.withValues(alpha: 0.1),
-                  ],
-                ),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor.withValues(alpha: 0.62)),
+            color: fillColor.withValues(alpha: 0.76),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: FiYouHomeColors.glassBorder),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 24,
-                offset: const Offset(0, 14),
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 22,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
@@ -1412,7 +1369,7 @@ class FiYouSurface extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         child: content,
       ),
     );
@@ -1422,11 +1379,13 @@ class FiYouSurface extends StatelessWidget {
 abstract final class FiYouHomeColors {
   static const backgroundBase = Color(0xFF050714);
   static const surfaceBase = Color(0xFF0B1020);
+  static const surfaceGlass = Color(0xB80E1325);
   static const surfaceInsight = Color(0xFF10172A);
   static const surfaceAction = Color(0xFF0B1722);
   static const surfaceCompact = Color(0xFF0C1222);
   static const borderSubtle = Color(0xFF1A2440);
   static const borderVisible = Color(0xFF273556);
+  static const glassBorder = Color(0x24FFFFFF);
   static const textPrimary = Color(0xFFFFFFFF);
   static const textSecondary = Color(0xFFB7C0D7);
   static const textMuted = Color(0xFF7F8AA6);
