@@ -1,6 +1,6 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
 import 'home_mock_data.dart';
@@ -71,7 +71,7 @@ class HomeScreen extends StatelessWidget {
                   TodayClueCard(clue: data.todayClue, onTap: onStatusTap),
                   const SizedBox(height: 14),
                   ExplorationStatusCard(
-                    metrics: data.activityMetrics,
+                    metrics: homeStatsMetrics,
                     latestUpdateLabel: data.latestUpdateLabel,
                     onTap: onStatusTap,
                   ),
@@ -137,25 +137,11 @@ class HeaderIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Ink(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: FiYouHomeColors.surfaceGlass,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: FiYouHomeColors.glassBorder),
-            ),
-            child: Icon(icon, color: FiYouHomeColors.textSecondary, size: 21),
-          ),
-        ),
-      ),
+    return FiYouLiquidIconButton(
+      label: tooltip,
+      icon: Icon(icon),
+      onPressed: onTap,
+      size: 42,
     );
   }
 }
@@ -215,21 +201,13 @@ class StarLevelBadge extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
           child: Ink(
             height: 42,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: FiYouHomeColors.surfaceGlass,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: FiYouHomeColors.glassBorder),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+            decoration: FiYouGlass.smallGlassV5(
+              borderColor: FiYouHomeColors.accentGold,
+              radius: FiYouGlass.glassRadiusSmall,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -241,7 +219,7 @@ class StarLevelBadge extends StatelessWidget {
                   width: 1,
                   height: 16,
                   margin: const EdgeInsets.symmetric(horizontal: 10),
-                  color: Colors.white.withValues(alpha: 0.14),
+                  color: FiYouGlass.glassStrokeSide,
                 ),
                 Text(levelLabel, style: _badgeTextStyle),
               ],
@@ -376,19 +354,12 @@ class NextQuestionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: FiYouHomeColors.surfaceGlass,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: FiYouHomeColors.glassBorder),
-            ),
-            child: const Icon(
-              Icons.chevron_right_rounded,
-              color: FiYouHomeColors.textSecondary,
-              size: 20,
-            ),
+          FiYouChevronButton(
+            color: FiYouHomeColors.textSecondary,
+            label: 'Diary',
+            size: 32,
+            onPressed: onTap,
+            showBorder: false,
           ),
         ],
       ),
@@ -411,17 +382,19 @@ class _TaskLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 22,
-          height: 22,
-          decoration: BoxDecoration(
-            color: FiYouHomeColors.surfaceGlass,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: FiYouHomeColors.glassBorder),
-          ),
+        FiYouIconTile(
+          color: color,
+          size: FiYouControlTokens.iconTileXSmall,
           child: icon == Icons.auto_awesome_rounded
-              ? HomeSparkIcon(color: color, size: 13)
-              : Icon(icon, color: color, size: 13),
+              ? HomeSparkIcon(
+                  color: color,
+                  size: FiYouControlTokens.iconTileXSmallIcon,
+                )
+              : Icon(
+                  icon,
+                  color: color,
+                  size: FiYouControlTokens.iconTileXSmallIcon,
+                ),
         ),
         const SizedBox(width: 8),
         Text(
@@ -955,9 +928,12 @@ class TodayClueCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: FiYouHomeColors.textMuted,
+          FiYouChevronButton(
+            color: FiYouHomeColors.textSecondary,
+            label: 'clue',
+            size: 32,
+            onPressed: onTap,
+            showBorder: false,
           ),
         ],
       ),
@@ -998,22 +974,11 @@ class ExplorationStatusCard extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
+              FiYouChevronButton(
+                label: 'details',
                 onPressed: onTap,
-                tooltip: '자세히',
-                visualDensity: VisualDensity.compact,
-                style: IconButton.styleFrom(
-                  backgroundColor: FiYouHomeColors.surfaceGlass,
-                  side: const BorderSide(color: FiYouHomeColors.glassBorder),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                icon: const Icon(
-                  Icons.chevron_right_rounded,
-                  color: FiYouHomeColors.textSecondary,
-                  size: 20,
-                ),
+                color: FiYouHomeColors.textSecondary,
+                showBorder: false,
               ),
             ],
           ),
@@ -1026,7 +991,7 @@ class ExplorationStatusCard extends StatelessWidget {
                   Container(
                     width: 1,
                     height: 44,
-                    color: FiYouHomeColors.borderSubtle.withValues(alpha: 0.65),
+                    color: FiYouGlass.glassStrokeSide,
                   ),
               ],
             ],
@@ -1058,17 +1023,19 @@ class ActivityMetricItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: FiYouHomeColors.surfaceGlass,
-            border: Border.all(color: FiYouHomeColors.glassBorder),
-          ),
+        FiYouIconTile(
+          color: metric.color,
+          size: FiYouControlTokens.iconTileSmall,
           child: metric.icon == Icons.auto_awesome_rounded
-              ? HomeSparkIcon(color: metric.color, size: 18)
-              : Icon(metric.icon, color: metric.color, size: 17),
+              ? HomeSparkIcon(
+                  color: metric.color,
+                  size: FiYouControlTokens.iconTileSmallIcon,
+                )
+              : Icon(
+                  metric.icon,
+                  color: metric.color,
+                  size: FiYouControlTokens.iconTileSmallIcon,
+                ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -1145,19 +1112,11 @@ class FiYouActionTile extends StatelessWidget {
               ),
             ],
           );
-          final action = Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: FiYouHomeColors.surfaceGlass,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: FiYouHomeColors.glassBorder),
-            ),
-            child: Icon(
-              Icons.chevron_right_rounded,
-              color: accentColor,
-              size: 20,
-            ),
+          final action = FiYouChevronButton(
+            label: title,
+            onPressed: onTap,
+            color: FiYouHomeColors.textSecondary,
+            showBorder: false,
           );
 
           if (constraints.maxWidth < 312) {
@@ -1201,17 +1160,18 @@ class SignalIconPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: FiYouHomeColors.surfaceGlass,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: FiYouHomeColors.glassBorder),
-      ),
+    return FiYouIconTile(
+      color: color,
       child: icon == Icons.auto_awesome_rounded
-          ? HomeSparkIcon(color: color, size: 22)
-          : Icon(icon, color: color, size: 20),
+          ? HomeSparkIcon(
+              color: color,
+              size: FiYouControlTokens.iconTileMediumSpark,
+            )
+          : Icon(
+              icon,
+              color: color,
+              size: FiYouControlTokens.iconTileMediumIcon,
+            ),
     );
   }
 }
@@ -1338,40 +1298,11 @@ class FiYouSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: fillColor.withValues(alpha: 0.76),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: FiYouHomeColors.glassBorder),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
-                blurRadius: 22,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: child,
-        ),
-      ),
-    );
-
-    if (onTap == null) {
-      return content;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: content,
-      ),
+    return FiYouGlassSurface(
+      padding: padding,
+      borderColor: borderColor,
+      onTap: onTap,
+      child: child,
     );
   }
 }
@@ -1379,13 +1310,13 @@ class FiYouSurface extends StatelessWidget {
 abstract final class FiYouHomeColors {
   static const backgroundBase = Color(0xFF050714);
   static const surfaceBase = Color(0xFF0B1020);
-  static const surfaceGlass = Color(0xB80E1325);
+  static const surfaceGlass = FiYouGlass.glassFill;
   static const surfaceInsight = Color(0xFF10172A);
   static const surfaceAction = Color(0xFF0B1722);
   static const surfaceCompact = Color(0xFF0C1222);
   static const borderSubtle = Color(0xFF1A2440);
-  static const borderVisible = Color(0xFF273556);
-  static const glassBorder = Color(0x24FFFFFF);
+  static const borderVisible = FiYouGlass.glassStrokeSide;
+  static const glassBorder = FiYouGlass.glassStrokeSide;
   static const textPrimary = Color(0xFFFFFFFF);
   static const textSecondary = Color(0xFFB7C0D7);
   static const textMuted = Color(0xFF7F8AA6);

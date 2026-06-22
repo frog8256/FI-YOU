@@ -37,6 +37,8 @@ dependencies:
   supabase_flutter: ^2.15.0
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.5
+  liquid_glass_widgets: ^0.17.1
+  shared_preferences_android: 2.4.15
 
 dev_dependencies:
   flutter_test:
