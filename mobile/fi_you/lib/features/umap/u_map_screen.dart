@@ -1,9 +1,23 @@
 import 'dart:math' as math;
-import 'dart:ui';
 
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
 typedef UMapScreen = FiYouUMapScreen;
+
+BoxDecoration _liquidGlassDecoration({
+  required double radius,
+  Color? borderColor,
+  bool large = false,
+  bool cta = false,
+}) {
+  if (large) {
+    return FiYouGlass.largeGlassV5(radius: radius, borderColor: borderColor);
+  }
+  return cta
+      ? FiYouGlass.ctaGlassV5(radius: radius, borderColor: borderColor)
+      : FiYouGlass.smallGlassV5(radius: radius, borderColor: borderColor);
+}
 
 class FiYouUMapScreen extends StatelessWidget {
   const FiYouUMapScreen({
@@ -40,7 +54,7 @@ class FiYouUMapScreen extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(20, 18, 20, bottomSpace + 132),
               sliver: SliverList(
                 delegate: SliverChildListDelegate.fixed([
-                  _Header(onShare: onShare),
+                  const _Header(),
                   const SizedBox(height: 18),
                   if (isEmpty)
                     _EmptyState(onStartQuestion: onStartQuestion)
@@ -70,50 +84,24 @@ class FiYouUMapScreen extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({this.onShare});
-
-  final VoidCallback? onShare;
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        const Icon(
-          Icons.bubble_chart_rounded,
-          color: _UMapColors.cyan,
-          size: 24,
-        ),
-        const SizedBox(width: 10),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'U-Map',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  height: 1.15,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'FI-YOU가 탐구한 당신',
-                style: TextStyle(
-                  color: _UMapColors.textSoft,
-                  fontSize: 12.8,
-                  height: 1.3,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+        Icon(Icons.bubble_chart_rounded, color: _UMapColors.cyan, size: 24),
+        SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'U-Map',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              height: 1.15,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-        ),
-        _IconButton(
-          icon: Icons.ios_share_rounded,
-          label: 'U-Map 공유',
-          onTap: onShare,
         ),
       ],
     );
@@ -134,21 +122,28 @@ class _RadarCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'FI-YOU가 정리한 User 님',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  height: 1.2,
-                  fontWeight: FontWeight.w900,
+              const Expanded(
+                child: Text(
+                  'FI-YOU가 정리한 User 님의 현재 흐름',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    height: 1.2,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
-              const Spacer(),
-              _IconButton(
-                icon: Icons.ios_share_rounded,
+              const SizedBox(width: 10),
+              FiYouLiquidIconButton(
+                icon: const Icon(Icons.ios_share_rounded),
                 label: '공유',
-                onTap: onShare,
+                onPressed: onShare,
+                size: 36,
+                radius: 18,
               ),
             ],
           ),
@@ -158,8 +153,8 @@ class _RadarCard extends StatelessWidget {
             width: double.infinity,
             child: CustomPaint(painter: _UMapRadarPainter(axes)),
           ),
-          const SizedBox(height: 10),
-          _InsightBox(),
+          const SizedBox(height: 16),
+          const _InsightBox(),
           const SizedBox(height: 8),
           const Align(
             alignment: Alignment.centerRight,
@@ -180,15 +175,16 @@ class _RadarCard extends StatelessWidget {
 }
 
 class _InsightBox extends StatelessWidget {
+  const _InsightBox();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _UMapColors.surfaceDeep.withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.11)),
+      decoration: FiYouGlass.smallGlassV5(
+        radius: FiYouGlass.glassRadiusSmall,
+        borderColor: _UMapColors.gold,
       ),
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,11 +193,11 @@ class _InsightBox extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              '가장 선명한 흐름은 선택 기준과 관계 반응 쪽에 모여 있어요. 아직 확정된 해석은 아니지만, 최근 기록은 연결과 조율의 단서를 자주 보여줘요.',
+              '최근 기록에서는 선택 기준과 관계 반응 쪽 단서가 조금 더 또렷하게 모이고 있어요. 아직 확정된 해석은 아니지만, 지금의 흐름을 살펴볼 수 있는 지도예요.',
               style: TextStyle(
                 color: _UMapColors.textSoft,
-                fontSize: 12.4,
-                height: 1.45,
+                fontSize: 12.1,
+                height: 1.38,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -244,7 +240,7 @@ class _AxisSummaryBox extends StatelessWidget {
               crossAxisCount: 4,
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
-              childAspectRatio: 0.86,
+              childAspectRatio: 0.94,
             ),
             itemBuilder: (context, index) =>
                 _AxisSummaryTile(axis: axes[index]),
@@ -252,9 +248,8 @@ class _AxisSummaryBox extends StatelessWidget {
           const SizedBox(height: 12),
           _PremiumActionTile(
             title: '상세 리포트',
-            subtitle: 'FI-YOU가 쌓은 Data를 기반으로 User를 탐구한 종합 리포트',
+            subtitle: 'FI-YOU가 쌓은 기록을 바탕으로 현재 흐름을 더 넓게 정리해요.',
             borderColor: _UMapColors.gold,
-            fillColor: _UMapColors.gold.withValues(alpha: 0.08),
             showLeadingIcon: false,
             showChevron: true,
             onTap: onOpenReport,
@@ -276,28 +271,27 @@ class _AxisSummaryTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _showAxisSheet(context, axis),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
         child: Ink(
-          padding: const EdgeInsets.fromLTRB(6, 9, 6, 8),
-          decoration: BoxDecoration(
-            color: _UMapColors.surfaceDeep.withValues(alpha: 0.72),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          padding: const EdgeInsets.fromLTRB(6, 8, 6, 7),
+          decoration: FiYouGlass.smallGlassV5(
+            radius: FiYouGlass.glassRadiusSmall,
+            borderColor: axis.color,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _UMapColors.surfaceBase.withValues(alpha: 0.82),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: axis.color.withValues(alpha: 0.26)),
+              FiYouIconTile(
+                color: axis.color,
+                size: FiYouControlTokens.iconTileSmall,
+                radius: 12,
+                child: Icon(
+                  axis.icon,
+                  color: axis.color,
+                  size: FiYouControlTokens.iconTileSmallIcon,
                 ),
-                child: Icon(axis.icon, color: axis.color, size: 17),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 6),
               Text(
                 axis.shortLabel,
                 maxLines: 1,
@@ -305,7 +299,7 @@ class _AxisSummaryTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 11.5,
+                  fontSize: 11.2,
                   height: 1.05,
                   fontWeight: FontWeight.w900,
                 ),
@@ -333,7 +327,7 @@ class _PremiumExtensionSection extends StatelessWidget {
       children: [
         _PremiumActionTile(
           title: 'Growth Map',
-          subtitle: '성장 흐름을 더 깊게 열람해요.',
+          subtitle: '성장 흐름의 단서를 조금 더 깊게 열어봐요.',
           starCost: 30,
           showLeadingIcon: false,
           onTap: onOpenGrowthMap,
@@ -341,7 +335,7 @@ class _PremiumExtensionSection extends StatelessWidget {
         const SizedBox(height: 10),
         _PremiumActionTile(
           title: 'Relation Map',
-          subtitle: '관계 안에서 반복되는 흐름을 살펴봐요.',
+          subtitle: '관계 안에서 반복되는 흐름의 단서를 살펴봐요.',
           starCost: 30,
           showLeadingIcon: false,
           onTap: onOpenRelationMap,
@@ -357,7 +351,6 @@ class _PremiumActionTile extends StatelessWidget {
     required this.subtitle,
     this.starCost,
     this.borderColor,
-    this.fillColor,
     this.showLeadingIcon = true,
     this.showChevron = false,
     this.onTap,
@@ -367,7 +360,6 @@ class _PremiumActionTile extends StatelessWidget {
   final String subtitle;
   final int? starCost;
   final Color? borderColor;
-  final Color? fillColor;
   final bool showLeadingIcon;
   final bool showChevron;
   final VoidCallback? onTap;
@@ -378,17 +370,12 @@ class _PremiumActionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
         child: Ink(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: fillColor ?? _UMapColors.surfaceDeep.withValues(alpha: 0.76),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color:
-                  borderColor?.withValues(alpha: 0.68) ??
-                  Colors.white.withValues(alpha: 0.11),
-            ),
+          decoration: _liquidGlassDecoration(
+            radius: FiYouGlass.glassRadiusSmall,
+            borderColor: borderColor,
           ),
           child: Row(
             children: [
@@ -432,10 +419,9 @@ class _PremiumActionTile extends StatelessWidget {
               ],
               if (showChevron) ...[
                 const SizedBox(width: 12),
-                const Icon(
-                  Icons.chevron_right_rounded,
+                const FiYouChevronButton(
                   color: _UMapColors.gold,
-                  size: 22,
+                  label: 'open',
                 ),
               ],
             ],
@@ -455,10 +441,9 @@ class _StarCostPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: _UMapColors.gold.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _UMapColors.gold.withValues(alpha: 0.38)),
+      decoration: FiYouGlass.smallGlassV5(
+        radius: 999,
+        borderColor: _UMapColors.gold,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -487,53 +472,12 @@ class _QuestionCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 58,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onStartQuestion,
-              borderRadius: BorderRadius.circular(20),
-              child: Ink(
-                decoration: BoxDecoration(
-                  color: _UMapColors.surface.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: _UMapColors.primarySoft.withValues(alpha: 0.34),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _UMapColors.primary.withValues(alpha: 0.13),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    UMapSparkIcon(color: _UMapColors.cyan, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      '질문 시작하기',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FiYouLiquidButton(
+      label: '질문 시작하기',
+      icon: const UMapSparkIcon(color: Colors.white, size: 18),
+      onPressed: onStartQuestion,
+      height: FiYouControlTokens.buttonRegularHeight,
+      fontSize: FiYouControlTokens.buttonRegularFont,
     );
   }
 }
@@ -583,50 +527,10 @@ class _GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          padding: padding ?? const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: _UMapColors.surface.withValues(alpha: 0.74),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.11)),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _IconButton extends StatelessWidget {
-  const _IconButton({required this.icon, required this.label, this.onTap});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      button: true,
-      child: IconButton(
-        onPressed: onTap,
-        icon: Icon(icon),
-        color: Colors.white,
-        iconSize: 20,
-        style: IconButton.styleFrom(
-          backgroundColor: Colors.white.withValues(alpha: 0.07),
-          fixedSize: const Size(44, 44),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-        ),
-      ),
+    return FiYouGlassSurface(
+      padding: padding ?? const EdgeInsets.all(18),
+      borderColor: _UMapColors.radarStroke,
+      child: child,
     );
   }
 }
@@ -676,7 +580,70 @@ class _UMapRadarPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1
-          ..color = _UMapColors.radarStroke.withValues(alpha: 0.12),
+          ..color = _UMapColors.radarStroke.withValues(alpha: 0.072),
+      );
+    }
+
+    final axisEnds = <Offset>[];
+    final galaxyPath = Path();
+    for (var i = 0; i < axes.length; i++) {
+      final angle = -math.pi / 2 + i * math.pi * 2 / axes.length;
+      final axisEnd = Offset(
+        center.dx + math.cos(angle) * radius,
+        center.dy + math.sin(angle) * radius,
+      );
+      axisEnds.add(axisEnd);
+      if (i == 0) {
+        galaxyPath.moveTo(axisEnd.dx, axisEnd.dy);
+      } else {
+        galaxyPath.lineTo(axisEnd.dx, axisEnd.dy);
+      }
+    }
+    galaxyPath.close();
+    final galaxyShaderRect = Rect.fromCircle(center: center, radius: radius);
+    canvas.drawPath(
+      galaxyPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeJoin = StrokeJoin.round
+        ..shader = SweepGradient(
+          colors: [
+            _UMapColors.cyan.withValues(alpha: 0.048),
+            Colors.white.withValues(alpha: 0.108),
+            _UMapColors.primarySoft.withValues(alpha: 0.072),
+            _UMapColors.cyan.withValues(alpha: 0.048),
+          ],
+        ).createShader(galaxyShaderRect)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.8),
+    );
+    canvas.drawPath(
+      galaxyPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.85
+        ..strokeJoin = StrokeJoin.round
+        ..shader = SweepGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.096),
+            _UMapColors.cyan.withValues(alpha: 0.12),
+            _UMapColors.primarySoft.withValues(alpha: 0.108),
+            Colors.white.withValues(alpha: 0.096),
+          ],
+        ).createShader(galaxyShaderRect),
+    );
+    for (var i = 0; i < axisEnds.length; i++) {
+      final edgeStart = axisEnds[i];
+      final edgeEnd = axisEnds[(i + 1) % axisEnds.length];
+      final dust = Offset.lerp(
+        edgeStart,
+        edgeEnd,
+        0.46 + (i.isEven ? 0.08 : -0.06),
+      )!;
+      canvas.drawCircle(
+        dust,
+        i.isEven ? 0.95 : 0.7,
+        Paint()..color = Colors.white.withValues(alpha: 0.28),
       );
     }
 
@@ -715,66 +682,70 @@ class _UMapRadarPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.4
         ..strokeJoin = StrokeJoin.round
-        ..color = _UMapColors.primarySoft,
+        ..color = _UMapColors.primarySoft.withValues(alpha: 0.6),
     );
 
+    const coreScale = 0.7;
     canvas.drawCircle(
       center,
-      11,
+      11 * coreScale,
       Paint()
         ..shader = RadialGradient(
           colors: [
             _UMapColors.primarySoft.withValues(alpha: 0.95),
             _UMapColors.primary.withValues(alpha: 0.18),
           ],
-        ).createShader(Rect.fromCircle(center: center, radius: 16)),
+        ).createShader(Rect.fromCircle(center: center, radius: 16 * coreScale)),
     );
-    _drawSpark(canvas, center, 9.5, Colors.white.withValues(alpha: 0.92));
+    _drawSpark(
+      canvas,
+      center,
+      9.5 * coreScale,
+      Colors.white.withValues(alpha: 0.92),
+    );
 
     for (var i = 0; i < axes.length; i++) {
       final axis = axes[i];
       final angle = -math.pi / 2 + i * math.pi * 2 / axes.length;
-      final axisEnd = Offset(
-        center.dx + math.cos(angle) * radius,
-        center.dy + math.sin(angle) * radius,
-      );
+      final axisEnd = axisEnds[i];
       canvas.drawLine(
         center,
         axisEnd,
         Paint()
-          ..color = _UMapColors.radarStroke.withValues(alpha: 0.1)
+          ..color = _UMapColors.radarStroke.withValues(alpha: 0.06)
           ..strokeWidth = 1,
       );
 
-      final point = points[i];
+      final point = axisEnd;
       canvas.drawCircle(
         point,
-        9,
-        Paint()..color = axis.color.withValues(alpha: 0.14),
+        4.2,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.05
+          ..color = axis.color.withValues(alpha: 0.76),
       );
-      canvas.drawCircle(point, 4.6, Paint()..color = axis.color);
+      canvas.drawCircle(
+        point,
+        2.45,
+        Paint()..color = axis.color.withValues(alpha: 0.32),
+      );
 
+      final labelRadius = radius + (math.sin(angle) > 0.9 ? 25 : 33);
       final label = Offset(
-        center.dx + math.cos(angle) * (radius + 31),
-        center.dy + math.sin(angle) * (radius + 31),
+        center.dx + math.cos(angle) * labelRadius,
+        center.dy + math.sin(angle) * labelRadius,
       );
       _drawText(
         canvas,
         label,
         '${axis.label}\n${axis.value.round()}',
         axis.color,
-        angle,
       );
     }
   }
 
-  void _drawText(
-    Canvas canvas,
-    Offset anchor,
-    String text,
-    Color color,
-    double angle,
-  ) {
+  void _drawText(Canvas canvas, Offset anchor, String text, Color color) {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
@@ -878,7 +849,7 @@ class _AxisSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             const Text(
-              '최근 FI-YOU가 분석한 단서',
+              '최근 기록에서 보인 단서',
               style: TextStyle(
                 color: _UMapColors.cyan,
                 fontSize: 13,
@@ -893,6 +864,16 @@ class _AxisSheet extends StatelessWidget {
                 fontSize: 13.5,
                 height: 1.45,
                 fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              '아직 확정된 해석은 아니에요.',
+              style: TextStyle(
+                color: _UMapColors.textMuted,
+                fontSize: 12.8,
+                height: 1.35,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],
@@ -946,7 +927,7 @@ const _axisSummaries = [
     icon: Icons.people_alt_rounded,
     color: Color(0xFF7DD3FC),
     description: '관계 안에서 연결감, 거리감, 반응 방식이 어떻게 이어지는지 기록으로 살펴보는 흐름이에요.',
-    recentClue: '최근 기록에서는 대화 직후 감정 변화를 살피고 다시 균형을 찾으려는 움직임이 담겨 있어요.',
+    recentClue: '최근 기록에서는 대화 직후 감정 변화를 살피고 다시 균형을 찾으려는 단서가 보여요.',
   ),
   _AxisSummary(
     label: '이해 흐름',
@@ -954,15 +935,15 @@ const _axisSummaries = [
     icon: Icons.hub_rounded,
     color: Color(0xFF6EE7B7),
     description: '질문과 기록 속에서 생각이 어떤 순서로 정리되는지 살펴보는 흐름이에요.',
-    recentClue: '최근에는 이유를 먼저 확인하고 다음 행동을 고르는 단서가 반복해서 나타났어요.',
+    recentClue: '최근에는 이유를 먼저 확인하고 다음 행동을 고르려는 단서가 반복되어 보여요.',
   ),
   _AxisSummary(
     label: '감정 신호',
     shortLabel: '감정',
     icon: Icons.water_drop_rounded,
     color: Color(0xFFC4B5FD),
-    description: '감정이 커질 때 몸과 생각에 남는 작은 변화를 살피는 흐름이에요.',
-    recentClue: '불편함을 바로 결론으로 보기보다 이름 붙여보려는 흐름이 보여요.',
+    description: '감정이 커질 때 몸과 생각에 남는 작은 변화를 기록으로 살펴보는 흐름이에요.',
+    recentClue: '불편함을 바로 결론으로 보기보다 이름을 붙여보려는 흐름이 보여요.',
   ),
   _AxisSummary(
     label: '회복 패턴',
@@ -970,7 +951,7 @@ const _axisSummaries = [
     icon: Icons.spa_rounded,
     color: Color(0xFFFB7185),
     description: '긴장이나 피로 뒤에 다시 정리되는 방식과 필요한 환경을 살펴보는 흐름이에요.',
-    recentClue: '바로 반응하기보다 잠깐 거리를 두는 선택이 반복해서 보여요.',
+    recentClue: '바로 반응하기보다 잠깐 거리를 두는 선택이 반복되어 보여요.',
   ),
   _AxisSummary(
     label: '선택 기준',
@@ -978,7 +959,7 @@ const _axisSummaries = [
     icon: Icons.tune_rounded,
     color: Color(0xFFF7C948),
     description: '선택 앞에서 어떤 기준과 우선순위를 확인하는지 기록으로 모아보는 흐름이에요.',
-    recentClue: '빠른 결정보다 이유가 충분히 정리되는 시간을 기다리는 기록이 반복되었어요.',
+    recentClue: '빠른 결정보다 이유가 충분히 정리되는 시간을 기다리는 기록이 보여요.',
   ),
   _AxisSummary(
     label: '몰입 방향',
@@ -986,7 +967,7 @@ const _axisSummaries = [
     icon: Icons.center_focus_strong_rounded,
     color: Color(0xFF93C5FD),
     description: '어떤 환경과 조건에서 몰입이 자연스럽게 이어지는지 살펴보는 흐름이에요.',
-    recentClue: '작은 목표를 먼저 세운 뒤 다음 행동으로 이어가기 쉬웠다는 기록이 있어요.',
+    recentClue: '작은 목표를 먼저 세운 뒤 다음 행동으로 이어가려는 단서가 있어요.',
   ),
   _AxisSummary(
     label: '갈등 반응',
@@ -994,22 +975,19 @@ const _axisSummaries = [
     icon: Icons.compare_arrows_rounded,
     color: Color(0xFFFCA5A5),
     description: '갈등이나 불편함이 커질 때 먼저 선택하는 반응과 정리 방식을 살펴보는 흐름이에요.',
-    recentClue: '감정이 올라올 때 바로 말하기보다 문장을 고르는 시간이 필요하다는 단서가 있어요.',
+    recentClue: '감정에 따라 바로 말하기보다 문장을 고르는 시간이 필요하다는 단서가 있어요.',
   ),
   _AxisSummary(
     label: '표현 확장',
     shortLabel: '표현',
     icon: Icons.north_east_rounded,
     color: Color(0xFF8B5CF6),
-    description: '말, 글, 선택으로 내면의 흐름이 어떻게 확장되는지 살펴보는 흐름이에요.',
-    recentClue: '짧은 문장으로 정리한 뒤 다음 행동이 선명해지는 기록이 담겨 있어요.',
+    description: '말, 글, 선택으로 내면의 흐름이 어떻게 밖으로 이어지는지 살펴보는 흐름이에요.',
+    recentClue: '지금의 마음을 문장으로 정리한 뒤 다음 행동을 선명하게 만들려는 기록이 보여요.',
   ),
 ];
 
 abstract final class _UMapColors {
-  static const surface = Color(0xFF0D1326);
-  static const surfaceDeep = Color(0xFF070B18);
-  static const surfaceBase = Color(0xFF0B1020);
   static const textSoft = Color(0xFFB7C0D7);
   static const textMuted = Color(0xFF7F8AA6);
   static const primary = Color(0xFF8B5CF6);

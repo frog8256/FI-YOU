@@ -26,6 +26,33 @@ class HomeActivityMetric {
   final Color color;
 }
 
+const homeStatsMetrics = [
+  HomeActivityMetric(
+    label: '총 출석일',
+    value: '18일',
+    icon: Icons.calendar_month_rounded,
+    color: Color(0xFFC4B5FD),
+  ),
+  HomeActivityMetric(
+    label: '연속 출석',
+    value: '5일',
+    icon: Icons.local_fire_department_rounded,
+    color: Color(0xFF7DD3FC),
+  ),
+  HomeActivityMetric(
+    label: '총 Diary',
+    value: '12개',
+    icon: Icons.edit_note_rounded,
+    color: Color(0xFFF7C948),
+  ),
+  HomeActivityMetric(
+    label: '연속 작성',
+    value: '3일',
+    icon: Icons.history_edu_rounded,
+    color: Color(0xFF6EE7B7),
+  ),
+];
+
 class HomeMockData {
   const HomeMockData({
     required this.userName,

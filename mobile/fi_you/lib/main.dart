@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 
 import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:fi_you/data/fi_you_repository.dart';
@@ -9,6 +9,7 @@ import 'package:fi_you/features/my/my.dart' as my;
 import 'package:fi_you/features/umap/umap.dart' as umap;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ Future<void> main() async {
 
   final repository = MockFiYouRepository();
   await repository.restoreLaunchState();
+  await LiquidGlassWidgets.initialize();
   runApp(FiYouApp(repository: repository));
 }
 
@@ -41,7 +43,7 @@ class FiYouApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: true,
           brightness: Brightness.dark,
-          scaffoldBackgroundColor: FiYouColors.background,
+          scaffoldBackgroundColor: Colors.transparent,
           colorScheme: const ColorScheme.dark(
             primary: FiYouColors.primary,
             secondary: FiYouColors.cyan,
@@ -53,29 +55,46 @@ class FiYouApp extends StatelessWidget {
           outlinedButtonTheme: OutlinedButtonThemeData(
             style: OutlinedButton.styleFrom(
               foregroundColor: FiYouColors.cyan,
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.22)),
+              backgroundColor: FiYouGlass.buttonTint,
+              side: const BorderSide(
+                color: FiYouGlass.buttonBorderSoft,
+                width: 1.1,
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(
+                  FiYouGlass.glassRadiusSmall,
+                ),
               ),
             ),
           ),
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
               foregroundColor: FiYouColors.cyan,
-              backgroundColor: Colors.white.withValues(alpha: 0.06),
+              backgroundColor: FiYouGlass.buttonTint,
+              overlayColor: FiYouGlass.buttonTintPressed,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(
+                  FiYouGlass.glassRadiusSmall,
+                ),
+                side: const BorderSide(
+                  color: FiYouGlass.buttonBorderSoft,
+                  width: 1,
+                ),
               ),
             ),
           ),
           iconButtonTheme: IconButtonThemeData(
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              backgroundColor: FiYouGlass.buttonTint,
               foregroundColor: FiYouColors.text,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
+                borderRadius: BorderRadius.circular(
+                  FiYouGlass.glassRadiusSmall,
+                ),
+                side: const BorderSide(
+                  color: FiYouGlass.buttonBorderSoft,
+                  width: 1,
+                ),
               ),
             ),
           ),
@@ -121,7 +140,13 @@ class FiYouApp extends StatelessWidget {
                 maxScaleFactor: 1.0,
               ),
             ),
-            child: child ?? const SizedBox.shrink(),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const Positioned.fill(child: FiYouBackground()),
+                child ?? const SizedBox.shrink(),
+              ],
+            ),
           );
         },
         home: const FiYouShell(),
@@ -147,10 +172,9 @@ class _FiYouShellState extends State<FiYouShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: FiYouColors.background,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          const Positioned.fill(child: FiYouBackground()),
           IndexedStack(
             index: FiYouTab.values.indexOf(_tab),
             children: [
@@ -206,6 +230,7 @@ class FiYouColors {
   static const surface = Color(0xFF0E1325);
   static const border = Color(0xFF1E2945);
   static const primary = Color(0xFF8B5CF6);
+  static const navMain = FiYouGlass.nativeBarAccent;
   static const cyan = Color(0xFF7DD3FC);
   static const gold = Color(0xFFF7C948);
   static const text = Color(0xFFFFFFFF);
@@ -248,28 +273,13 @@ class FiYouNavBar extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(32),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        filter: ImageFilter.blur(
+          sigmaX: FiYouGlass.glassBlurSigma,
+          sigmaY: FiYouGlass.glassBlurSigma,
+        ),
         child: Container(
           height: 72,
-          decoration: BoxDecoration(
-            color: FiYouColors.depth.withValues(alpha: 0.68),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.18),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.28),
-                blurRadius: 30,
-                offset: const Offset(0, 18),
-              ),
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.05),
-                blurRadius: 1,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
+          decoration: FiYouGlass.nativeBarDecoration(radius: 32),
           child: Row(
             children: [
               for (final item in items)
@@ -288,7 +298,7 @@ class FiYouNavBar extends StatelessWidget {
   }
 }
 
-class _NavButton extends StatelessWidget {
+class _NavButton extends StatefulWidget {
   const _NavButton({
     required this.item,
     required this.active,
@@ -300,52 +310,83 @@ class _NavButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final activeColor = item.tab == FiYouTab.explore
-        ? FiYouColors.gold
-        : FiYouColors.cyan;
-    final color = item.tab == FiYouTab.explore
-        ? FiYouColors.gold
-        : active
-        ? activeColor
-        : FiYouColors.textMuted;
+  State<_NavButton> createState() => _NavButtonState();
+}
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(28),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 42,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: active
-                ? BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.09),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: activeColor.withValues(alpha: 0.30),
-                    ),
-                  )
-                : null,
-            child: item.tab == FiYouTab.explore
-                ? SparkNavIcon(color: color, size: 24)
-                : Icon(item.icon, color: color, size: 22),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            item.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: color,
-              fontSize: 10.5,
-              height: 1,
-              fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+class _NavButtonState extends State<_NavButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isExplore = widget.item.tab == FiYouTab.explore;
+    final iconColor = isExplore
+        ? FiYouColors.gold
+        : widget.active
+        ? FiYouColors.navMain
+        : FiYouColors.textMuted;
+    final labelColor = isExplore
+        ? FiYouColors.gold
+        : widget.active
+        ? FiYouColors.navMain
+        : FiYouColors.textMuted;
+    final activeScale = widget.active ? 1.03 : 1.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onTap,
+        onHighlightChanged: (value) => setState(() => _pressed = value),
+        borderRadius: BorderRadius.circular(28),
+        splashColor: Colors.white.withValues(alpha: 0.045),
+        highlightColor: Colors.white.withValues(alpha: 0.025),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          decoration: BoxDecoration(
+            color: widget.active
+                ? FiYouColors.navMain.withValues(alpha: 0.18)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: widget.active
+                  ? FiYouColors.navMain.withValues(alpha: 0.38)
+                  : Colors.transparent,
+              width: 0.9,
             ),
           ),
-        ],
+          transform: Matrix4.diagonal3Values(
+            activeScale * (_pressed ? 1.024 : 1),
+            activeScale * (_pressed ? 0.986 : 1),
+            1,
+          ),
+          transformAlignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 42,
+                height: 32,
+                alignment: Alignment.center,
+                child: widget.item.tab == FiYouTab.explore
+                    ? SparkNavIcon(color: iconColor, size: 24)
+                    : Icon(widget.item.icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: labelColor,
+                  fontSize: 10.5,
+                  height: 1,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -383,35 +424,22 @@ class _SparkNavIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final shortest = size.shortestSide;
     final center = Offset(size.width * 0.48, size.height * 0.52);
-    final bright = Color.lerp(color, Colors.white, 0.55)!;
-    final shadow = Paint()
-      ..color = color.withValues(alpha: 0.22)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, shortest * 0.12);
-    final fill = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.35, -0.45),
-        radius: 0.9,
-        colors: [Colors.white, bright, color],
-        stops: const [0.0, 0.22, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: shortest * 0.42));
+    final fill = Paint()..color = color;
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..strokeJoin = StrokeJoin.round
+      ..color = Colors.white.withValues(alpha: 0.18);
 
     final mainSpark = _sparkPath(center, shortest * 0.36, shortest * 0.12);
-    canvas.drawPath(mainSpark, shadow);
     canvas.drawPath(mainSpark, fill);
-    canvas.drawPath(
-      mainSpark,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..strokeJoin = StrokeJoin.round
-        ..color = bright.withValues(alpha: 0.72),
-    );
+    canvas.drawPath(mainSpark, stroke);
 
     _drawSmallSpark(
       canvas,
       Offset(size.width * 0.76, size.height * 0.24),
       shortest * 0.12,
-      bright,
+      color,
     );
     _drawSmallSpark(
       canvas,
