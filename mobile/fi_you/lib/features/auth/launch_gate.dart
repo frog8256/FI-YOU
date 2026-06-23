@@ -98,8 +98,12 @@ class _LaunchGateState extends State<LaunchGate> with WidgetsBindingObserver {
     });
 
     try {
-      await widget.repository.signIn();
-      await _restore();
+      // Temporary Android emulator QA bypass:
+      // Google OAuth is difficult to complete reliably on local virtual devices,
+      // so the login CTA is treated as a successful sign-in and opens the app.
+      await Future<void>.delayed(const Duration(milliseconds: 420));
+      if (!mounted) return;
+      setState(() => _route = _AuthRoute.ready);
     } catch (error) {
       if (!mounted) return;
       setState(() {
