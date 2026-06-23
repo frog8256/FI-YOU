@@ -47,6 +47,54 @@ class UserProfile {
   }
 }
 
+class OnboardingQuestionOption {
+  const OnboardingQuestionOption({
+    required this.id,
+    required this.label,
+    required this.sequence,
+  });
+
+  final String id;
+  final String label;
+  final int sequence;
+}
+
+class OnboardingQuestion {
+  const OnboardingQuestion({
+    required this.id,
+    required this.questionSet,
+    required this.sequence,
+    required this.prompt,
+    required this.options,
+    this.helperText,
+    this.axisKeys = const [],
+  });
+
+  final String id;
+  final String questionSet;
+  final int sequence;
+  final String prompt;
+  final String? helperText;
+  final List<String> axisKeys;
+  final List<OnboardingQuestionOption> options;
+}
+
+class QuestionAnswerInput {
+  const QuestionAnswerInput({
+    required this.questionSet,
+    required this.questionId,
+    this.selectedOptionId,
+    this.optionalText,
+    this.skipped = false,
+  });
+
+  final String questionSet;
+  final String questionId;
+  final String? selectedOptionId;
+  final String? optionalText;
+  final bool skipped;
+}
+
 class ClueInsight {
   const ClueInsight({
     required this.id,
@@ -109,7 +157,19 @@ abstract class FiYouRepository extends ChangeNotifier {
 
   Future<LaunchSnapshot> restoreLaunchState();
   Future<void> signIn();
-  Future<void> completeOnboarding({required String name});
+  Future<UserProfile> saveProfileBasics({
+    required String name,
+    DateTime? birthday,
+  });
+  Future<List<OnboardingQuestion>> loadOnboardingQuestions({
+    String questionSet = 'onboarding_required',
+  });
+  Future<void> saveOnboardingAnswer(QuestionAnswerInput input);
+  Future<void> completeOnboarding({
+    required String name,
+    DateTime? birthday,
+    String? focusArea,
+  });
   Future<void> signOut();
   Future<DiaryEntry> saveDiary({
     required String title,
@@ -203,7 +263,22 @@ class MockFiYouRepository extends FiYouRepository {
   }
 
   @override
-  Future<void> completeOnboarding({required String name}) async {
+  Future<void> completeOnboarding({
+    required String name,
+    DateTime? birthday,
+    String? focusArea,
+  }) async {
+    await saveProfileBasics(name: name);
+    _profile = _profile!.copyWith(onboardingComplete: true);
+    await _persistProfile();
+    notifyListeners();
+  }
+
+  @override
+  Future<UserProfile> saveProfileBasics({
+    required String name,
+    DateTime? birthday,
+  }) async {
     _profile =
         (_profile ??
                 const UserProfile(
@@ -216,10 +291,41 @@ class MockFiYouRepository extends FiYouRepository {
                 ))
             .copyWith(
               name: name.trim().isEmpty ? 'User' : name.trim(),
-              onboardingComplete: true,
             );
     await _persistProfile();
     notifyListeners();
+    return _profile!;
+  }
+
+  @override
+  Future<List<OnboardingQuestion>> loadOnboardingQuestions({
+    String questionSet = 'onboarding_required',
+  }) async {
+    return [
+      for (var index = 0; index < questionFlowSteps.length; index++)
+        OnboardingQuestion(
+          id: 'mock-question-$index',
+          questionSet: questionSet,
+          sequence: index + 1,
+          prompt: questionFlowSteps[index].title,
+          helperText: questionFlowSteps[index].description,
+          options: [
+            for (var optionIndex = 0;
+                optionIndex < questionFlowSteps[index].options.length;
+                optionIndex++)
+              OnboardingQuestionOption(
+                id: 'mock-question-$index-option-$optionIndex',
+                label: questionFlowSteps[index].options[optionIndex],
+                sequence: optionIndex + 1,
+              ),
+          ],
+        ),
+    ];
+  }
+
+  @override
+  Future<void> saveOnboardingAnswer(QuestionAnswerInput input) async {
+    await Future<void>.delayed(const Duration(milliseconds: 120));
   }
 
   @override

@@ -294,7 +294,7 @@ final settingItems = [
   ),
   const SettingItem(
     title: 'AI 안내',
-    subtitle: 'FI-YOU는 진단하거나 확정하지 않아요',
+    subtitle: 'My Universe는 진단하거나 확정하지 않아요',
     icon: Icons.info_outline_rounded,
   ),
   const SettingItem(

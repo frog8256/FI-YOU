@@ -1,5 +1,6 @@
 import 'package:fi_you/features/my/my_models.dart';
 import 'package:fi_you/features/my/my_theme.dart';
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
 class StoreScreen extends StatelessWidget {
@@ -27,28 +28,11 @@ class StoreScreen extends StatelessWidget {
         children: [
           MySurface(
             padding: const EdgeInsets.all(20),
-            borderColor: MyColors.gold.withValues(alpha: 0.22),
-            radius: 24,
-            alpha: 0.8,
+            borderColor: FiYouGlass.glassStrokeTop,
+            radius: FiYouGlass.glassRadiusCard,
             child: Row(
               children: [
-                Container(
-                  width: 58,
-                  height: 58,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: MyColors.surface.withValues(alpha: 0.76),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: MyColors.gold.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.star_rounded,
-                    color: MyColors.gold,
-                    size: 34,
-                  ),
-                ),
+                const _GoldLogoBadge(size: 58, padding: 8),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -66,6 +50,8 @@ class StoreScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '${profile.starBalance} Star',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: MyColors.gold,
                           fontSize: 28,
@@ -108,7 +94,7 @@ class StoreScreen extends StatelessWidget {
           MySurface(
             padding: EdgeInsets.zero,
             radius: 22,
-            alpha: 0.78,
+            v5Preset: FiYouGlassV5Preset.medium,
             child: Column(
               children: [
                 for (var index = 0; index < history.length; index++) ...[
@@ -116,7 +102,7 @@ class StoreScreen extends StatelessWidget {
                   if (index != history.length - 1)
                     Divider(
                       height: 1,
-                      color: MyColors.border.withValues(alpha: 0.75),
+                      color: FiYouGlass.glassStrokeBottom,
                       indent: 52,
                     ),
                 ],
@@ -124,6 +110,27 @@ class StoreScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GoldLogoBadge extends StatelessWidget {
+  const _GoldLogoBadge({required this.size, required this.padding});
+
+  final double size;
+  final double padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: FiYouGlassSurface(
+        padding: EdgeInsets.all(padding),
+        radius: size,
+        v5Preset: FiYouGlassV5Preset.small,
+        child: Image.asset('assets/images/Logo_gold.png', fit: BoxFit.contain),
       ),
     );
   }
@@ -140,22 +147,11 @@ class _PackageTile extends StatelessWidget {
     return MySurface(
       onTap: onTap,
       padding: const EdgeInsets.all(16),
+      radius: 22,
+      v5Preset: FiYouGlassV5Preset.medium,
       child: Row(
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: MyColors.surface.withValues(alpha: 0.76),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            child: const Icon(
-              Icons.star_rounded,
-              color: MyColors.gold,
-              size: 23,
-            ),
-          ),
+          const _GoldLogoBadge(size: 42, padding: 7),
           const SizedBox(width: 13),
           Expanded(
             child: Column(
@@ -163,6 +159,8 @@ class _PackageTile extends StatelessWidget {
               children: [
                 Text(
                   package.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: MyColors.text,
                     fontSize: 14,
@@ -176,7 +174,7 @@ class _PackageTile extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: MyColors.textMuted,
+                    color: MyColors.textSoft,
                     fontSize: 12,
                     height: 1.35,
                     letterSpacing: 0,
@@ -186,28 +184,36 @@ class _PackageTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${package.stars} Star',
-                style: const TextStyle(
-                  color: MyColors.gold,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 96),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${package.stars} Star',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: MyColors.gold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                package.priceLabel,
-                style: const TextStyle(
-                  color: MyColors.textMuted,
-                  fontSize: 11,
-                  letterSpacing: 0,
+                const SizedBox(height: 4),
+                Text(
+                  package.priceLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: const TextStyle(
+                    color: MyColors.textSoft,
+                    fontSize: 12,
+                    letterSpacing: 0,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -235,6 +241,8 @@ class _HistoryTile extends StatelessWidget {
       ),
       title: Text(
         item.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: const TextStyle(
           color: MyColors.textSoft,
           fontSize: 13,
@@ -245,18 +253,24 @@ class _HistoryTile extends StatelessWidget {
       subtitle: Text(
         item.dateLabel,
         style: const TextStyle(
-          color: MyColors.textMuted,
-          fontSize: 11.5,
+          color: MyColors.textSoft,
+          fontSize: 12,
           letterSpacing: 0,
         ),
       ),
-      trailing: Text(
-        '${isGain ? '+' : ''}${item.amount} Star',
-        style: TextStyle(
-          color: isGain ? MyColors.gold : MyColors.primarySoft,
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0,
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 86),
+        child: Text(
+          '${isGain ? '+' : ''}${item.amount} Star',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.end,
+          style: TextStyle(
+            color: isGain ? MyColors.gold : MyColors.primarySoft,
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0,
+          ),
         ),
       ),
     );

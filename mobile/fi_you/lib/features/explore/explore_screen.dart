@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:fi_you/core/ui/fi_you_glass.dart';
@@ -6,8 +7,6 @@ import 'package:flutter/material.dart';
 typedef ExploreAnswersSaved = Future<void> Function(List<String> answers);
 
 const _surface = FiYouGlass.surface;
-const _surfaceSoft = FiYouGlass.surfaceSoft;
-const _line = Color(0xFF2D3B62);
 const _text = FiYouGlass.text;
 const _textSoft = FiYouGlass.textSoft;
 const _textMuted = FiYouGlass.textMuted;
@@ -98,23 +97,10 @@ class _ExploreHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-            child: Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: _surfaceSoft.withValues(alpha: 0.68),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _gold.withValues(alpha: 0.26)),
-              ),
-              child: const Center(
-                child: ExploreSparkIcon(color: _gold, size: 23),
-              ),
-            ),
-          ),
+        const SizedBox(
+          width: 46,
+          height: 46,
+          child: Center(child: ExploreSparkIcon(color: _gold, size: 25)),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -197,11 +183,7 @@ class _FlowCard extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: _GlassButton(
-              label: '질문 시작',
-              icon: Icons.play_arrow_rounded,
-              onPressed: onStartQuestion,
-            ),
+            child: _QuestionStartButton(onPressed: onStartQuestion),
           ),
         ],
       ),
@@ -218,10 +200,9 @@ class _FreeExploreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _GlassPanel(
       onTap: onStart,
-      borderColor: _gold.withValues(alpha: 0.34),
       child: const Row(
         children: [
-          ExploreSparkIcon(color: _gold, size: 32),
+          _RingedPlanetIcon(color: _gold, size: 34),
           SizedBox(width: 14),
           Expanded(child: _FreeExploreCopy()),
           SizedBox(width: 12),
@@ -278,7 +259,6 @@ class _TodayRecommendationCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _GlassPanel(
-          borderColor: _primarySoft.withValues(alpha: 0.28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -305,11 +285,7 @@ class _TodayRecommendationCard extends StatelessWidget {
               const SizedBox(height: 17),
               SizedBox(
                 width: double.infinity,
-                child: _GlassButton(
-                  label: '질문 시작',
-                  icon: Icons.play_arrow_rounded,
-                  onPressed: onStart,
-                ),
+                child: _QuestionStartButton(onPressed: onStart),
               ),
             ],
           ),
@@ -474,7 +450,7 @@ class _QuestionFlowScreenState extends State<QuestionFlowScreen> {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 5,
-                      backgroundColor: _surfaceSoft.withValues(alpha: 0.7),
+                      backgroundColor: FiYouGlass.glassFill,
                       valueColor: const AlwaysStoppedAnimation(_cyan),
                     ),
                   ),
@@ -559,7 +535,6 @@ class QuestionCompleteScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
             _GlassPanel(
-              borderColor: _mint.withValues(alpha: 0.28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -608,26 +583,23 @@ class QuestionCompleteScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 10),
-            OutlinedButton.icon(
+            FiYouLiquidButton(
+              label: 'U-Map',
+              icon: const Icon(Icons.map_outlined),
               onPressed: () {
                 onOpenUMap?.call();
                 Navigator.of(context).pop();
               },
-              icon: const Icon(Icons.map_outlined),
-              label: const Text('U-Map에 반영'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _cyan,
-                side: BorderSide(color: _cyan.withValues(alpha: 0.36)),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
+              height: 52,
+              fontSize: 14,
             ),
             const SizedBox(height: 8),
-            TextButton(
+            FiYouLiquidButton(
+              label: 'Close',
+              icon: const Icon(Icons.close_rounded),
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('오늘은 여기까지'),
+              height: 52,
+              fontSize: 14,
             ),
           ],
         ),
@@ -644,7 +616,6 @@ class _QuestionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _GlassPanel(
-      borderColor: _cyan.withValues(alpha: 0.3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -776,15 +747,12 @@ class _ChoiceTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           constraints: const BoxConstraints(minHeight: 58),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: _glassDecoration(
-            radius: 16,
-            borderColor: selected ? _cyan : _line,
-          ),
+          decoration: _glassDecoration(radius: FiYouGlass.glassRadiusSmall),
           child: Row(
             children: [
               Icon(
@@ -840,9 +808,12 @@ class _TextAnswer extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         ClipRRect(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            filter: ImageFilter.blur(
+              sigmaX: FiYouGlass.glassBlurSigma,
+              sigmaY: FiYouGlass.glassBlurSigma,
+            ),
             child: TextField(
               controller: controller,
               minLines: minLines,
@@ -853,14 +824,22 @@ class _TextAnswer extends StatelessWidget {
                 hintText: '떠오르는 장면이나 감정을 편하게 남겨주세요.',
                 hintStyle: const TextStyle(color: _textMuted),
                 filled: true,
-                fillColor: _surface.withValues(alpha: 0.78),
+                fillColor: FiYouGlass.glassFill,
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide(color: _line.withValues(alpha: 0.54)),
+                  borderRadius: BorderRadius.circular(
+                    FiYouGlass.glassRadiusSmall,
+                  ),
+                  borderSide: const BorderSide(
+                    color: FiYouGlass.glassStrokeSide,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide(color: _cyan.withValues(alpha: 0.55)),
+                  borderRadius: BorderRadius.circular(
+                    FiYouGlass.glassRadiusSmall,
+                  ),
+                  borderSide: const BorderSide(
+                    color: FiYouGlass.glassStrokeTop,
+                  ),
                 ),
               ),
             ),
@@ -872,40 +851,19 @@ class _TextAnswer extends StatelessWidget {
 }
 
 class _GlassPanel extends StatelessWidget {
-  const _GlassPanel({required this.child, this.borderColor, this.onTap});
+  const _GlassPanel({required this.child, this.onTap});
 
   final Widget child;
-  final Color? borderColor;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final panel = ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: _glassDecoration(
-            radius: 18,
-            borderColor: borderColor ?? _line,
-          ),
-          child: child,
-        ),
-      ),
-    );
-
-    if (onTap == null) {
-      return panel;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: panel,
-      ),
+    return FiYouGlassSurface(
+      padding: const EdgeInsets.all(18),
+      onTap: onTap,
+      transparent: true,
+      v5Preset: FiYouGlassV5Preset.large,
+      child: child,
     );
   }
 }
@@ -921,7 +879,7 @@ class _Metric extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minHeight: 70),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: _glassDecoration(radius: 12, borderColor: _line),
+      decoration: _glassDecoration(radius: FiYouGlass.glassRadiusSmall),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1005,10 +963,7 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: _glassDecoration(
-        radius: 999,
-        borderColor: _primarySoft.withValues(alpha: 0.62),
-      ),
+      decoration: _glassDecoration(radius: 999),
       child: Text(
         label,
         style: const TextStyle(
@@ -1028,29 +983,36 @@ class _StarPrice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 82),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: _glassDecoration(
-        radius: 999,
-        borderColor: _gold.withValues(alpha: 0.62),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.star_rounded, color: _gold, size: 15),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: _gold,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
+    return FiYouLiquidButton(
+      label: label,
+      icon: const Icon(Icons.star_rounded),
+      onPressed: () {},
+      width: 92,
+      height: 38,
+      radius: 999,
+      fontSize: 12,
+      foregroundColor: _gold,
+      borderColor: _gold,
+      borderWidth: 1.45,
+      accentColor: _gold,
+      accentStrength: 0.5,
+      iconSize: 15,
+      horizontalPadding: 10,
+    );
+  }
+}
+
+class _QuestionStartButton extends StatelessWidget {
+  const _QuestionStartButton({required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouSettingsActionButton(
+      label: '질문 시작하기',
+      icon: const Icon(Icons.auto_awesome_rounded),
+      onPressed: onPressed,
     );
   }
 }
@@ -1068,38 +1030,10 @@ class _GlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = onPressed != null;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: _glassDecoration(
-            radius: 16,
-            borderColor: enabled ? _primarySoft : _line,
-          ),
-          child: FilledButton.icon(
-            onPressed: onPressed,
-            icon: Icon(icon, size: 18),
-            label: Text(label, overflow: TextOverflow.ellipsis),
-            style: FilledButton.styleFrom(
-              disabledBackgroundColor: Colors.transparent,
-              disabledForegroundColor: _textMuted,
-              backgroundColor: Colors.transparent,
-              foregroundColor: enabled ? _text : _textMuted,
-              shadowColor: Colors.transparent,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return FiYouSettingsActionButton(
+      label: label,
+      icon: Icon(icon),
+      onPressed: onPressed,
     );
   }
 }
@@ -1116,6 +1050,109 @@ class ExploreSparkIcon extends StatelessWidget {
       dimension: size,
       child: CustomPaint(painter: _ExploreSparkIconPainter(color)),
     );
+  }
+}
+
+class _RingedPlanetIcon extends StatelessWidget {
+  const _RingedPlanetIcon({required this.color, required this.size});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: size,
+      child: CustomPaint(painter: _RingedPlanetIconPainter(color)),
+    );
+  }
+}
+
+class _RingedPlanetIconPainter extends CustomPainter {
+  const _RingedPlanetIconPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final shortest = size.shortestSide;
+    final center = Offset(size.width * 0.5, size.height * 0.5);
+    final coreRadius = shortest * 0.22;
+    final ringRect = Rect.fromCenter(
+      center: center,
+      width: shortest * 0.88,
+      height: shortest * 0.34,
+    );
+    final bright = Color.lerp(color, Colors.white, 0.42)!;
+
+    canvas.drawCircle(
+      center,
+      coreRadius * 1.8,
+      Paint()
+        ..color = color.withValues(alpha: 0.13)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, shortest * 0.12),
+    );
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(-math.pi / 8);
+    canvas.translate(-center.dx, -center.dy);
+
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.6, shortest * 0.07)
+      ..strokeCap = StrokeCap.round
+      ..color = bright.withValues(alpha: 0.86);
+    canvas.drawOval(ringRect, ringPaint);
+
+    final backMaskPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(2.2, shortest * 0.09)
+      ..strokeCap = StrokeCap.round
+      ..color = _surface.withValues(alpha: 0.88);
+    canvas.drawArc(
+      ringRect,
+      math.pi * 0.05,
+      math.pi * 0.9,
+      false,
+      backMaskPaint,
+    );
+
+    final frontRingPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = math.max(1.6, shortest * 0.07)
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+    canvas.drawArc(
+      ringRect,
+      math.pi * 0.05,
+      math.pi * 0.9,
+      false,
+      frontRingPaint,
+    );
+    canvas.restore();
+
+    canvas.drawCircle(
+      center,
+      coreRadius,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.45, -0.45),
+          radius: 0.9,
+          colors: [bright, color, color.withValues(alpha: 0.68)],
+          stops: const [0, 0.58, 1],
+        ).createShader(Rect.fromCircle(center: center, radius: coreRadius)),
+    );
+    canvas.drawCircle(
+      Offset(center.dx + coreRadius * 0.35, center.dy + coreRadius * 0.25),
+      coreRadius * 0.16,
+      Paint()..color = Colors.white.withValues(alpha: 0.5),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RingedPlanetIconPainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
 
@@ -1224,22 +1261,8 @@ class _ReflectionStrip extends StatelessWidget {
   }
 }
 
-BoxDecoration _glassDecoration({
-  required double radius,
-  required Color borderColor,
-}) {
-  return BoxDecoration(
-    borderRadius: BorderRadius.circular(radius),
-    color: _surface.withValues(alpha: 0.78),
-    border: Border.all(color: borderColor.withValues(alpha: 0.3), width: 1),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.22),
-        blurRadius: 18,
-        offset: const Offset(0, 10),
-      ),
-    ],
-  );
+BoxDecoration _glassDecoration({required double radius, Color? borderColor}) {
+  return FiYouGlass.ctaGlassV5(radius: radius, borderColor: borderColor);
 }
 
 enum _AnswerType { choice, text, mixed }

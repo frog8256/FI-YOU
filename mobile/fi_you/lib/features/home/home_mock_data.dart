@@ -26,6 +26,33 @@ class HomeActivityMetric {
   final Color color;
 }
 
+const homeStatsMetrics = [
+  HomeActivityMetric(
+    label: '총 출석',
+    value: '18일',
+    icon: Icons.calendar_month_rounded,
+    color: Color(0xFFC4B5FD),
+  ),
+  HomeActivityMetric(
+    label: '연속 출석',
+    value: '5일',
+    icon: Icons.local_fire_department_rounded,
+    color: Color(0xFF7DD3FC),
+  ),
+  HomeActivityMetric(
+    label: '총 Diary',
+    value: '12개',
+    icon: Icons.edit_note_rounded,
+    color: Color(0xFFF7C948),
+  ),
+  HomeActivityMetric(
+    label: '연속 작성',
+    value: '3일',
+    icon: Icons.history_edu_rounded,
+    color: Color(0xFF6EE7B7),
+  ),
+];
+
 class HomeMockData {
   const HomeMockData({
     required this.userName,
@@ -63,7 +90,7 @@ const homeMockData = HomeMockData(
   starCount: 124,
   levelLabel: 'Level 2',
   uMapVisibility: 0.34,
-  uMapLevelLabel: 'FI-YOU가 정리한 User 님',
+  uMapLevelLabel: '지금까지 기록을 바탕으로 탐구한 User 님 입니다.',
   uMapHelpText: '질문과 Diary가 쌓이면 8개 흐름이 더 섬세하게 나타납니다.',
   axisClues: [
     HomeAxisClue(label: '관계 반응', value: 82, color: Color(0xFFA78BFA)),

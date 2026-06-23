@@ -1,3 +1,4 @@
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:fi_you/features/my/my_models.dart';
 import 'package:fi_you/features/my/my_theme.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +62,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: '질문, Diary, 탐구 흐름 업데이트 알림',
                 trailing: Switch(
                   value: _notificationsEnabled,
-                  activeThumbColor: MyColors.gold,
+                  activeThumbColor: MyColors.primarySoft,
+                  activeTrackColor: MyColors.primarySoft.withValues(
+                    alpha: 0.18,
+                  ),
+                  inactiveThumbColor: MyColors.textSoft,
+                  inactiveTrackColor: FiYouGlass.glassSmallFill,
                   onChanged: (value) {
                     setState(() => _notificationsEnabled = value);
                     widget.onNotificationChanged?.call(value);
@@ -85,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _SettingsTile(
                 icon: Icons.description_outlined,
                 title: '이용약관',
-                subtitle: 'FI-YOU 서비스 이용 기준',
+                subtitle: 'My Universe 서비스 이용 기준',
                 onTap: widget.onTermsTap ?? () => _showMockMessage('이용약관'),
               ),
               _SettingsTile(
@@ -101,9 +107,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 28),
           MySurface(
             onTap: widget.onLogout ?? () => _showMockMessage('로그아웃'),
-            radius: 18,
-            alpha: 0.76,
-            borderColor: MyColors.danger.withValues(alpha: 0.24),
+            radius: FiYouGlass.glassRadiusSmall,
+            borderColor: FiYouGlass.glassStrokeSide,
+            v5Preset: FiYouGlassV5Preset.cta,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -148,7 +154,7 @@ class _SettingsSection extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            color: MyColors.textMuted,
+            color: MyColors.textSoft,
             fontSize: 12,
             fontWeight: FontWeight.w800,
             letterSpacing: 0,
@@ -157,8 +163,8 @@ class _SettingsSection extends StatelessWidget {
         const SizedBox(height: 10),
         MySurface(
           padding: EdgeInsets.zero,
-          radius: 24,
-          alpha: 0.78,
+          radius: 22,
+          v5Preset: FiYouGlassV5Preset.medium,
           child: Column(
             children: [
               for (var index = 0; index < children.length; index++) ...[
@@ -166,7 +172,7 @@ class _SettingsSection extends StatelessWidget {
                 if (index != children.length - 1)
                   Divider(
                     height: 1,
-                    color: MyColors.border.withValues(alpha: 0.75),
+                    color: FiYouGlass.glassStrokeBottom,
                     indent: 58,
                   ),
               ],
@@ -195,33 +201,56 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      minLeadingWidth: 28,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: Icon(icon, color: MyColors.primarySoft, size: 22),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: MyColors.text,
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: MyColors.textMuted,
-          fontSize: 12,
-          letterSpacing: 0,
-        ),
-      ),
-      trailing:
-          trailing ??
-          const Icon(Icons.chevron_right_rounded, color: MyColors.textMuted),
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            FiYouIconTile(
+              color: MyColors.primarySoft,
+              size: 34,
+              child: Icon(icon, color: MyColors.primarySoft, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: MyColors.text,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: MyColors.textMuted,
+                      fontSize: 11.5,
+                      height: 1.35,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null)
+              trailing!
+            else
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: MyColors.textMuted,
+                size: 21,
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -5,7 +5,7 @@ class MyProfileData {
   const MyProfileData({
     this.name = 'User',
     this.email = 'user@fi-you.app',
-    this.profileLine = '관찰과 탐구를 좋아하는',
+    this.profileLine = '최근 기록에 관찰과 탐구가 쌓이는',
     this.level = 3,
     this.starBalance = 130,
     this.diaryCount = 12,
@@ -78,7 +78,7 @@ const myDefaultInsights = <MyInsightData>[
   MyInsightData(
     icon: Icons.edit_note_rounded,
     color: Color(0xFF7DD3FC),
-    title: '기록 반응이 안정적이에요',
+    title: '기록 단서가 쌓이고 있어요',
     description: 'Diary와 질문 응답이 쌓일수록 U-Map의 자기탐색 단서가 더 선명해집니다.',
   ),
   MyInsightData(

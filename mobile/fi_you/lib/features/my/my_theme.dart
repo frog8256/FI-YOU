@@ -1,24 +1,27 @@
-import 'dart:ui';
-
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
 class MyColors {
   const MyColors._();
 
-  static const background = Color(0xFF050714);
-  static const depth = Color(0xFF080D1D);
-  static const surface = Color(0xFF0E1325);
-  static const surfaceSoft = Color(0xFF141B30);
+  static const background = FiYouGlass.background;
+  static const depth = FiYouGlass.depth;
+  static const surface = FiYouGlass.surface;
+  static const surfaceSoft = FiYouGlass.surfaceSoft;
   static const border = Color(0xFF1E2945);
-  static const borderStrong = Color(0xFF2D3B62);
-  static const primarySoft = Color(0xFFC4B5FD);
-  static const cyan = Color(0xFF7DD3FC);
+  static const borderStrong = FiYouGlass.border;
+  static const primarySoft = FiYouGlass.primarySoft;
+  static const cyan = FiYouGlass.cyan;
   static const mint = Color(0xFF6EE7B7);
-  static const gold = Color(0xFFF7C948);
+  static const gold = FiYouGlass.gold;
   static const danger = Color(0xFFFFA8A8);
-  static const text = Color(0xFFFFFFFF);
-  static const textSoft = Color(0xFFB7C0D7);
-  static const textMuted = Color(0xFF7F8AA6);
+  static const text = FiYouGlass.text;
+  static const textSoft = FiYouGlass.textSoft;
+  static const textMuted = FiYouGlass.textMuted;
+  static final glassFill = FiYouGlass.glassFill;
+  static final glassStrokeSide = FiYouGlass.glassStrokeSide;
+  static final glassStrokeBottom = FiYouGlass.glassStrokeBottom;
+  static final glassSpecularWhite = FiYouGlass.glassSpecularWhite;
 }
 
 class MyPageScaffold extends StatelessWidget {
@@ -55,9 +58,9 @@ class MySurface extends StatelessWidget {
     this.padding = const EdgeInsets.all(18),
     this.borderColor,
     this.onTap,
-    this.radius = 22,
-    this.blurSigma = 20,
-    this.alpha = 0.78,
+    this.radius = FiYouGlass.glassRadiusCard,
+    this.blurSigma = FiYouGlass.glassBlurSigma,
+    this.v5Preset = FiYouGlassV5Preset.large,
     super.key,
   });
 
@@ -67,47 +70,19 @@ class MySurface extends StatelessWidget {
   final VoidCallback? onTap;
   final double radius;
   final double blurSigma;
-  final double alpha;
+  final FiYouGlassV5Preset v5Preset;
 
   @override
   Widget build(BuildContext context) {
-    final decoration = BoxDecoration(
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: borderColor ?? Colors.white.withValues(alpha: 0.12),
-      ),
-      color: MyColors.surface.withValues(alpha: alpha),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.22),
-          blurRadius: 22,
-          offset: const Offset(0, 12),
-        ),
-      ],
-    );
-
-    final content = ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: Ink(
-          decoration: decoration,
-          child: Padding(padding: padding, child: child),
-        ),
-      ),
-    );
-
-    if (onTap == null) {
-      return content;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(radius),
-        child: content,
-      ),
+    return FiYouGlassSurface(
+      padding: padding,
+      radius: radius,
+      borderColor: borderColor,
+      onTap: onTap,
+      v5Preset: v5Preset,
+      transparent: true,
+      blurSigma: blurSigma,
+      child: child,
     );
   }
 }

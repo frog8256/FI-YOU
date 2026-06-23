@@ -37,6 +37,8 @@ dependencies:
   supabase_flutter: ^2.15.0
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.5
+  liquid_glass_widgets: ^0.17.1
+  shared_preferences_android: 2.4.15
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +65,7 @@ flutter:
   assets:
     - assets/images/fi_you_logo_mark.png
     - assets/images/Logo_gold.png
+    - assets/images/dna_studio_white.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

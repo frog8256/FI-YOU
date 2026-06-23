@@ -1,5 +1,8 @@
 import 'package:fi_you/features/my/my_models.dart';
 import 'package:fi_you/features/my/my_theme.dart';
+import 'package:fi_you/features/my/settings_screen.dart';
+import 'package:fi_you/features/my/store_screen.dart';
+import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
 class MyScreen extends StatelessWidget {
@@ -25,7 +28,7 @@ class MyScreen extends StatelessWidget {
         children: [
           const _Header(),
           const SizedBox(height: 20),
-          _ProfileCard(profile: profile),
+          _ProfileCard(profile: profile, onStarTap: () => _openStore(context)),
           const SizedBox(height: 24),
           const MySectionTitle(
             title: '분석내용',
@@ -34,14 +37,29 @@ class MyScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _InsightList(insights: insights),
           const SizedBox(height: 22),
-          const MySectionTitle(
-            title: '설정',
-            subtitle: '계정, 알림, 개인정보 항목을 바로 확인하고 관리합니다.',
-          ),
-          const SizedBox(height: 12),
-          _InlineSettingsList(profile: profile),
+          _SettingsButton(onTap: () => _openSettings(context)),
         ],
       ),
+    );
+  }
+
+  void _openStore(BuildContext context) {
+    if (onOpenStore != null) {
+      onOpenStore!();
+      return;
+    }
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => StoreScreen(profile: profile)),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    if (onOpenSettings != null) {
+      onOpenSettings!();
+      return;
+    }
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => SettingsScreen(profile: profile)),
     );
   }
 }
@@ -53,20 +71,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: MyColors.surface.withValues(alpha: 0.78),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          ),
-          child: const Icon(
-            Icons.person_rounded,
-            color: MyColors.primarySoft,
-            size: 23,
-          ),
-        ),
+        const Icon(Icons.person_rounded, color: MyColors.primarySoft, size: 23),
         const SizedBox(width: 10),
         const Text(
           'My',
@@ -83,21 +88,24 @@ class _Header extends StatelessWidget {
 }
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.profile});
+  const _ProfileCard({required this.profile, required this.onStarTap});
 
   final MyProfileData profile;
+  final VoidCallback onStarTap;
 
   @override
   Widget build(BuildContext context) {
     return MySurface(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-      radius: 28,
-      alpha: 0.8,
+      radius: FiYouGlass.glassRadiusCard,
+      borderColor: FiYouGlass.glassStrokeTop,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             profile.profileLine,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: MyColors.primarySoft,
               fontSize: 15,
@@ -106,20 +114,28 @@ class _ProfileCard extends StatelessWidget {
               letterSpacing: 0,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            '${profile.name} 님',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: MyColors.text,
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              height: 1.12,
-              letterSpacing: 0,
-            ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${profile.name} 님',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: MyColors.text,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    height: 1.12,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 18),
+          const _ProfileRecordStats(),
+          const SizedBox(height: 14),
           Row(
             children: [
               _MetricBox(label: 'Level', value: '${profile.level}'),
@@ -133,6 +149,90 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
+class _ProfileRecordStats extends StatelessWidget {
+  const _ProfileRecordStats();
+
+  @override
+  Widget build(BuildContext context) {
+    const stats = <({String label, String value})>[
+      (label: '탐구시작', value: '00일'),
+      (label: '총 출석', value: '00일'),
+      (label: '연속출석', value: '00일'),
+      (label: 'Diary', value: '00개'),
+      (label: '연속작성', value: '00개'),
+    ];
+
+    return Row(
+      children: [
+        for (var index = 0; index < stats.length; index++) ...[
+          Expanded(child: _ProfileRecordStat(item: stats[index])),
+          if (index == 2) const _ProfileStatsDivider(),
+          if (index != stats.length - 1 && index != 2) const SizedBox(width: 6),
+        ],
+      ],
+    );
+  }
+}
+
+class _ProfileStatsDivider extends StatelessWidget {
+  const _ProfileStatsDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 32,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      color: FiYouGlass.glassStrokeBottom,
+    );
+  }
+}
+
+class _ProfileRecordStat extends StatelessWidget {
+  const _ProfileRecordStat({required this.item});
+
+  final ({String label, String value}) item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            item.label,
+            maxLines: 1,
+            style: const TextStyle(
+              color: MyColors.textMuted,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            item.value,
+            maxLines: 1,
+            style: const TextStyle(
+              color: MyColors.text,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _MetricBox extends StatelessWidget {
   const _MetricBox({required this.label, required this.value});
 
@@ -141,37 +241,49 @@ class _MetricBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tint = label == 'Star' ? MyColors.gold : MyColors.primarySoft;
+
     return Expanded(
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: MyColors.surface.withValues(alpha: 0.76),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Row(
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: MyColors.textMuted,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0,
-              ),
+      child: SizedBox(
+        height: 42,
+        child: MySurface(
+          padding: const EdgeInsets.symmetric(horizontal: 13),
+          radius: FiYouGlass.glassRadiusSmall,
+          borderColor: tint,
+          v5Preset: FiYouGlassV5Preset.cta,
+          child: SizedBox.expand(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: MyColors.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const Spacer(),
+                Flexible(
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      color: MyColors.text,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Text(
-              value,
-              style: const TextStyle(
-                color: MyColors.text,
-                fontSize: 17,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -187,8 +299,7 @@ class _InsightList extends StatelessWidget {
   Widget build(BuildContext context) {
     return MySurface(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      radius: 24,
-      alpha: 0.78,
+      radius: FiYouGlass.glassRadiusCard,
       child: Column(
         children: [
           for (var index = 0; index < insights.length; index++) ...[
@@ -196,7 +307,7 @@ class _InsightList extends StatelessWidget {
             if (index != insights.length - 1)
               Divider(
                 height: 1,
-                color: MyColors.border.withValues(alpha: 0.8),
+                color: FiYouGlass.glassStrokeBottom,
                 indent: 50,
               ),
           ],
@@ -218,17 +329,14 @@ class _InsightRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: MyColors.surface.withValues(alpha: 0.76),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          FiYouIconTile(
+            color: insight.color,
+            size: FiYouControlTokens.iconTileList,
+            child: Icon(
+              insight.icon,
+              color: insight.color,
+              size: FiYouControlTokens.iconTileListIcon,
             ),
-            child: insight.icon == Icons.auto_awesome_rounded
-                ? MySparkIcon(color: insight.color, size: 21)
-                : Icon(insight.icon, color: insight.color, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -263,255 +371,17 @@ class _InsightRow extends StatelessWidget {
   }
 }
 
-class MySparkIcon extends StatelessWidget {
-  const MySparkIcon({required this.color, required this.size, super.key});
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton({required this.onTap});
 
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: size,
-      child: CustomPaint(painter: _MySparkIconPainter(color)),
-    );
-  }
-}
-
-class _MySparkIconPainter extends CustomPainter {
-  const _MySparkIconPainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final shortest = size.shortestSide;
-    final center = Offset(size.width * 0.48, size.height * 0.52);
-    final main = _sparkPath(center, shortest * 0.36, shortest * 0.12);
-    canvas.drawPath(main, Paint()..color = color);
-    _drawSmall(
-      canvas,
-      Offset(size.width * 0.76, size.height * 0.24),
-      shortest * 0.12,
-      color,
-    );
-    _drawSmall(
-      canvas,
-      Offset(size.width * 0.24, size.height * 0.72),
-      shortest * 0.09,
-      color,
-    );
-  }
-
-  Path _sparkPath(Offset center, double longRadius, double shortRadius) {
-    return Path()
-      ..moveTo(center.dx, center.dy - longRadius)
-      ..quadraticBezierTo(
-        center.dx + shortRadius * 0.62,
-        center.dy - shortRadius * 0.62,
-        center.dx + longRadius,
-        center.dy,
-      )
-      ..quadraticBezierTo(
-        center.dx + shortRadius * 0.62,
-        center.dy + shortRadius * 0.62,
-        center.dx,
-        center.dy + longRadius,
-      )
-      ..quadraticBezierTo(
-        center.dx - shortRadius * 0.62,
-        center.dy + shortRadius * 0.62,
-        center.dx - longRadius,
-        center.dy,
-      )
-      ..quadraticBezierTo(
-        center.dx - shortRadius * 0.62,
-        center.dy - shortRadius * 0.62,
-        center.dx,
-        center.dy - longRadius,
-      )
-      ..close();
-  }
-
-  void _drawSmall(Canvas canvas, Offset center, double radius, Color color) {
-    canvas.drawPath(
-      _sparkPath(center, radius, radius * 0.35),
-      Paint()..color = color,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _MySparkIconPainter oldDelegate) {
-    return oldDelegate.color != color;
-  }
-}
-
-class _InlineSettingsList extends StatefulWidget {
-  const _InlineSettingsList({required this.profile});
-
-  final MyProfileData profile;
-
-  @override
-  State<_InlineSettingsList> createState() => _InlineSettingsListState();
-}
-
-class _InlineSettingsListState extends State<_InlineSettingsList> {
-  bool _notificationsEnabled = true;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        MySurface(
-          padding: EdgeInsets.zero,
-          radius: 24,
-          alpha: 0.78,
-          child: Column(
-            children: [
-              _SettingsListTile(
-                icon: Icons.person_outline_rounded,
-                title: '프로필',
-                subtitle: '${widget.profile.name} · ${widget.profile.email}',
-                onTap: () => _showMockMessage('프로필 편집'),
-              ),
-              const _SettingsDivider(),
-              _SettingsListTile(
-                icon: Icons.notifications_none_rounded,
-                title: '알림 설정',
-                subtitle: '질문, Diary, 탐구 흐름 업데이트 알림',
-                trailing: Switch(
-                  value: _notificationsEnabled,
-                  activeThumbColor: MyColors.gold,
-                  onChanged: (value) {
-                    setState(() => _notificationsEnabled = value);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        MySurface(
-          padding: EdgeInsets.zero,
-          radius: 24,
-          alpha: 0.78,
-          child: Column(
-            children: [
-              _SettingsListTile(
-                icon: Icons.folder_delete_outlined,
-                title: '개인정보 / 데이터 삭제',
-                subtitle: '기록과 U-Map 데이터 삭제 요청',
-                onTap: () => _showMockMessage('데이터 삭제 요청'),
-              ),
-              const _SettingsDivider(),
-              _SettingsListTile(
-                icon: Icons.description_outlined,
-                title: '이용약관',
-                subtitle: 'FI-YOU 서비스 이용 기준',
-                onTap: () => _showMockMessage('이용약관'),
-              ),
-              const _SettingsDivider(),
-              _SettingsListTile(
-                icon: Icons.privacy_tip_outlined,
-                title: '개인정보처리방침',
-                subtitle: '기록 데이터 처리와 보관 기준',
-                onTap: () => _showMockMessage('개인정보처리방침'),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        MySurface(
-          onTap: () => _showMockMessage('로그아웃'),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-          radius: 18,
-          alpha: 0.76,
-          borderColor: MyColors.danger.withValues(alpha: 0.24),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.logout_rounded, color: MyColors.danger, size: 20),
-              SizedBox(width: 10),
-              Text(
-                '로그아웃',
-                style: TextStyle(
-                  color: MyColors.danger,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showMockMessage(String label) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$label 기능은 연결 준비 중입니다.')));
-  }
-}
-
-class _SettingsListTile extends StatelessWidget {
-  const _SettingsListTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      minLeadingWidth: 28,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: Icon(icon, color: MyColors.primarySoft, size: 22),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: MyColors.text,
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: MyColors.textMuted,
-          fontSize: 12,
-          letterSpacing: 0,
-        ),
-      ),
-      trailing:
-          trailing ??
-          const Icon(Icons.chevron_right_rounded, color: MyColors.textMuted),
-      onTap: onTap,
-    );
-  }
-}
-
-class _SettingsDivider extends StatelessWidget {
-  const _SettingsDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      color: MyColors.border.withValues(alpha: 0.75),
-      indent: 58,
+    return FiYouSettingsActionButton(
+      label: 'Settings',
+      icon: const Icon(Icons.settings_outlined),
+      onPressed: onTap,
     );
   }
 }

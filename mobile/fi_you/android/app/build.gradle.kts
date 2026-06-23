@@ -1,5 +1,6 @@
 import java.util.Properties
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.compile.JavaCompile
 
 plugins {
     id("com.android.application")
@@ -23,7 +24,7 @@ gradle.taskGraph.whenReady {
     }
     if (releaseSigningRequired && !hasReleaseSigning) {
         throw GradleException(
-            "FI-YOU release signing is not configured. Create android/key.properties " +
+            "My Universe release signing is not configured. Create android/key.properties " +
                 "from android/key.properties.example or inject the same values in CI. " +
                 "Do not commit keystore files or passwords.",
         )
@@ -78,4 +79,22 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    doFirst {
+        val registrant = file("src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java")
+        if (registrant.exists()) {
+            val patched = registrant.readText()
+                .replace(
+                    "new io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin()",
+                    "new io.flutter.plugins.sharedpreferences.LegacySharedPreferencesPlugin()",
+                )
+                .replace(
+                    "io.flutter.plugins.sharedpreferences.SharedPreferencesPlugin",
+                    "io.flutter.plugins.sharedpreferences.LegacySharedPreferencesPlugin",
+                )
+            registrant.writeText(patched)
+        }
+    }
 }
