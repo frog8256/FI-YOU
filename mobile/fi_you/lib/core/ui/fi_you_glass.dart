@@ -648,6 +648,26 @@ class FiYouChevronButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!showBorder) {
+      return Tooltip(
+        message: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: SizedBox.square(
+            dimension: size,
+            child: Center(
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: color,
+                size: iconSize,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return FiYouLiquidIconButton(
       icon: Icon(Icons.chevron_right_rounded, color: color, size: iconSize),
       label: label,

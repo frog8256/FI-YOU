@@ -213,6 +213,33 @@ class SupabaseFiYouRepository extends FiYouRepository {
   }
 
   @override
+  Future<ExplorationCard> loadNextExplorationCard() async {
+    final response = await client.functions.invoke(
+      'deliver-exploration-card',
+      body: {'userLanguage': 'ko'},
+    );
+    final data = _requiredMap(response.data, 'deliver-exploration-card');
+    return _explorationCardFromMap(
+      _requiredMap(data['card'], 'exploration.card'),
+    );
+  }
+
+  @override
+  Future<void> submitExplorationAnswer(ExplorationAnswerInput input) async {
+    await client.functions.invoke(
+      'answer-exploration-card',
+      body: {
+        'card_id': input.cardId,
+        'selected_options': input.selectedOptionIds,
+        'user_note': input.userNote?.trim() ?? '',
+      },
+    );
+    await _refreshUMapSnapshot();
+    _todayInsight = _insightFromCurrentState(questionCount: 1);
+    notifyListeners();
+  }
+
+  @override
   Future<void> completeOnboarding({
     required String name,
     DateTime? birthday,
@@ -476,10 +503,21 @@ class SupabaseFiYouRepository extends FiYouRepository {
   }
 
   Future<void> _refreshUMapSnapshot() async {
-    final data = await client.rpc('get_latest_u_map');
-    final snapshot = _requiredMap(data, 'get_latest_u_map');
-    final axes = _mapList(snapshot['axes']);
-    _hasLowUMapData = snapshot['lowData'] == true;
+    Object? data;
+    try {
+      data = await client.rpc('get_latest_u_map');
+    } on PostgrestException catch (error) {
+      if (error.code != 'PGRST202') {
+        rethrow;
+      }
+      data = await client.rpc('get_my_u_map');
+    }
+
+    final snapshot = _optionalMap(data);
+    final axes = snapshot == null ? _mapList(data) : _mapList(snapshot['axes']);
+    _hasLowUMapData = snapshot == null
+        ? axes.isEmpty
+        : snapshot['lowData'] == true;
     _axes = axes.isEmpty
         ? List.of(axisSummaries)
         : [
@@ -566,6 +604,31 @@ class SupabaseFiYouRepository extends FiYouRepository {
             sequence: (option['sequence'] as num?)?.toInt() ?? 0,
           ),
       ],
+    );
+  }
+
+  ExplorationCard _explorationCardFromMap(Map<String, dynamic> data) {
+    final type = switch ((data['card_type'] as String?) ?? 'scenario_choice') {
+      'binary_choice' => ExplorationCardType.binaryChoice,
+      'multiple_choice' => ExplorationCardType.multipleChoice,
+      'priority_selection' => ExplorationCardType.prioritySelection,
+      _ => ExplorationCardType.scenarioChoice,
+    };
+    final options = _mapList(data['options'])
+        .map(
+          (option) => ExplorationCardOption(
+            id: (option['id'] as String?) ?? '',
+            label: (option['label'] as String?) ?? '',
+          ),
+        )
+        .where((option) => option.id.isNotEmpty && option.label.isNotEmpty)
+        .toList();
+    return ExplorationCard(
+      id: (data['card_id'] as String?) ?? '',
+      type: type,
+      question: (data['question'] as String?) ?? '',
+      options: options,
+      requiredSelections: (data['required_selections'] as num?)?.toInt() ?? 1,
     );
   }
 

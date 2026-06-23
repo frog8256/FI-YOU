@@ -1184,6 +1184,7 @@ class _PremiumExtensionSection extends StatelessWidget {
           subtitle: '성장 흐름의 단서를 조금 더 깊게 열어봐요.',
           icon: Icons.trending_up_rounded,
           color: _UMapColors.gold,
+          starCost: 30,
           onTap: onOpenGrowthMap,
         ),
         const SizedBox(height: 10),
@@ -1192,6 +1193,7 @@ class _PremiumExtensionSection extends StatelessWidget {
           subtitle: '관계 안에서 반복되는 흐름의 단서를 살펴봐요.',
           icon: Icons.people_alt_rounded,
           color: _UMapColors.cyan,
+          starCost: 30,
           onTap: onOpenRelationMap,
         ),
         const SizedBox(height: 10),
@@ -1200,6 +1202,7 @@ class _PremiumExtensionSection extends StatelessWidget {
           subtitle: 'U-Map의 노드와 기록 근거를 리포트로 정리해요.',
           icon: Icons.article_outlined,
           color: _UMapColors.emerald,
+          starCost: 50,
           onTap: onOpenReport,
         ),
       ],
@@ -1213,6 +1216,7 @@ class _ActionTile extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.color,
+    required this.starCost,
     this.onTap,
   });
 
@@ -1220,6 +1224,7 @@ class _ActionTile extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color color;
+  final int starCost;
   final VoidCallback? onTap;
 
   @override
@@ -1259,7 +1264,7 @@ class _ActionTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          _StarUseButton(color: color, label: title),
+          _StarUseButton(label: title, cost: starCost),
         ],
       ),
     );
@@ -1267,27 +1272,27 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _StarUseButton extends StatelessWidget {
-  const _StarUseButton({required this.color, required this.label});
+  const _StarUseButton({required this.label, required this.cost});
 
-  final Color color;
   final String label;
+  final int cost;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
       message: '$label Star 소비',
       child: FiYouLiquidButton(
-        label: 'Star',
+        label: '$cost Star',
         icon: const Icon(Icons.star_rounded),
         onPressed: () {},
-        width: 82,
+        width: 92,
         height: 34,
         radius: 999,
         fontSize: 11.5,
-        foregroundColor: color,
-        borderColor: color,
+        foregroundColor: _UMapColors.gold,
+        borderColor: _UMapColors.gold,
         borderWidth: 1.15,
-        accentColor: color,
+        accentColor: _UMapColors.gold,
         accentStrength: 0.38,
         iconSize: 14,
         horizontalPadding: 10,
@@ -1304,7 +1309,7 @@ class _QuestionCta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FiYouLiquidButton(
-      label: '질문 시작하기',
+      label: '탐구 시작하기',
       icon: const Icon(Icons.auto_awesome_rounded),
       onPressed: onStartQuestion,
       height: FiYouControlTokens.buttonRegularHeight,

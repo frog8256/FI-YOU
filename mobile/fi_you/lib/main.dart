@@ -330,11 +330,13 @@ class _FiYouShellState extends State<FiYouShell> {
                 onNotificationTap: () =>
                     _showMessage(context, '알림 설정은 출시 때 연결됩니다.'),
                 onProfileTap: () => _select(FiYouTab.my),
-                onStoreTap: () => _select(FiYouTab.my),
+                onStoreTap: _openStore,
+                onLevelTap: () => _select(FiYouTab.my),
                 onUMapTap: () => _select(FiYouTab.uMap),
                 onDiaryTap: () => _select(FiYouTab.diary),
                 onQuestionTap: () => _select(FiYouTab.explore),
                 onStatusTap: () => _select(FiYouTab.explore),
+                onShareTap: () => _showMessage(context, '공유 기능은 출시 때 연결됩니다.'),
               ),
               const diary.DiaryScreen(),
               explore.ExploreScreen(
@@ -364,6 +366,12 @@ class _FiYouShellState extends State<FiYouShell> {
         ],
       ),
     );
+  }
+
+  void _openStore() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const my.StoreScreen()));
   }
 }
 

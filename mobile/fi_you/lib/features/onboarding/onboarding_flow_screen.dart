@@ -395,13 +395,7 @@ class _ReadyStep extends StatelessWidget {
       ),
       children: const [
         SizedBox(height: 34),
-        Center(
-          child: Icon(
-            Icons.auto_awesome_rounded,
-            color: FiYouGlass.gold,
-            size: 72,
-          ),
-        ),
+        Center(child: _OnboardingLogo(size: 118)),
         SizedBox(height: 28),
         _HeroCopy(
           eyebrow: 'MY UNIVERSE starts here',
@@ -610,11 +604,7 @@ class _FeedbackStepState extends State<_FeedbackStep> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.bubble_chart_outlined,
-                color: FiYouGlass.cyan,
-                size: 96,
-              ),
+              const _OnboardingLogo(size: 128),
               const SizedBox(height: 30),
               const _HeroCopy(
                 eyebrow: 'MY UNIVERSE reflection',
@@ -704,6 +694,23 @@ class _OnboardingScaffold extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _OnboardingLogo extends StatelessWidget {
+  const _OnboardingLogo({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: size,
+      child: Image.asset(
+        'assets/images/my_universe_logo_symbol.png',
+        fit: BoxFit.contain,
       ),
     );
   }

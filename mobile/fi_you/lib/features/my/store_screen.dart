@@ -32,7 +32,7 @@ class StoreScreen extends StatelessWidget {
             radius: FiYouGlass.glassRadiusCard,
             child: Row(
               children: [
-                const _GoldLogoBadge(size: 58, padding: 8),
+                const _GoldStarBadge(size: 58, iconSize: 32),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -69,6 +69,14 @@ class StoreScreen extends StatelessWidget {
           const MySectionTitle(
             title: '구매 패키지',
             subtitle: 'Google Play Billing 연결 전 mock UI입니다.',
+          ),
+          const SizedBox(height: 12),
+          _WatchAdRewardButton(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('광고 시청 보상 연결 전 mock 버튼입니다.')),
+              );
+            },
           ),
           const SizedBox(height: 12),
           for (final package in packages) ...[
@@ -115,11 +123,11 @@ class StoreScreen extends StatelessWidget {
   }
 }
 
-class _GoldLogoBadge extends StatelessWidget {
-  const _GoldLogoBadge({required this.size, required this.padding});
+class _GoldStarBadge extends StatelessWidget {
+  const _GoldStarBadge({required this.size, required this.iconSize});
 
   final double size;
-  final double padding;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -127,11 +135,36 @@ class _GoldLogoBadge extends StatelessWidget {
       width: size,
       height: size,
       child: FiYouGlassSurface(
-        padding: EdgeInsets.all(padding),
+        padding: EdgeInsets.zero,
         radius: size,
         v5Preset: FiYouGlassV5Preset.small,
-        child: Image.asset('assets/images/Logo_gold.png', fit: BoxFit.contain),
+        borderColor: MyColors.gold,
+        child: Center(
+          child: Icon(Icons.star_rounded, color: MyColors.gold, size: iconSize),
+        ),
       ),
+    );
+  }
+}
+
+class _WatchAdRewardButton extends StatelessWidget {
+  const _WatchAdRewardButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouLiquidButton(
+      label: '광고 시청 후 Star 획득하기',
+      icon: const Icon(Icons.play_circle_outline_rounded),
+      onPressed: onTap,
+      height: 52,
+      radius: FiYouGlass.glassRadiusSmall,
+      foregroundColor: MyColors.gold,
+      borderColor: MyColors.gold,
+      accentColor: MyColors.gold,
+      accentStrength: 0.32,
+      iconSize: 19,
     );
   }
 }
@@ -151,7 +184,7 @@ class _PackageTile extends StatelessWidget {
       v5Preset: FiYouGlassV5Preset.medium,
       child: Row(
         children: [
-          const _GoldLogoBadge(size: 42, padding: 7),
+          const _GoldStarBadge(size: 42, iconSize: 24),
           const SizedBox(width: 13),
           Expanded(
             child: Column(

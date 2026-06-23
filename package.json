@@ -1,20 +1,11 @@
 {
-  "name": "fi-you",
+  "name": "fi-you-exploration-simulation",
   "private": true,
-  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "simulate-exploration": "tsx scripts/simulate-exploration.ts"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.108.1",
-    "@vitejs/plugin-react": "^5.0.0",
-    "lucide-react": "^0.468.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "typescript": "^5.8.3",
-    "vite": "^8.0.16"
+  "devDependencies": {
+    "tsx": "^4.22.4"
   }
 }

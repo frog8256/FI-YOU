@@ -12,10 +12,12 @@ class HomeScreen extends StatelessWidget {
     this.onNotificationTap,
     this.onProfileTap,
     this.onStoreTap,
+    this.onLevelTap,
     this.onUMapTap,
     this.onDiaryTap,
     this.onQuestionTap,
     this.onStatusTap,
+    this.onShareTap,
   });
 
   final HomeMockData data;
@@ -29,6 +31,9 @@ class HomeScreen extends StatelessWidget {
   /// Star 박스 클릭 콜백입니다. PM AppShell에서 Store 화면 이동에 연결하면 됩니다.
   final VoidCallback? onStoreTap;
 
+  /// Level 클릭 콜백입니다. PM AppShell에서 My 탭 이동에 연결하면 됩니다.
+  final VoidCallback? onLevelTap;
+
   /// U-Map 카드 클릭 콜백입니다.
   final VoidCallback? onUMapTap;
 
@@ -40,6 +45,7 @@ class HomeScreen extends StatelessWidget {
 
   /// 오늘의 탐구 현황 또는 오늘 발견된 단서 클릭 콜백입니다.
   final VoidCallback? onStatusTap;
+  final VoidCallback? onShareTap;
 
   @override
   Widget build(BuildContext context) {
@@ -54,27 +60,29 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
               sliver: SliverList.list(
                 children: [
-                  HomeHeader(data: data, onStoreTap: onStoreTap),
+                  HomeHeader(
+                    data: data,
+                    onStoreTap: onStoreTap,
+                    onLevelTap: onLevelTap,
+                  ),
                   const SizedBox(height: 20),
                   GreetingSection(data: data),
-                  const SizedBox(height: 15),
-                  NextQuestionCard(
-                    question: data.nextQuestion,
-                    estimatedTime: data.estimatedQuestionTime,
-                    onTap: onQuestionTap,
-                  ),
-                  const SizedBox(height: 14),
-                  UMapCard(data: data, onTap: onUMapTap),
-                  const SizedBox(height: 14),
-                  DiaryPromptCard(prompt: data.diaryPrompt, onTap: onDiaryTap),
-                  const SizedBox(height: 14),
-                  TodayClueCard(clue: data.todayClue, onTap: onStatusTap),
                   const SizedBox(height: 14),
                   ExplorationStatusCard(
                     metrics: homeStatsMetrics,
                     latestUpdateLabel: data.latestUpdateLabel,
                     onTap: onStatusTap,
                   ),
+                  const SizedBox(height: 14),
+                  UMapCard(
+                    data: data,
+                    onTap: onUMapTap,
+                    onShareTap: onShareTap,
+                  ),
+                  const SizedBox(height: 14),
+                  DiaryPromptCard(prompt: data.diaryPrompt, onTap: onDiaryTap),
+                  const SizedBox(height: 14),
+                  TodayClueCard(clue: data.todayClue, onTap: onStatusTap),
                 ],
               ),
             ),
@@ -86,10 +94,16 @@ class HomeScreen extends StatelessWidget {
 }
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key, required this.data, this.onStoreTap});
+  const HomeHeader({
+    super.key,
+    required this.data,
+    this.onStoreTap,
+    this.onLevelTap,
+  });
 
   final HomeMockData data;
   final VoidCallback? onStoreTap;
+  final VoidCallback? onLevelTap;
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +133,8 @@ class HomeHeader extends StatelessWidget {
         StarLevelBadge(
           starCount: data.starCount,
           levelLabel: data.levelLabel,
-          onTap: onStoreTap,
+          onStarTap: onStoreTap,
+          onLevelTap: onLevelTap,
         ),
       ],
     );
@@ -184,51 +199,148 @@ class GreetingSection extends StatelessWidget {
   }
 }
 
+class JourneyStatsStrip extends StatelessWidget {
+  const JourneyStatsStrip({super.key, required this.metrics});
+
+  final List<HomeJourneyMetric> metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouSurface(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      fillColor: FiYouHomeColors.surfaceCompact,
+      borderColor: FiYouHomeColors.borderSubtle,
+      child: Row(
+        children: [
+          for (var i = 0; i < metrics.length; i++) ...[
+            Expanded(child: _JourneyMetricPill(metric: metrics[i])),
+            if (i == 2) const _JourneyStatsDivider(),
+            if (i != metrics.length - 1 && i != 2) const SizedBox(width: 6),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _JourneyStatsDivider extends StatelessWidget {
+  const _JourneyStatsDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 32,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      color: FiYouGlass.glassStrokeBottom,
+    );
+  }
+}
+
+class _JourneyMetricPill extends StatelessWidget {
+  const _JourneyMetricPill({required this.metric});
+
+  final HomeJourneyMetric metric;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            metric.label,
+            maxLines: 1,
+            style: const TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              height: 1,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            metric.value,
+            maxLines: 1,
+            style: const TextStyle(
+              color: FiYouHomeColors.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              height: 1,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class StarLevelBadge extends StatelessWidget {
   const StarLevelBadge({
     super.key,
     required this.starCount,
     required this.levelLabel,
-    this.onTap,
+    this.onStarTap,
+    this.onLevelTap,
   });
 
   final int starCount;
   final String levelLabel;
-  final VoidCallback? onTap;
+  final VoidCallback? onStarTap;
+  final VoidCallback? onLevelTap;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: 'Store로 이동',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
-          child: Ink(
-            height: 42,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: FiYouGlass.ctaGlassV5(
-              borderColor: FiYouHomeColors.accentGold,
-              radius: FiYouGlass.glassRadiusSmall,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const HomeStarIcon(color: FiYouHomeColors.accentGold, size: 19),
-                const SizedBox(width: 6),
-                Text('$starCount', style: _badgeTextStyle),
-                Container(
-                  width: 1,
-                  height: 16,
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  color: FiYouGlass.glassStrokeSide,
-                ),
-                Text(levelLabel, style: _badgeTextStyle),
-              ],
+    return Container(
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: FiYouGlass.ctaGlassV5(
+        borderColor: FiYouHomeColors.accentGold,
+        radius: FiYouGlass.glassRadiusSmall,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Tooltip(
+            message: 'Star 구매 화면으로 이동',
+            child: _BadgeSegment(
+              onTap: onStarTap,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const HomeStarIcon(
+                    color: FiYouHomeColors.accentGold,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 6),
+                  Text('$starCount', style: _badgeTextStyle),
+                ],
+              ),
             ),
           ),
-        ),
+          Container(
+            width: 1,
+            height: 16,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            color: FiYouGlass.glassStrokeSide,
+          ),
+          Tooltip(
+            message: 'My 화면으로 이동',
+            child: _BadgeSegment(
+              onTap: onLevelTap,
+              child: Text(levelLabel, style: _badgeTextStyle),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -239,6 +351,28 @@ class StarLevelBadge extends StatelessWidget {
     fontWeight: FontWeight.w800,
     letterSpacing: 0,
   );
+}
+
+class _BadgeSegment extends StatelessWidget {
+  const _BadgeSegment({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 8),
+          child: child,
+        ),
+      ),
+    );
+  }
 }
 
 class HomeStarIcon extends StatelessWidget {
@@ -416,97 +550,210 @@ class _TaskLine extends StatelessWidget {
 }
 
 class UMapCard extends StatelessWidget {
-  const UMapCard({super.key, required this.data, this.onTap});
+  const UMapCard({super.key, required this.data, this.onTap, this.onShareTap});
 
   final HomeMockData data;
   final VoidCallback? onTap;
+  final VoidCallback? onShareTap;
 
   @override
   Widget build(BuildContext context) {
     return FiYouSurface(
       onTap: onTap,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 18),
       fillColor: FiYouHomeColors.surfaceBase,
       borderColor: FiYouHomeColors.borderVisible,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 350;
-          final graph = SizedBox(
-            width: compact ? 172 : 190,
-            height: compact ? 172 : 190,
-            child: UMapGraph(axes: data.axisClues),
-          );
-
-          final content = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'U-Map',
-                      style: TextStyle(
-                        color: FiYouHomeColors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.018),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.24),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SignalIconPanel(
+                  icon: Icons.auto_awesome_rounded,
+                  color: FiYouHomeColors.primarySoft,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '현재 기록에서 보이는 나의 흐름',
+                        style: TextStyle(
+                          color: FiYouHomeColors.textMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
+                          letterSpacing: 0,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '"${data.userName}" 님은 ${data.universeOneLiner}처럼 보여요',
+                        style: const TextStyle(
+                          color: FiYouHomeColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          height: 1.25,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    data.latestUpdateLabel,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 0.9,
+              ),
+            ),
+            child: Text(
+              data.universeSummaryBody,
+              style: const TextStyle(
+                color: FiYouHomeColors.textSecondary,
+                fontSize: 13,
+                height: 1.55,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+          const Offstage(child: SizedBox.shrink()),
+          Offstage(
+            child: Column(
+              children: [
+                RichText(
+                  text: TextSpan(
                     style: const TextStyle(
-                      color: FiYouHomeColors.textMuted,
-                      fontSize: 10.8,
-                      fontWeight: FontWeight.w600,
+                      color: FiYouHomeColors.textSecondary,
+                      fontSize: 13,
+                      height: 1.48,
                       letterSpacing: 0,
                     ),
+                    children: [
+                      TextSpan(
+                        text:
+                            '"${data.userName}" 님은 ${data.universeOneLiner}처럼 보여요.\n',
+                        style: const TextStyle(
+                          color: FiYouHomeColors.textPrimary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      TextSpan(text: data.universeSummaryBody),
+                    ],
                   ),
-                ],
-              ),
-            ],
-          );
-
-          if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                content,
-                const SizedBox(height: 10),
-                Center(child: graph),
-                const SizedBox(height: 10),
+                ),
+                const SizedBox(height: 9),
                 Text(
-                  "지금까지 기록을 바탕으로 탐구한 '${data.userName}' 님 입니다.",
+                  data.universeSummarySupport,
                   style: const TextStyle(
-                    color: FiYouHomeColors.textSecondary,
-                    fontSize: 12,
+                    color: FiYouHomeColors.textMuted,
+                    fontSize: 11.8,
                     height: 1.42,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 0,
                   ),
                 ),
               ],
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
             children: [
-              content,
-              const SizedBox(height: 8),
-              Center(child: graph),
-              const SizedBox(height: 9),
-              Text(
-                "지금까지 기록을 바탕으로 탐구한 '${data.userName}' 님 입니다.",
-                style: const TextStyle(
-                  color: FiYouHomeColors.textSecondary,
-                  fontSize: 12,
-                  height: 1.42,
-                  letterSpacing: 0,
+              for (var i = 0; i < data.recommendations.length; i++) ...[
+                Expanded(
+                  child: _RecommendationTile(item: data.recommendations[i]),
                 ),
-              ),
+                if (i != data.recommendations.length - 1)
+                  const SizedBox(width: 8),
+              ],
             ],
-          );
-        },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendationTile extends StatelessWidget {
+  const _RecommendationTile({required this.item});
+
+  final HomeRecommendation item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 78),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.018),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.42),
+          width: 1.25,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(item.icon, color: item.color, size: 18),
+          const SizedBox(height: 7),
+          Text(
+            item.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 9.8,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              item.value,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11.4,
+                height: 1.18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,9 +1,33 @@
 node_modules/
 dist/
 .vercel/
+.idea/
 .env
 .env.*
 *.local
 client_secret_*.json
 .DS_Store
 Thumbs.db
+
+# Flutter / Dart
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/build/
+**/coverage/
+*.iml
+
+# Android local state and signing material
+**/.gradle/
+**/.kotlin/
+**/local.properties
+**/key.properties
+**/*.jks
+**/*.keystore
+**/*.log
+**/install_stdout.txt
+**/install_stderr.txt
+
+# Local verification artifacts
+mobile/fi_you/screenshots/
+supabase/.temp/
