@@ -125,7 +125,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
   Future<void> signIn() async {
     await client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'com.fiyou.app://login-callback/',
+      redirectTo: 'com.myuniverse.app://login-callback/',
     );
   }
 

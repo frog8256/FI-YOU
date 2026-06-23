@@ -32,7 +32,7 @@ gradle.taskGraph.whenReady {
 }
 
 android {
-    namespace = "com.fiyou.app"
+    namespace = "com.myuniverse.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -42,7 +42,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.fiyou.app"
+        applicationId = "com.myuniverse.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

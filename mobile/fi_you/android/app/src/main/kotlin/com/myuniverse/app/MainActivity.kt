@@ -1,4 +1,4 @@
-package com.fiyou.app
+package com.myuniverse.app
 
 import io.flutter.embedding.android.FlutterActivity
 
