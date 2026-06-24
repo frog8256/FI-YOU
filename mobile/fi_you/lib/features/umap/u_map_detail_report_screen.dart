@@ -1,5 +1,6 @@
 import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:fi_you/data/fi_you_repository.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 const _text = FiYouGlass.text;
@@ -48,34 +49,53 @@ class UMapDetailReportScreen extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-          children: [
-            _CountsStrip(report: report),
-            const SizedBox(height: 16),
-            _Hero(report: report),
-            const SizedBox(height: 16),
-            _SufficiencyPanel(report: report),
-            const SizedBox(height: 16),
-            _KeywordWrap(keywords: report.keywords),
-            const SizedBox(height: 18),
-            for (final section in report.sections) ...[
-              _ReportSectionTile(section: section),
-              const SizedBox(height: 12),
+        child: ScrollConfiguration(
+          behavior: const _ReportScrollBehavior(),
+          child: ListView(
+            primary: true,
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+            children: [
+              _CountsStrip(report: report),
+              const SizedBox(height: 16),
+              _Hero(report: report),
+              const SizedBox(height: 16),
+              _SufficiencyPanel(report: report),
+              const SizedBox(height: 16),
+              _KeywordWrap(keywords: report.keywords),
+              const SizedBox(height: 18),
+              for (final section in report.sections) ...[
+                _ReportSectionTile(section: section),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 4),
+              _ActionPlanPanel(items: report.actionPlans),
+              const SizedBox(height: 14),
+              _RecordingGuidePanel(items: report.recordingGuides),
+              const SizedBox(height: 14),
+              _EvidencePanel(items: report.evidence),
+              const SizedBox(height: 14),
+              const _DisclaimerPanel(),
             ],
-            const SizedBox(height: 4),
-            _ActionPlanPanel(items: report.actionPlans),
-            const SizedBox(height: 14),
-            _RecordingGuidePanel(items: report.recordingGuides),
-            const SizedBox(height: 14),
-            _EvidencePanel(items: report.evidence),
-            const SizedBox(height: 14),
-            const _DisclaimerPanel(),
-          ],
+          ),
         ),
       ),
     );
   }
+}
+
+class _ReportScrollBehavior extends MaterialScrollBehavior {
+  const _ReportScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+  };
 }
 
 class _Hero extends StatelessWidget {
