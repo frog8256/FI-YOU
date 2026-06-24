@@ -116,12 +116,42 @@ class HomeMockData {
   final String estimatedQuestionTime;
   final List<HomeActivityMetric> activityMetrics;
   final String latestUpdateLabel;
+
+  HomeMockData copyWith({
+    String? userName,
+    int? starCount,
+    String? levelLabel,
+    List<HomeJourneyMetric>? journeyMetrics,
+    List<HomeActivityMetric>? activityMetrics,
+  }) {
+    return HomeMockData(
+      userName: userName ?? this.userName,
+      starCount: starCount ?? this.starCount,
+      levelLabel: levelLabel ?? this.levelLabel,
+      uMapVisibility: uMapVisibility,
+      uMapLevelLabel: uMapLevelLabel,
+      uMapHelpText: uMapHelpText,
+      axisClues: axisClues,
+      journeyMetrics: journeyMetrics ?? this.journeyMetrics,
+      universeSummaryTitle: universeSummaryTitle,
+      universeOneLiner: universeOneLiner,
+      universeSummaryBody: universeSummaryBody,
+      universeSummarySupport: universeSummarySupport,
+      recommendations: recommendations,
+      diaryPrompt: diaryPrompt,
+      todayClue: todayClue,
+      nextQuestion: nextQuestion,
+      estimatedQuestionTime: estimatedQuestionTime,
+      activityMetrics: activityMetrics ?? this.activityMetrics,
+      latestUpdateLabel: latestUpdateLabel,
+    );
+  }
 }
 
 const homeMockData = HomeMockData(
   userName: 'User',
   starCount: 124,
-  levelLabel: 'Level 2',
+  levelLabel: '관찰자',
   uMapVisibility: 0.68,
   uMapLevelLabel: '현재 기록을 바탕으로 탐구 중인 우주입니다.',
   uMapHelpText: '질문과 Diary가 쌓이면 10개 노드가 더 선명하게 연결됩니다.',

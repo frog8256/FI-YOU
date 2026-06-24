@@ -48,9 +48,7 @@ class MyScreen extends StatelessWidget {
       onOpenStore!();
       return;
     }
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => StoreScreen(profile: profile)),
-    );
+    showStoreModal(context, profile: profile);
   }
 
   void _openSettings(BuildContext context) {
@@ -134,11 +132,11 @@ class _ProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          const _ProfileRecordStats(),
+          _ProfileRecordStats(profile: profile),
           const SizedBox(height: 14),
           Row(
             children: [
-              _MetricBox(label: 'Level', value: '${profile.level}'),
+              _MetricBox(label: 'Level', value: profile.levelLabel),
               const SizedBox(width: 10),
               _MetricBox(label: 'Star', value: '${profile.starBalance}'),
             ],
@@ -150,16 +148,26 @@ class _ProfileCard extends StatelessWidget {
 }
 
 class _ProfileRecordStats extends StatelessWidget {
-  const _ProfileRecordStats();
+  const _ProfileRecordStats({required this.profile});
+
+  final MyProfileData profile;
 
   @override
   Widget build(BuildContext context) {
-    const stats = <({String label, String value})>[
+    var stats = <({String label, String value})>[
       (label: '탐구시작', value: '00일'),
       (label: '총 출석', value: '00일'),
       (label: '연속출석', value: '00일'),
       (label: 'Diary', value: '00개'),
       (label: '연속작성', value: '00개'),
+    ];
+
+    stats = <({String label, String value})>[
+      (label: 'Joined', value: '${profile.joinedDays}d'),
+      (label: 'Attend', value: '${profile.attendanceDays}d'),
+      (label: 'Question', value: '${profile.questionCount}'),
+      (label: 'Diary', value: '${profile.diaryCount}'),
+      (label: 'Lv', value: '${profile.level}'),
     ];
 
     return Row(
@@ -241,13 +249,14 @@ class _MetricBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = label == 'Star' ? MyColors.gold : MyColors.primarySoft;
+    final isStar = label == 'Star';
+    final tint = isStar ? MyColors.gold : MyColors.primarySoft;
 
     return Expanded(
       child: SizedBox(
-        height: 42,
+        height: 44,
         child: MySurface(
-          padding: const EdgeInsets.symmetric(horizontal: 13),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           radius: FiYouGlass.glassRadiusSmall,
           borderColor: tint,
           v5Preset: FiYouGlassV5Preset.cta,
@@ -257,27 +266,55 @@ class _MetricBox extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: MyColors.textMuted,
+                  style: TextStyle(
+                    color: isStar ? MyColors.gold : MyColors.textMuted,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     height: 1,
                     letterSpacing: 0,
                   ),
                 ),
-                const Spacer(),
-                Flexible(
-                  child: Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      color: MyColors.text,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                      height: 1,
-                      letterSpacing: 0,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: isStar
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  color: MyColors.gold,
+                                  size: 15,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  value,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    color: MyColors.gold,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    height: 1,
+                                    letterSpacing: 0,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              value,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                color: MyColors.text,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                height: 1,
+                                letterSpacing: 0,
+                              ),
+                            ),
                     ),
                   ),
                 ),

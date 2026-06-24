@@ -6,10 +6,13 @@ class MyProfileData {
     this.name = 'User',
     this.email = 'user@fi-you.app',
     this.profileLine = '최근 기록에 관찰과 탐구가 쌓이는',
-    this.level = 3,
+    this.level = 1,
+    this.levelLabel = '탐험가',
     this.starBalance = 130,
-    this.diaryCount = 12,
-    this.questionCount = 24,
+    this.diaryCount = 0,
+    this.questionCount = 0,
+    this.attendanceDays = 0,
+    this.joinedDays = 0,
     this.clueCount = 8,
   });
 
@@ -17,9 +20,12 @@ class MyProfileData {
   final String email;
   final String profileLine;
   final int level;
+  final String levelLabel;
   final int starBalance;
   final int diaryCount;
   final int questionCount;
+  final int attendanceDays;
+  final int joinedDays;
   final int clueCount;
 }
 

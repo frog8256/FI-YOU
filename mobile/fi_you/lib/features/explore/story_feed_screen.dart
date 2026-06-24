@@ -316,10 +316,7 @@ class _StoryPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: child,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: child),
     );
   }
 }

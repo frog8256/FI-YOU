@@ -24,6 +24,10 @@ class AppConfig {
     'DATA_DELETION_URL',
     defaultValue: 'https://fi-you.vercel.app/data-deletion',
   );
+  static const authRedirectUrl = String.fromEnvironment(
+    'AUTH_REDIRECT_URL',
+    defaultValue: 'com.myuniverse.app://login-callback/',
+  );
 
   static bool get hasSupabaseConfig =>
       supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty;

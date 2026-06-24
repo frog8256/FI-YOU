@@ -9,6 +9,8 @@ const _gold = FiYouGlass.gold;
 const _cyan = FiYouGlass.cyan;
 const _mint = Color(0xFF6EE7B7);
 const _rose = Color(0xFFFB7185);
+const _reportBlue = Color(0xFF60A5FA);
+const _reportViolet = Color(0xFFA78BFA);
 
 class UMapDetailReportScreen extends StatelessWidget {
   const UMapDetailReportScreen({required this.report, super.key});
@@ -20,21 +22,27 @@ class UMapDetailReportScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF0B1022).withValues(alpha: 0.92),
         elevation: 0,
         foregroundColor: _text,
-        title: const Text('U-Map Report'),
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          'U-Map Report',
+          style: TextStyle(
+            color: _reportBlue,
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
         actions: [
           IconButton(
-            tooltip: 'PDF',
+            tooltip: 'Share',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('PDF 저장은 결제 리포트 보관함과 함께 제공될 예정이에요.'),
-                ),
+                const SnackBar(content: Text('공유 기능은 리포트 링크와 함께 제공될 예정입니다.')),
               );
             },
-            icon: const Icon(Icons.picture_as_pdf_rounded),
+            icon: const Icon(Icons.ios_share_rounded, color: _reportViolet),
           ),
         ],
       ),
@@ -78,19 +86,45 @@ class _Hero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      borderColor: _cyan.withValues(alpha: 0.28),
+      borderColor: _reportBlue.withValues(alpha: 0.32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Personal U-Map Analysis',
-            style: TextStyle(
-              color: _cyan,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
+          const Row(
+            children: [
+              Icon(Icons.auto_graph_rounded, color: _reportBlue, size: 17),
+              SizedBox(width: 7),
+              Text(
+                'PERSONAL U-MAP ANALYSIS',
+                style: TextStyle(
+                  color: _reportBlue,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 11),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: _reportViolet.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _reportViolet.withValues(alpha: 0.18)),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              child: Text(
+                'Mock analysis result',
+                style: TextStyle(
+                  color: _reportViolet,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 12),
           Text(
             report.title,
             style: const TextStyle(
@@ -247,7 +281,7 @@ class _SufficiencyPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      '분석 충실도',
+                      '분석 충분도',
                       style: TextStyle(
                         color: _muted,
                         fontSize: 11,
@@ -448,7 +482,7 @@ class _ActionPlanPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TitledPanel(
       icon: Icons.task_alt_rounded,
-      title: '맞춤 액션 플랜',
+      title: '바로 실행할 액션',
       color: _mint,
       child: Column(
         children: [
@@ -533,7 +567,7 @@ class _RecordingGuidePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return _TitledPanel(
       icon: Icons.edit_note_rounded,
-      title: '다음 기록 질문',
+      title: '다음 기록 가이드',
       color: _gold,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,7 +597,7 @@ class _EvidencePanel extends StatelessWidget {
         children: [
           if (items.isEmpty)
             const Text(
-              '표시할 근거가 아직 부족해요. 다음 기록이 쌓이면 리포트 근거가 더 선명해집니다.',
+              '아직 표시할 근거 기록이 부족합니다. 다음 기록이 쌓이면 이 영역에 근거가 더 자세히 표시됩니다.',
               style: TextStyle(color: _soft, height: 1.45),
             )
           else
@@ -630,7 +664,7 @@ class _DisclaimerPanel extends StatelessWidget {
     return _Panel(
       borderColor: _rose.withValues(alpha: 0.18),
       child: const Text(
-        '이 리포트는 U-Map 노드와 기록을 근거로 한 자기이해용 해석입니다. 의료, 법률, 금융 진단이나 조언이 아니며 민감한 결정에는 전문가의 도움을 함께 고려해주세요.',
+        '이 리포트는 U-Map 기록과 선택 단서를 바탕으로 현재 반복되는 경향을 정리한 분석 결과입니다. 사람 자체를 고정하거나 단정하지 않으며, 기록이 늘어나면 결과는 더 정밀하게 업데이트됩니다.',
         style: TextStyle(
           color: _muted,
           fontSize: 11.5,

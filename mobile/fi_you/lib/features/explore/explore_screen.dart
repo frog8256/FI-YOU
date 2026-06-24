@@ -17,6 +17,7 @@ const _primarySoft = FiYouGlass.primarySoft;
 const _cyan = FiYouGlass.cyan;
 const _mint = Color(0xFF6EE7B7);
 const _gold = FiYouGlass.gold;
+const _minimumExplorationLoadingDuration = Duration(milliseconds: 2600);
 
 class ExploreScreen extends ExploreHomeScreen {
   const ExploreScreen({
@@ -219,7 +220,11 @@ class _InsightFeedEntryCard extends StatelessWidget {
                 SizedBox(height: 4),
                 Text(
                   '최근 탐험에서 떠오른 발견을 살펴보세요.',
-                  style: TextStyle(color: _textSoft, fontSize: 13, height: 1.35),
+                  style: TextStyle(
+                    color: _textSoft,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
@@ -266,7 +271,11 @@ class _StoryFeedEntryCard extends StatelessWidget {
                 SizedBox(height: 4),
                 Text(
                   '탐험에서 이어지는 조용한 장을 읽어보세요.',
-                  style: TextStyle(color: _textSoft, fontSize: 13, height: 1.35),
+                  style: TextStyle(
+                    color: _textSoft,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
@@ -505,8 +514,13 @@ class _ExplorationExperienceScreenState
       _errorMessage = null;
     });
 
+    final minimumLoading = Future<void>.delayed(
+      _minimumExplorationLoadingDuration,
+    );
+
     try {
       final nextCard = await _repository.loadNextExplorationCard();
+      await minimumLoading;
       if (!mounted) {
         return;
       }
@@ -519,12 +533,13 @@ class _ExplorationExperienceScreenState
         _cardSerial += 1;
       });
     } catch (_) {
+      await minimumLoading;
       if (!mounted) {
         return;
       }
       setState(() {
         _loading = false;
-        _errorMessage = _errorMessage = '질문을 불러오지 못했어요. 다시 시도해 주세요.';
+        _errorMessage = '질문을 불러오지 못했어요. 다시 시도해 주세요.';
       });
     }
   }
@@ -785,9 +800,7 @@ class _ExplorationCardView extends StatelessWidget {
                 const SizedBox(height: 10),
               ],
               const SizedBox(height: 12),
-              _ExplorationNoteField(
-                controller: noteController,
-              ),
+              _ExplorationNoteField(controller: noteController),
               if (errorMessage != null) ...[
                 const SizedBox(height: 14),
                 Text(
@@ -890,9 +903,7 @@ class _ExplorationOptionTile extends StatelessWidget {
 }
 
 class _ExplorationNoteField extends StatelessWidget {
-  const _ExplorationNoteField({
-    required this.controller,
-  });
+  const _ExplorationNoteField({required this.controller});
 
   final TextEditingController controller;
 

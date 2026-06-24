@@ -49,6 +49,7 @@ class FiYouUMapScreen extends StatefulWidget {
     this.isEmpty = false,
     this.onStartQuestion,
     this.onShare,
+    this.onOpenJourny,
     this.onOpenGrowthMap,
     this.onOpenRelationMap,
     this.onOpenReport,
@@ -58,9 +59,10 @@ class FiYouUMapScreen extends StatefulWidget {
   final bool isEmpty;
   final VoidCallback? onStartQuestion;
   final VoidCallback? onShare;
+  final ValueChanged<JournyReport>? onOpenJourny;
   final VoidCallback? onOpenGrowthMap;
   final VoidCallback? onOpenRelationMap;
-  final VoidCallback? onOpenReport;
+  final ValueChanged<UMapDetailReport>? onOpenReport;
   final double bottomPadding;
 
   @override
@@ -70,6 +72,7 @@ class FiYouUMapScreen extends StatefulWidget {
 class _FiYouUMapScreenState extends State<FiYouUMapScreen> {
   String? _selectedParentId;
   String? _selectedChildId;
+  String? _spendingPremiumTitle;
   double _rotationX = -0.18;
   double _rotationY = 0.18;
 
@@ -128,65 +131,173 @@ class _FiYouUMapScreenState extends State<FiYouUMapScreen> {
           : _relatedNodes(parents, selectedChild),
     );
     final bottomSpace = math.max(widget.bottomPadding, 24.0);
+    final topBackgroundHeight = MediaQuery.paddingOf(context).top + 116;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 18, 20, bottomSpace + 132),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate.fixed([
-                  const _Header(),
-                  const SizedBox(height: 18),
-                  if (widget.isEmpty)
-                    _EmptyState(onStartQuestion: widget.onStartQuestion)
-                  else ...[
-                    _GalaxyPanel(
-                      parents: parents,
-                      selectedParent: selectedParent,
-                      selectedChildId: selectedChild?.id,
-                      rotationX: _rotationX,
-                      rotationY: _rotationY,
-                      onRotate: _rotate,
-                      onParentTap: _selectParent,
-                      onChildTap: _selectChild,
-                      onRootTap: selectedParent == null ? null : _resetGalaxy,
-                      onShare: widget.onShare,
-                    ),
-                    const SizedBox(height: 14),
-                    _AnalysisPanel(
-                      parent: selectedParent,
-                      child: selectedChild,
-                      relatedNodes: selectedChild == null
-                          ? const []
-                          : _relatedNodes(parents, selectedChild),
-                    ),
-                    if (selectedParent != null) ...[
-                      const SizedBox(height: 14),
-                      _RadarSummaryPanel(axes: radarAxes),
-                    ],
-                    if (selectedParent == null) ...[
-                      const SizedBox(height: 12),
-                      _PremiumExtensionSection(
-                        onOpenGrowthMap: widget.onOpenGrowthMap,
-                        onOpenRelationMap: widget.onOpenRelationMap,
-                        onOpenReport: widget.onOpenReport,
-                      ),
-                    ],
-                    const SizedBox(height: 14),
-                    _QuestionCta(onStartQuestion: widget.onStartQuestion),
-                  ],
-                ]),
-              ),
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topBackgroundHeight,
+            child: const IgnorePointer(child: _HeaderBackgroundWash()),
+          ),
+          SafeArea(
+            bottom: false,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(20, 18, 20, bottomSpace + 132),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate.fixed([
+                      const _Header(),
+                      const SizedBox(height: 18),
+                      if (widget.isEmpty)
+                        _EmptyState(onStartQuestion: widget.onStartQuestion)
+                      else ...[
+                        _GalaxyPanel(
+                          parents: parents,
+                          selectedParent: selectedParent,
+                          selectedChildId: selectedChild?.id,
+                          rotationX: _rotationX,
+                          rotationY: _rotationY,
+                          onRotate: _rotate,
+                          onParentTap: _selectParent,
+                          onChildTap: _selectChild,
+                          onRootTap: selectedParent == null
+                              ? null
+                              : _resetGalaxy,
+                          onShare: widget.onShare,
+                        ),
+                        const SizedBox(height: 14),
+                        _AnalysisPanel(
+                          parent: selectedParent,
+                          child: selectedChild,
+                          relatedNodes: selectedChild == null
+                              ? const []
+                              : _relatedNodes(parents, selectedChild),
+                        ),
+                        if (selectedParent != null) ...[
+                          const SizedBox(height: 14),
+                          _RadarSummaryPanel(axes: radarAxes),
+                        ],
+                        if (selectedParent == null) ...[
+                          const SizedBox(height: 12),
+                          _PremiumExtensionSection(
+                            spendingTitle: _spendingPremiumTitle,
+                            onOpenJourny: widget.onOpenJourny,
+                            onOpenRelationMap: widget.onOpenRelationMap,
+                            onOpenReport: widget.onOpenReport,
+                            onGenerateJourny: _generateJournyReport,
+                            onGenerateUMapReport: _generateUMapDetailReport,
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        _QuestionCta(onStartQuestion: widget.onStartQuestion),
+                      ],
+                    ]),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _generateJournyReport({
+    required String title,
+    ValueChanged<JournyReport>? onOpen,
+  }) async {
+    if (_spendingPremiumTitle != null) {
+      return;
+    }
+
+    setState(() => _spendingPremiumTitle = title);
+    try {
+      final report = await FiYouRepositoryScope.of(
+        context,
+      ).generateJournyReport();
+      if (!mounted) {
+        return;
+      }
+      onOpen?.call(report);
+    } on StarSpendException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showStarSpendMessage(
+        error.isInsufficientBalance
+            ? 'Star가 부족해요. Store에서 충전한 뒤 다시 열어주세요.'
+            : 'Star 사용에 실패했어요. 잠시 후 다시 시도해주세요.',
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showStarSpendMessage('Star 사용에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      if (mounted) {
+        setState(() => _spendingPremiumTitle = null);
+      }
+    }
+  }
+
+  Future<void> _generateUMapDetailReport({
+    required String title,
+    ValueChanged<UMapDetailReport>? onOpen,
+  }) async {
+    if (_spendingPremiumTitle != null) {
+      return;
+    }
+
+    setState(() => _spendingPremiumTitle = title);
+    try {
+      final repository = FiYouRepositoryScope.of(context);
+      final visibleAxes = repository.axes
+          .where((axis) => !axis.locked)
+          .take(5)
+          .toList(growable: false);
+      final report = buildMockUMapDetailReport(
+        now: DateTime.now(),
+        recentDiaries: repository.diaryEntries.take(6).toList(),
+        axesForReport: visibleAxes.isEmpty
+            ? repository.axes.take(5).toList(growable: false)
+            : visibleAxes,
+      );
+      if (!mounted) {
+        return;
+      }
+      onOpen?.call(report);
+    } on StarSpendException catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showStarSpendMessage(
+        error.isInsufficientBalance
+            ? 'Star가 부족해요. Store에서 충전한 뒤 다시 시도해주세요.'
+            : '상세 리포트 생성에 실패했어요. 잠시 후 다시 시도해주세요.',
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showStarSpendMessage('상세 리포트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      if (mounted) {
+        setState(() => _spendingPremiumTitle = null);
+      }
+    }
+  }
+
+  void _showStarSpendMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   List<GalaxyChildNode> _relatedNodes(
@@ -204,6 +315,25 @@ class _FiYouUMapScreenState extends State<FiYouUMapScreen> {
       (a, b) => (a.score - selected.score).abs().compareTo(
         (b.score - selected.score).abs(),
       ),
+    );
+  }
+}
+
+class _HeaderBackgroundWash extends StatelessWidget {
+  const _HeaderBackgroundWash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0x52050714), Color(0x18050714), Colors.transparent],
+          stops: [0, 0.58, 1],
+        ),
+      ),
+      child: SizedBox.expand(),
     );
   }
 }
@@ -1166,14 +1296,28 @@ class _RadarSummaryPanel extends StatelessWidget {
 
 class _PremiumExtensionSection extends StatelessWidget {
   const _PremiumExtensionSection({
-    this.onOpenGrowthMap,
+    this.spendingTitle,
+    this.onOpenJourny,
     this.onOpenRelationMap,
     this.onOpenReport,
+    this.onGenerateJourny,
+    this.onGenerateUMapReport,
   });
 
-  final VoidCallback? onOpenGrowthMap;
+  final String? spendingTitle;
+  final ValueChanged<JournyReport>? onOpenJourny;
   final VoidCallback? onOpenRelationMap;
-  final VoidCallback? onOpenReport;
+  final ValueChanged<UMapDetailReport>? onOpenReport;
+  final Future<void> Function({
+    required String title,
+    ValueChanged<JournyReport>? onOpen,
+  })?
+  onGenerateJourny;
+  final Future<void> Function({
+    required String title,
+    ValueChanged<UMapDetailReport>? onOpen,
+  })?
+  onGenerateUMapReport;
 
   @override
   Widget build(BuildContext context) {
@@ -1184,8 +1328,10 @@ class _PremiumExtensionSection extends StatelessWidget {
           subtitle: '성장 흐름의 단서를 조금 더 깊게 열어봐요.',
           icon: Icons.trending_up_rounded,
           color: _UMapColors.gold,
-          starCost: 1,
-          onTap: onOpenGrowthMap,
+          starCost: journyReportStarCost,
+          loading: spendingTitle == 'Journy',
+          onTap: () =>
+              onGenerateJourny?.call(title: 'Journy', onOpen: onOpenJourny),
         ),
         const SizedBox(height: 10),
         _ActionTile(
@@ -1193,17 +1339,22 @@ class _PremiumExtensionSection extends StatelessWidget {
           subtitle: '관계 안에서 반복되는 흐름의 단서를 살펴봐요.',
           icon: Icons.people_alt_rounded,
           color: _UMapColors.cyan,
-          starCost: 1,
+          starCost: relationMapStarCost,
+          loading: spendingTitle == 'Relation Map',
           onTap: onOpenRelationMap,
         ),
         const SizedBox(height: 10),
         _ActionTile(
-          title: '상세 리포트',
+          title: 'U-Map 상세 리포트',
           subtitle: 'U-Map의 노드와 기록 근거를 리포트로 정리해요.',
           icon: Icons.article_outlined,
           color: _UMapColors.emerald,
-          starCost: 1,
-          onTap: onOpenReport,
+          starCost: uMapDetailReportStarCost,
+          loading: spendingTitle == 'U-Map Report',
+          onTap: () => onGenerateUMapReport?.call(
+            title: 'U-Map Report',
+            onOpen: onOpenReport,
+          ),
         ),
       ],
     );
@@ -1217,6 +1368,7 @@ class _ActionTile extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.starCost,
+    required this.loading,
     this.onTap,
   });
 
@@ -1225,6 +1377,7 @@ class _ActionTile extends StatelessWidget {
   final IconData icon;
   final Color color;
   final int starCost;
+  final bool loading;
   final VoidCallback? onTap;
 
   @override
@@ -1264,7 +1417,12 @@ class _ActionTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          _StarUseButton(label: title, cost: starCost),
+          _StarUseButton(
+            label: title,
+            cost: starCost,
+            loading: loading,
+            onPressed: onTap,
+          ),
         ],
       ),
     );
@@ -1272,19 +1430,26 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _StarUseButton extends StatelessWidget {
-  const _StarUseButton({required this.label, required this.cost});
+  const _StarUseButton({
+    required this.label,
+    required this.cost,
+    required this.loading,
+    this.onPressed,
+  });
 
   final String label;
   final int cost;
+  final bool loading;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
       message: '$label Star 소비',
       child: FiYouLiquidButton(
-        label: '$cost Star',
-        icon: const Icon(Icons.star_rounded),
-        onPressed: () {},
+        label: loading ? 'Using' : '$cost Star',
+        icon: Icon(loading ? Icons.hourglass_top_rounded : Icons.star_rounded),
+        onPressed: loading ? null : onPressed,
         width: 92,
         height: 34,
         radius: 999,
