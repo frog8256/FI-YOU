@@ -240,6 +240,67 @@ class SupabaseFiYouRepository extends FiYouRepository {
   }
 
   @override
+  Future<InsightFeedResponse> getInsightFeed() async {
+    if (client.auth.currentSession == null || client.auth.currentUser == null) {
+      return InsightFeedResponse.empty(errorMessage: 'auth_session_missing');
+    }
+
+    try {
+      final response = await client.functions.invoke(
+        'insight-feed',
+        body: {'refresh': false},
+      );
+      final parsed = InsightFeedResponse.fromJson(response.data);
+      if (parsed.hasError) {
+        return parsed;
+      }
+      if (parsed.isEmpty) {
+        final refreshedResponse = await client.functions.invoke(
+          'insight-feed',
+          body: {'refresh': true},
+        );
+        return InsightFeedResponse.fromJson(refreshedResponse.data);
+      }
+      return parsed;
+    } on FunctionException {
+      return InsightFeedResponse.empty(errorMessage: 'insight_feed_unavailable');
+    } on AuthException {
+      return InsightFeedResponse.empty(errorMessage: 'auth_session_invalid');
+    } on FormatException {
+      return InsightFeedResponse.empty(errorMessage: 'insight_feed_malformed');
+    } on StateError {
+      return InsightFeedResponse.empty(errorMessage: 'insight_feed_malformed');
+    } catch (_) {
+      return InsightFeedResponse.empty(errorMessage: 'insight_feed_unavailable');
+    }
+  }
+
+  @override
+  Future<StoryFeedResponse> getStoryFeed() async {
+    if (client.auth.currentSession == null || client.auth.currentUser == null) {
+      return StoryFeedResponse.empty(errorMessage: 'auth_session_missing');
+    }
+
+    try {
+      final response = await client.functions.invoke(
+        'story-feed',
+        body: {'refresh': false},
+      );
+      return StoryFeedResponse.fromJson(response.data);
+    } on FunctionException {
+      return StoryFeedResponse.empty(errorMessage: 'story_feed_unavailable');
+    } on AuthException {
+      return StoryFeedResponse.empty(errorMessage: 'auth_session_invalid');
+    } on FormatException {
+      return StoryFeedResponse.empty(errorMessage: 'story_feed_malformed');
+    } on StateError {
+      return StoryFeedResponse.empty(errorMessage: 'story_feed_malformed');
+    } catch (_) {
+      return StoryFeedResponse.empty(errorMessage: 'story_feed_unavailable');
+    }
+  }
+
+  @override
   Future<void> completeOnboarding({
     required String name,
     DateTime? birthday,

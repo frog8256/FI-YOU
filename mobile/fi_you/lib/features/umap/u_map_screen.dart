@@ -603,7 +603,7 @@ class _CoreNode extends StatelessWidget {
   Widget build(BuildContext context) {
     final parent = this.parent;
     return Tooltip(
-      message: onTap == null ? 'U-Map Root' : '상위 노드로 돌아가기',
+      message: onTap == null ? 'U-Map Root' : '큰 영역으로 돌아가기',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
@@ -859,7 +859,7 @@ class _GalaxyHint extends StatelessWidget {
           SizedBox(width: 9),
           Expanded(
             child: Text(
-              '상위 노드를 선택하면 하위 성향 노드가 열려요.',
+              '큰 영역을 선택하면 작은 성향 신호가 열려요.',
               style: TextStyle(
                 color: _UMapColors.textSoft,
                 fontSize: 12.4,
@@ -1023,7 +1023,7 @@ class _OverviewAnalysisPanel extends StatelessWidget {
           ),
           SizedBox(height: 12),
           Text(
-            '현재 지도는 10개의 상위 카테고리로 시작해요. 하나를 선택하면 실제 분석 데이터에서 생성된 하위 성향 노드가 열리고, 선택한 영역 안에서 User의 성향 설명이 표시됩니다.',
+            '현재 지도는 10개의 큰 영역으로 시작해요. 하나를 선택하면 기록에서 이어진 작은 성향 신호가 열리고, 선택한 영역 안에서 User의 흐름이 표시됩니다.',
             style: TextStyle(
               color: _UMapColors.textSoft,
               fontSize: 13.3,
@@ -1144,7 +1144,7 @@ class _RadarSummaryPanel extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           const Text(
-            '하위 성향 노드의 평균값으로 자동 생성된 보조 지도예요.',
+            '작은 성향 신호의 흐름을 모아 만든 보조 지도예요.',
             style: TextStyle(
               color: _UMapColors.textMuted,
               fontSize: 12.2,
@@ -1339,7 +1339,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           const Text(
-            '질문과 Diary 기록이 쌓이면 하위 성향 노드가 생기고, 그 노드들이 U-Map으로 연결돼요.',
+            '질문과 Diary 기록이 쌓이면 작은 성향 신호가 생기고, 그 신호들이 U-Map으로 연결돼요.',
             style: TextStyle(
               color: _UMapColors.textSoft,
               fontSize: 13.5,
@@ -2078,7 +2078,7 @@ abstract final class _GalaxyData {
   }
 
   static String _insightText(String parentLabel, AxisSummary axis) {
-    return '$parentLabel 영역에서는 ${axis.copy} 이 흐름은 고정된 유형이 아니라, 최근 응답과 Diary 기록에서 반복된 단서를 연결해 만든 현재 지도예요.';
+    return '$parentLabel 영역에서는 ${axis.copy} 이 흐름은 고정된 모습이 아니라, 최근 응답과 Diary 기록에서 반복된 단서를 연결해 만든 현재 지도예요.';
   }
 
   static String _childLabel(AxisSummary axis, int offset, int sourceCount) {
@@ -2138,7 +2138,7 @@ abstract final class _GalaxyData {
       color: Color(0xFF7DD3FC),
       recordCount: 0,
       recentSource: '기본 지도',
-      clue: '질문과 Diary가 쌓이면 실제 분석 노드로 교체돼요.',
+      clue: '질문과 Diary가 쌓이면 실제 탐험 신호로 이어져요.',
     ),
   ];
 }

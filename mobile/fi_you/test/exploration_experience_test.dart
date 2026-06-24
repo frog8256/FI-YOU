@@ -17,13 +17,13 @@ void main() {
       );
 
       await tester.pumpWidget(_testApp(repository, const ExploreScreen()));
-      expect(find.text('자유 탐험'), findsOneWidget);
+      expect(find.text('자유탐구'), findsOneWidget);
 
-      await tester.tap(find.text('자유 탐험'));
+      await tester.tap(find.text('자유탐구'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 20));
 
-      expect(find.text('무엇을 물어볼지 고민하고 있어요...'), findsOneWidget);
+      expect(find.text('당신을 탐구하기 위해 준비 중 이에요.'), findsOneWidget);
 
       await tester.pumpAndSettle();
       expect(find.text(_scenarioCard().question), findsOneWidget);
@@ -64,22 +64,22 @@ void main() {
       await tester.pumpWidget(_testApp(repository));
       await tester.pumpAndSettle();
 
-      expect(find.text('Selected 0/2'), findsOneWidget);
+      expect(find.text('2개를 선택해 주세요 (0/2)'), findsOneWidget);
       expect(_continueButton(tester).onPressed, isNull);
 
       await tester.tap(find.text(card.options[0].label));
       await tester.pumpAndSettle();
-      expect(find.text('Selected 1/2'), findsOneWidget);
+      expect(find.text('2개를 선택해 주세요 (1/2)'), findsOneWidget);
       expect(_continueButton(tester).onPressed, isNull);
 
       await tester.tap(find.text(card.options[1].label));
       await tester.pumpAndSettle();
-      expect(find.text('Selected 2/2'), findsOneWidget);
+      expect(find.text('2개를 선택해 주세요 (2/2)'), findsOneWidget);
       expect(_continueButton(tester).onPressed, isNotNull);
 
       await tester.tap(find.text(card.options[2].label));
       await tester.pumpAndSettle();
-      expect(find.text('Selected 2/2'), findsOneWidget);
+      expect(find.text('2개를 선택해 주세요 (2/2)'), findsOneWidget);
 
       _continueButton(tester).onPressed!();
       await tester.pumpAndSettle();
@@ -109,7 +109,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 20));
 
-        expect(find.text('무엇을 물어볼지 고민하고 있어요...'), findsOneWidget);
+        expect(find.text('당신을 탐구하기 위해 준비 중 이에요.'), findsOneWidget);
 
         await tester.pumpAndSettle();
         expect(repository.submissions.single.userNote, isNull);
@@ -123,8 +123,13 @@ void main() {
       await tester.pumpWidget(_testApp(repository));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('생각 남기기'));
-      await tester.pumpAndSettle();
+      expect(find.text('생각 남기기 (선택)'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(
+        find.text('필수는 아니에요. 떠오르는 생각이 있다면 남겨보세요.'),
+        findsOneWidget,
+      );
+
       await tester.enterText(find.byType(TextField), '가' * 350);
       await tester.tap(find.text(card.options.first.label));
       await tester.pumpAndSettle();

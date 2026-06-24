@@ -13,9 +13,30 @@ The Card Delivery Engine chooses what the next exploration card should explore b
    - depth level
    - time axis
 5. If `EXPLORATION_CARD_ENGINE_URL` is configured, the function posts the payload to that service.
-6. The delivered card is recorded through `record_delivered_exploration_card`.
+6. Otherwise, if `OPENAI_API_KEY` is configured, the function calls the OpenAI Responses API directly and asks for a strict JSON card shape.
+7. The delivered card is recorded through `record_delivered_exploration_card`.
 
-If `EXPLORATION_CARD_ENGINE_URL` is not configured, the function still returns the generated request payload. This keeps the delivery layer testable before the card-generation service is wired.
+If neither `EXPLORATION_CARD_ENGINE_URL` nor `OPENAI_API_KEY` is configured, the function still returns the generated request payload and a safe fallback card. This keeps the delivery layer testable before generation is wired.
+
+## AI Configuration
+
+For the built-in OpenAI path, set the secret on the Supabase project:
+
+```bash
+supabase secrets set OPENAI_API_KEY=... --project-ref debgzfnbthaipqvbytko
+```
+
+The default OpenAI model is `gpt-4.1`. Override it with:
+
+```bash
+supabase secrets set OPENAI_MODEL=gpt-4.1 --project-ref debgzfnbthaipqvbytko
+```
+
+Deploy the function after changing secrets or code:
+
+```bash
+supabase functions deploy deliver-exploration-card --project-ref debgzfnbthaipqvbytko
+```
 
 ## Data
 

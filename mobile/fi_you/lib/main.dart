@@ -317,6 +317,22 @@ class _FiYouShellState extends State<FiYouShell> {
     setState(() => _tab = tab);
   }
 
+  void _handleNavChanged(FiYouTab tab) {
+    if (tab == FiYouTab.explore) {
+      _openQuestionFlow();
+      return;
+    }
+    _select(tab);
+  }
+
+  void _openQuestionFlow() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const explore.ExplorationExperienceScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -334,7 +350,7 @@ class _FiYouShellState extends State<FiYouShell> {
                 onLevelTap: () => _select(FiYouTab.my),
                 onUMapTap: () => _select(FiYouTab.uMap),
                 onDiaryTap: () => _select(FiYouTab.diary),
-                onQuestionTap: () => _select(FiYouTab.explore),
+                onQuestionTap: _openQuestionFlow,
                 onStatusTap: () => _select(FiYouTab.explore),
                 onShareTap: () => _showMessage(context, '공유 기능은 출시 때 연결됩니다.'),
               ),
@@ -346,7 +362,7 @@ class _FiYouShellState extends State<FiYouShell> {
                 },
               ),
               umap.FiYouUMapScreen(
-                onStartQuestion: () => _select(FiYouTab.explore),
+                onStartQuestion: _openQuestionFlow,
                 onShare: () => _showMessage(context, '공유 기능은 출시 때 연결됩니다.'),
                 onOpenGrowthMap: () =>
                     _showMessage(context, 'Growth Map은 Star 콘텐츠로 준비 중입니다.'),
@@ -361,7 +377,7 @@ class _FiYouShellState extends State<FiYouShell> {
             left: 18,
             right: 18,
             bottom: MediaQuery.of(context).padding.bottom + 10,
-            child: FiYouNavBar(current: _tab, onChanged: _select),
+            child: FiYouNavBar(current: _tab, onChanged: _handleNavChanged),
           ),
         ],
       ),

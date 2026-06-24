@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:fi_you/data/fi_you_repository.dart';
+import 'package:fi_you/features/explore/insight_feed_screen.dart';
+import 'package:fi_you/features/explore/story_feed_screen.dart';
 import 'package:flutter/material.dart';
 
 typedef ExploreAnswersSaved = Future<void> Function(List<String> answers);
@@ -56,11 +58,15 @@ class ExploreHomeScreen extends StatelessWidget {
               onStartQuestion: () => _startTodayRecommendation(context),
             ),
             const SizedBox(height: 14),
+            const _InsightFeedEntryCard(),
+            const SizedBox(height: 14),
             _FreeExploreCard(onStart: () => _startFreeExplore(context)),
             const SizedBox(height: 18),
             _TodayRecommendationCard(
               onStart: () => _startTodayRecommendation(context),
             ),
+            const SizedBox(height: 14),
+            const _StoryFeedEntryCard(),
           ],
         ),
       ),
@@ -141,7 +147,7 @@ class _FlowCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           const Text(
-            '질문과 Diary에서 쌓인 단서를 바탕으로, 아직 더 살펴볼 자기이해 영역을 보여줘요.',
+            '질문과 Diary에서 쌓인 단서를 바탕으로, 아직 더 살펴볼 자기탐험 영역을 보여줘요.',
             style: TextStyle(
               color: _textSoft,
               fontSize: 13,
@@ -188,6 +194,100 @@ class _FlowCard extends StatelessWidget {
   }
 }
 
+class _InsightFeedEntryCard extends StatelessWidget {
+  const _InsightFeedEntryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome_rounded, color: _cyan, size: 24),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '조금씩 선명해지는 방향',
+                  style: TextStyle(
+                    color: _text,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '최근 탐험에서 떠오른 발견을 살펴보세요.',
+                  style: TextStyle(color: _textSoft, fontSize: 13, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: '발견 열기',
+            icon: const Icon(Icons.arrow_forward_rounded, color: _text),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const InsightFeedScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoryFeedEntryCard extends StatelessWidget {
+  const _StoryFeedEntryCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      child: Row(
+        children: [
+          const Icon(Icons.menu_book_rounded, color: _gold, size: 24),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '나의 이야기',
+                  style: TextStyle(
+                    color: _text,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '탐험에서 이어지는 조용한 장을 읽어보세요.',
+                  style: TextStyle(color: _textSoft, fontSize: 13, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: '이야기 열기',
+            icon: const Icon(Icons.arrow_forward_rounded, color: _text),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const StoryFeedScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FreeExploreCard extends StatelessWidget {
   const _FreeExploreCard({required this.onStart});
 
@@ -197,13 +297,13 @@ class _FreeExploreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _GlassPanel(
       onTap: onStart,
-      child: const Row(
+      child: Row(
         children: [
-          _RingedPlanetIcon(color: _gold, size: 34),
-          SizedBox(width: 14),
-          Expanded(child: _FreeExploreCopy()),
-          SizedBox(width: 12),
-          _FreeExploreStarPill(),
+          const _RingedPlanetIcon(color: _gold, size: 34),
+          const SizedBox(width: 14),
+          const Expanded(child: _FreeExploreCopy()),
+          const SizedBox(width: 12),
+          _FreeExploreStarPill(onPressed: onStart),
         ],
       ),
     );
@@ -211,25 +311,30 @@ class _FreeExploreCard extends StatelessWidget {
 }
 
 class _FreeExploreStarPill extends StatelessWidget {
-  const _FreeExploreStarPill();
+  const _FreeExploreStarPill({required this.onPressed});
+
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return FiYouLiquidButton(
-      label: '30 Star',
-      icon: const Icon(Icons.star_rounded),
-      onPressed: () {},
-      width: 92,
-      height: 34,
-      radius: 999,
-      fontSize: 11.5,
-      foregroundColor: _gold,
-      borderColor: _gold,
-      borderWidth: 1.15,
-      accentColor: _gold,
-      accentStrength: 0.38,
-      iconSize: 14,
-      horizontalPadding: 10,
+    return Tooltip(
+      message: '자유탐구 Star 소비',
+      child: FiYouLiquidButton(
+        label: '30 Star',
+        icon: const Icon(Icons.star_rounded),
+        onPressed: onPressed,
+        width: 92,
+        height: 34,
+        radius: 999,
+        fontSize: 11.5,
+        foregroundColor: _gold,
+        borderColor: _gold,
+        borderWidth: 1.15,
+        accentColor: _gold,
+        accentStrength: 0.38,
+        iconSize: 14,
+        horizontalPadding: 10,
+      ),
     );
   }
 }
@@ -338,7 +443,6 @@ class _ExplorationExperienceScreenState
   String? _errorMessage;
   bool _loading = true;
   bool _submitting = false;
-  bool _noteExpanded = false;
   bool _awaitingNextCard = false;
   bool _startedLoading = false;
   int _cardSerial = 0;
@@ -410,7 +514,6 @@ class _ExplorationExperienceScreenState
         _card = nextCard;
         _selectedOptionIds.clear();
         _noteController.clear();
-        _noteExpanded = false;
         _awaitingNextCard = false;
         _loading = false;
         _cardSerial += 1;
@@ -538,12 +641,9 @@ class _ExplorationExperienceScreenState
                   card: card,
                   selectedOptionIds: _selectedOptionIds,
                   noteController: _noteController,
-                  noteExpanded: _noteExpanded,
                   submitting: _submitting,
                   errorMessage: _errorMessage,
                   canContinue: _canContinue,
-                  onToggleNote: () =>
-                      setState(() => _noteExpanded = !_noteExpanded),
                   onSelectOption: _toggleOption,
                   onContinue: _submitAnswer,
                 ),
@@ -584,7 +684,7 @@ class _ExplorationStatusView extends StatelessWidget {
               const SizedBox(height: 18),
             ],
             Text(
-              hasError ? errorMessage! : '무엇을 물어볼지 고민하고 있어요...',
+              hasError ? errorMessage! : '당신을 탐구하기 위해 준비 중 이에요.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: _text,
@@ -616,11 +716,9 @@ class _ExplorationCardView extends StatelessWidget {
     required this.card,
     required this.selectedOptionIds,
     required this.noteController,
-    required this.noteExpanded,
     required this.submitting,
     required this.errorMessage,
     required this.canContinue,
-    required this.onToggleNote,
     required this.onSelectOption,
     required this.onContinue,
     super.key,
@@ -629,11 +727,9 @@ class _ExplorationCardView extends StatelessWidget {
   final ExplorationCard card;
   final Set<String> selectedOptionIds;
   final TextEditingController noteController;
-  final bool noteExpanded;
   final bool submitting;
   final String? errorMessage;
   final bool canContinue;
-  final VoidCallback onToggleNote;
   final ValueChanged<ExplorationCardOption> onSelectOption;
   final VoidCallback onContinue;
 
@@ -669,7 +765,7 @@ class _ExplorationCardView extends StatelessWidget {
               if (_isPriority) ...[
                 const SizedBox(height: 14),
                 Text(
-                  'Selected ${selectedOptionIds.length}/$_requiredSelections',
+                  '$_requiredSelections개를 선택해 주세요 (${selectedOptionIds.length}/$_requiredSelections)',
                   style: const TextStyle(
                     color: _cyan,
                     fontSize: 13,
@@ -691,8 +787,6 @@ class _ExplorationCardView extends StatelessWidget {
               const SizedBox(height: 12),
               _ExplorationNoteField(
                 controller: noteController,
-                expanded: noteExpanded,
-                onToggle: onToggleNote,
               ),
               if (errorMessage != null) ...[
                 const SizedBox(height: 14),
@@ -798,35 +892,32 @@ class _ExplorationOptionTile extends StatelessWidget {
 class _ExplorationNoteField extends StatelessWidget {
   const _ExplorationNoteField({
     required this.controller,
-    required this.expanded,
-    required this.onToggle,
   });
 
   final TextEditingController controller;
-  final bool expanded;
-  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-              decoration: _glassDecoration(radius: FiYouGlass.glassRadiusSmall),
-              child: Row(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: FiYouGlass.glassBlurSigma,
+          sigmaY: FiYouGlass.glassBlurSigma,
+        ),
+        child: Container(
+          decoration: _glassDecoration(radius: FiYouGlass.glassRadiusSmall),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
                 children: [
-                  const Icon(Icons.edit_note_rounded, color: _textMuted),
-                  const SizedBox(width: 10),
-                  const Expanded(
+                  Icon(Icons.edit_note_rounded, color: _textMuted),
+                  SizedBox(width: 10),
+                  Expanded(
                     child: Text(
-                      '생각 남기기',
+                      '생각 남기기 (선택)',
                       style: TextStyle(
                         color: _textSoft,
                         fontSize: 14,
@@ -834,74 +925,35 @@ class _ExplorationNoteField extends StatelessWidget {
                       ),
                     ),
                   ),
-                  AnimatedRotation(
-                    turns: expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    child: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: _textMuted,
-                    ),
-                  ),
                 ],
               ),
-            ),
-          ),
-        ),
-        AnimatedCrossFade(
-          firstChild: const SizedBox.shrink(),
-          secondChild: Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(FiYouGlass.glassRadiusSmall),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: FiYouGlass.glassBlurSigma,
-                  sigmaY: FiYouGlass.glassBlurSigma,
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller,
+                minLines: 4,
+                maxLines: 6,
+                maxLength: 300,
+                style: const TextStyle(
+                  color: _text,
+                  fontSize: 14,
+                  height: 1.45,
                 ),
-                child: TextField(
-                  controller: controller,
-                  minLines: 4,
-                  maxLines: 6,
-                  maxLength: 300,
-                  style: const TextStyle(
-                    color: _text,
-                    fontSize: 14,
-                    height: 1.45,
-                  ),
-                  cursorColor: _cyan,
-                  decoration: InputDecoration(
-                    hintText: '떠오르는 생각이 있다면 남겨보세요.',
-                    hintStyle: const TextStyle(color: _textMuted),
-                    counterStyle: const TextStyle(color: _textMuted),
-                    filled: true,
-                    fillColor: FiYouGlass.glassFill,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        FiYouGlass.glassRadiusSmall,
-                      ),
-                      borderSide: const BorderSide(
-                        color: FiYouGlass.glassStrokeSide,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        FiYouGlass.glassRadiusSmall,
-                      ),
-                      borderSide: const BorderSide(
-                        color: FiYouGlass.glassStrokeTop,
-                      ),
-                    ),
-                  ),
+                cursorColor: _cyan,
+                decoration: const InputDecoration(
+                  hintText: '필수는 아니에요. 떠오르는 생각이 있다면 남겨보세요.',
+                  hintStyle: TextStyle(color: _textMuted),
+                  counterStyle: TextStyle(color: _textMuted),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
-            ),
+            ],
           ),
-          crossFadeState: expanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 190),
         ),
-      ],
+      ),
     );
   }
 }
@@ -1141,7 +1193,7 @@ class QuestionCompleteScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              '오늘의 답변은 기록으로 남겨졌어요. 아직 확정된 분석은 아니며, 다음 기록과 함께 더 살펴볼 작은 단서예요.',
+              '오늘의 답변은 기록으로 남겨졌어요. 아직 고정된 결론은 아니며, 다음 기록과 함께 더 살펴볼 작은 단서예요.',
               style: TextStyle(color: _textSoft, fontSize: 14, height: 1.55),
             ),
             const SizedBox(height: 22),

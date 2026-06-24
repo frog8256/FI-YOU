@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { refreshUserInsights, toFeedItem } from "../_shared/insight-engine.ts";
+import { refreshUserStories, toStoryFeedItem } from "../_shared/story-engine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,18 +15,18 @@ const json = (status: number, body: Record<string, unknown>) =>
 
 function feedSectionForType(type: string) {
   switch (type) {
-    case "emerging_pattern":
-      return "반복해서 나타나는 흐름";
+    case "current_chapter":
+      return "현재의 장";
+    case "emerging_direction":
+      return "선명해지는 방향";
     case "internal_tension":
-      return "함께 보이는 연결";
-    case "exploration_gap":
+      return "함께 나타나는 두 흐름";
+    case "hidden_territory":
       return "아직 조용한 영역";
-    case "consistent_theme":
-      return "조금씩 선명해지는 방향";
     case "change_over_time":
       return "변화의 흔적";
     default:
-      return "최근 탐험";
+      return "현재의 장";
   }
 }
 
@@ -55,37 +55,38 @@ Deno.serve(async (request) => {
     const body = request.method === "POST" ? await request.json().catch(() => ({})) : {};
     const forceRefresh = url.searchParams.get("refresh") === "true" ||
       (body && typeof body === "object" && (body as Record<string, unknown>).refresh === true);
-    const refresh = await refreshUserInsights(admin, userData.user.id, { force: forceRefresh });
+    const refresh = await refreshUserStories(admin, userData.user.id, { force: forceRefresh });
 
-    const { data: rows, error: insightError } = await admin
-      .from("user_insights")
-      .select("id,insight_type,title,description,supporting_nodes,confidence_level,updated_at")
+    const { data: rows, error: storyError } = await admin
+      .from("user_stories")
+      .select("id,story_type,title,description,supporting_insights,updated_at")
       .eq("user_id", userData.user.id)
       .eq("active", true)
       .order("updated_at", { ascending: false })
       .limit(20);
-    if (insightError) throw insightError;
+    if (storyError) throw storyError;
 
-    const insights = (rows ?? []).map((row) => ({
-      ...toFeedItem(row),
-      feed_section: feedSectionForType(String(row.insight_type)),
+    const stories = (rows ?? []).map((row) => ({
+      ...toStoryFeedItem(row),
+      feed_section: feedSectionForType(String(row.story_type)),
     }));
 
     return json(200, {
       ok: true,
-      feed_title: "최근 탐험",
+      feed_title: "나의 이야기",
       sections: [
-        "최근 탐험",
-        "반복해서 나타나는 흐름",
-        "함께 보이는 연결",
-        "조금씩 선명해지는 방향",
+        "현재의 장",
+        "선명해지는 방향",
+        "함께 나타나는 두 흐름",
+        "아직 조용한 영역",
+        "변화의 흔적",
       ],
-      insights,
+      stories,
       refresh,
     });
   } catch (error) {
     return json(500, {
-      error: "insight_feed_failed",
+      error: "story_feed_failed",
       message: error instanceof Error ? error.message : String(error),
     });
   }

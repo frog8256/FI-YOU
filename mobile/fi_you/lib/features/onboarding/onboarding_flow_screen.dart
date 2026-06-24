@@ -405,7 +405,7 @@ class _ReadyStep extends StatelessWidget {
         ),
         SizedBox(height: 20),
         _SoftLine(
-          text: '질문은 사용자를 분류하거나 진단하지 않아요. 오늘의 자기탐색을 시작하기 위한 첫 기록으로만 다룹니다.',
+          text: '질문은 사용자를 한 가지 모습으로 고정하지 않아요. 오늘의 자기탐색을 시작하기 위한 첫 기록으로만 다룹니다.',
         ),
       ],
     );
@@ -610,7 +610,7 @@ class _FeedbackStepState extends State<_FeedbackStep> {
                 eyebrow: 'MY UNIVERSE reflection',
                 title: '첫 단서가 U-Map에 반영되는 중이에요.',
                 body:
-                    'My Universe는 지금의 답을 고정된 유형으로 판단하지 않아요. 다음 탐색을 조금 더 섬세하게 이어가기 위한 출발점으로만 다룹니다.',
+                    'My Universe는 지금의 답을 고정된 모습으로 판단하지 않아요. 다음 탐색을 조금 더 섬세하게 이어가기 위한 출발점으로만 다룹니다.',
                 centered: true,
               ),
               const SizedBox(height: 22),
@@ -877,7 +877,7 @@ class _SafetyNote extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              '이 정보는 사용자를 분류하거나 진단하기 위한 것이 아니에요. 질문과 기록의 표현을 더 섬세하게 맞추기 위한 참고 단서로만 사용합니다.',
+              '이 정보는 사용자를 한 가지 모습으로 고정하기 위한 것이 아니에요. 질문과 기록의 표현을 더 섬세하게 맞추기 위한 참고 단서로만 사용합니다.',
               style: TextStyle(
                 color: FiYouGlass.textSoft,
                 fontSize: 13,

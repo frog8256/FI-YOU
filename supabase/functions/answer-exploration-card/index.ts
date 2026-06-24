@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { refreshUserInsights } from "../_shared/insight-engine.ts";
+import { refreshUserStories } from "../_shared/story-engine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,8 +61,13 @@ Deno.serve(async (request) => {
       reason: "refresh_failed",
       message: error instanceof Error ? error.message : String(error),
     }));
+    const stories = await refreshUserStories(serviceAdmin, userData.user.id).catch((error) => ({
+      refreshed: false,
+      reason: "refresh_failed",
+      message: error instanceof Error ? error.message : String(error),
+    }));
 
-    return json(200, { success: true, insights: refresh });
+    return json(200, { success: true, insights: refresh, stories });
   } catch (error) {
     return json(500, {
       error: "answer_exploration_card_failed",

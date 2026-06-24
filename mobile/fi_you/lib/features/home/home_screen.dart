@@ -57,37 +57,1070 @@ class HomeScreen extends StatelessWidget {
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 118),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 118),
               sliver: SliverList.list(
                 children: [
-                  HomeHeader(
-                    data: data,
-                    onStoreTap: onStoreTap,
-                    onLevelTap: onLevelTap,
-                  ),
-                  const SizedBox(height: 20),
-                  GreetingSection(data: data),
-                  const SizedBox(height: 14),
-                  ExplorationStatusCard(
-                    metrics: homeStatsMetrics,
-                    latestUpdateLabel: data.latestUpdateLabel,
-                    onTap: onStatusTap,
+                  _HomeWidth(
+                    child: HomeHeader(
+                      data: data,
+                      onStoreTap: onStoreTap,
+                      onLevelTap: onLevelTap,
+                    ),
                   ),
                   const SizedBox(height: 14),
-                  UMapCard(
-                    data: data,
-                    onTap: onUMapTap,
-                    onShareTap: onShareTap,
+                  _HomeWidth(
+                    child: TodayDiscoveryCard(
+                      insight: data.todayClue,
+                      onTap: onStatusTap,
+                    ),
                   ),
-                  const SizedBox(height: 14),
-                  DiaryPromptCard(prompt: data.diaryPrompt, onTap: onDiaryTap),
-                  const SizedBox(height: 14),
-                  TodayClueCard(clue: data.todayClue, onTap: onStatusTap),
+                  const SizedBox(height: 12),
+                  _HomeWidth(
+                    child: GrowthTimelineCard(
+                      metrics: data.activityMetrics,
+                      latestUpdateLabel: data.latestUpdateLabel,
+                      onTap: onStatusTap,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _HomeWidth(
+                    child: HeroUniverseCard(data: data, onTap: onUMapTap),
+                  ),
+                  const SizedBox(height: 16),
+                  _HomeWidth(
+                    child: AIObservationCard(data: data, onTap: onStatusTap),
+                  ),
+                  const SizedBox(height: 16),
+                  _HomeWidth(
+                    child: UniversePreviewCard(
+                      data: data,
+                      onTap: onUMapTap,
+                      onShareTap: onShareTap,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _HomeWidth(
+                    child: NextExplorationRecommendationCard(
+                      data: data,
+                      onQuestionTap: onQuestionTap,
+                      onDiaryTap: onDiaryTap,
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HomeWidth extends StatelessWidget {
+  const _HomeWidth({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 430),
+        child: SizedBox(width: double.infinity, child: child),
+      ),
+    );
+  }
+}
+
+class HeroUniverseCard extends StatelessWidget {
+  const HeroUniverseCard({super.key, required this.data, this.onTap});
+
+  final HomeMockData data;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouSurface(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      borderColor: FiYouHomeColors.primarySoft.withValues(alpha: 0.44),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const SignalIconPanel(
+                icon: Icons.bubble_chart_rounded,
+                color: FiYouHomeColors.primarySoft,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionKicker(label: '당신에 대해'),
+                    SizedBox(height: 6),
+                    Text(
+                      '발견된 나의 구조',
+                      style: TextStyle(
+                        color: FiYouHomeColors.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              FiYouChevronButton(
+                label: '나의 구조',
+                onPressed: onTap,
+                color: FiYouHomeColors.textSecondary,
+                showBorder: false,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const pattern = _DiscoveryMetricPanel(
+                value: '127',
+                label: '패턴',
+                help: '반복해서 드러난 생각과 행동의 단서',
+                color: FiYouHomeColors.accentCyan,
+              );
+              const connection = _DiscoveryMetricPanel(
+                value: '42',
+                label: '연결',
+                help: '서로 영향을 주는 감정, 선택, 관계의 고리',
+                color: FiYouHomeColors.accentGold,
+              );
+
+              if (constraints.maxWidth < 332) {
+                return const Column(
+                  children: [pattern, SizedBox(height: 10), connection],
+                );
+              }
+
+              return const Row(
+                children: [
+                  Expanded(child: pattern),
+                  SizedBox(width: 10),
+                  Expanded(child: connection),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.035),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14),
+                width: 0.9,
+              ),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '최근 관측된 특징',
+                  style: TextStyle(
+                    color: FiYouHomeColors.textMuted,
+                    fontSize: 11.2,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+                SizedBox(height: 7),
+                Text(
+                  '새로운 아이디어를 현실로 옮기는 속도가 빠르며,\n하나를 오래 이어가는 방식은 계속 진화하고 있습니다.',
+                  style: TextStyle(
+                    color: FiYouHomeColors.textSecondary,
+                    fontSize: 13,
+                    height: 1.48,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DiscoveryMetricPanel extends StatelessWidget {
+  const _DiscoveryMetricPanel({
+    required this.value,
+    required this.label,
+    required this.help,
+    required this.color,
+  });
+
+  final String value;
+  final String label;
+  final String help;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 106),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.22), width: 0.9),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  height: 0.95,
+                  letterSpacing: 0,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: FiYouHomeColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            help,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 10.6,
+              height: 1.32,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TodayDiscoveryCard extends StatelessWidget {
+  const TodayDiscoveryCard({super.key, required this.insight, this.onTap});
+
+  final String insight;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouSurface(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SignalIconPanel(
+            icon: Icons.lightbulb_rounded,
+            color: FiYouHomeColors.accentGold,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '오늘의 인사이트',
+                  style: TextStyle(
+                    color: FiYouHomeColors.textPrimary,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  insight,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: FiYouHomeColors.textSecondary,
+                    fontSize: 12.2,
+                    height: 1.35,
+                    letterSpacing: 0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FiYouChevronButton(
+            label: '오늘의 인사이트',
+            onPressed: onTap,
+            color: FiYouHomeColors.textSecondary,
+            showBorder: false,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AIObservationCard extends StatelessWidget {
+  const AIObservationCard({super.key, required this.data, this.onTap});
+
+  final HomeMockData data;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const keywords = [
+      '차분한 정리',
+      '기준 세우기',
+      '느린 확신',
+      '혼자 회복',
+      '상황 관찰',
+      '오래 가는 선택',
+    ];
+
+    return FiYouSurface(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(14, 15, 14, 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const SignalIconPanel(
+                icon: Icons.psychology_alt_rounded,
+                color: FiYouHomeColors.primarySoft,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionKicker(label: 'AI가 보는 나'),
+                    SizedBox(height: 6),
+                    Text(
+                      '깊은 관찰',
+                      style: TextStyle(
+                        color: FiYouHomeColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              FiYouChevronButton(
+                label: '깊은 관찰',
+                onPressed: onTap,
+                color: FiYouHomeColors.textSecondary,
+                showBorder: false,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            '최근 기록에서 자주 반복된 나의 신호예요.',
+            style: TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 11.5,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < keywords.length; i++)
+                _ObservationKeywordChip(
+                  label: keywords[i],
+                  color: _observationKeywordColors[i],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ObservationKeywordChip extends StatelessWidget {
+  const _ObservationKeywordChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.075),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 0.9),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Color.lerp(color, Colors.white, 0.18),
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          height: 1,
+          letterSpacing: 0,
+        ),
+      ),
+    );
+  }
+}
+
+const _observationKeywordColors = [
+  FiYouHomeColors.primarySoft,
+  FiYouHomeColors.accentGold,
+  FiYouHomeColors.accentCyan,
+  Color(0xFF6EE7B7),
+  Color(0xFFF0ABFC),
+  Color(0xFFFB7185),
+];
+
+class GrowthTimelineCard extends StatelessWidget {
+  const GrowthTimelineCard({
+    super.key,
+    required this.metrics,
+    required this.latestUpdateLabel,
+    this.onTap,
+  });
+
+  final List<HomeActivityMetric> metrics;
+  final String latestUpdateLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final timeline = [
+      ('오늘', '감정 신호 3개가 새로 연결됐어요', FiYouHomeColors.accentGold),
+      ('이번 주', '선택 기준 노드가 더 선명해졌어요', FiYouHomeColors.accentCyan),
+      ('최근', '관계 반응과 회복 패턴 사이의 연결을 발견했어요', FiYouHomeColors.primarySoft),
+    ];
+
+    return FiYouSurface(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionKicker(label: '성장 타임라인'),
+                    SizedBox(height: 6),
+                    Text(
+                      '최근 변화',
+                      style: TextStyle(
+                        color: FiYouHomeColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                latestUpdateLabel,
+                style: const TextStyle(
+                  color: FiYouHomeColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 13),
+          for (var i = 0; i < timeline.length; i++) ...[
+            _TimelineRow(
+              label: timeline[i].$1,
+              body: timeline[i].$2,
+              color: timeline[i].$3,
+            ),
+            if (i != timeline.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.label,
+    required this.body,
+    required this.color,
+  });
+
+  final String label;
+  final String body;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          margin: const EdgeInsets.only(top: 5),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.34),
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        SizedBox(
+          width: 52,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              height: 1.35,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            body,
+            style: const TextStyle(
+              color: FiYouHomeColors.textSecondary,
+              fontSize: 12.5,
+              height: 1.4,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class UniverseProgressCard extends StatelessWidget {
+  const UniverseProgressCard({super.key, required this.data, this.onTap});
+
+  final HomeMockData data;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouSurface(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 17),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionKicker(label: 'Universe Progress'),
+          const SizedBox(height: 6),
+          const Text(
+            '10개 영역의 대표 작은 신호',
+            style: TextStyle(
+              color: FiYouHomeColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 15),
+          for (var i = 0; i < _homeNodeHighlights.length; i++) ...[
+            _NodeSubnodeRow(node: _homeNodeHighlights[i]),
+            if (i != _homeNodeHighlights.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _NodeSubnodeRow extends StatelessWidget {
+  const _NodeSubnodeRow({required this.node});
+
+  final _HomeNodeHighlight node;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          margin: const EdgeInsets.only(top: 5),
+          decoration: BoxDecoration(
+            color: node.color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: node.color.withValues(alpha: 0.28),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 78,
+          child: Text(
+            node.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: FiYouHomeColors.textSecondary,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w900,
+              height: 1.35,
+              letterSpacing: 0,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                node.topSubnode,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: node.color,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w900,
+                  height: 1.2,
+                  letterSpacing: 0,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                node.signal,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: FiYouHomeColors.textMuted,
+                  fontSize: 10.8,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class UniversePreviewCard extends StatelessWidget {
+  const UniversePreviewCard({
+    super.key,
+    required this.data,
+    this.onTap,
+    this.onShareTap,
+  });
+
+  final HomeMockData data;
+  final VoidCallback? onTap;
+  final VoidCallback? onShareTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouSurface(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SectionKicker(label: 'Universe Preview'),
+                    SizedBox(height: 6),
+                    Text(
+                      '나의 U-Map 스냅샷',
+                      style: TextStyle(
+                        color: FiYouHomeColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              FiYouLiquidIconButton(
+                label: '공유',
+                icon: const Icon(Icons.ios_share_rounded),
+                onPressed: onShareTap,
+                size: 38,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            '10개의 영역에서 지금 가장 선명한 작은 신호예요.',
+            style: TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 11.5,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const _MiniUMapSubnodeGrid(nodes: _homeNodeHighlights),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniUMapSubnodeGrid extends StatelessWidget {
+  const _MiniUMapSubnodeGrid({required this.nodes});
+
+  final List<_HomeNodeHighlight> nodes;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - 24) / 5;
+        return Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final node in nodes)
+              SizedBox(
+                width: itemWidth,
+                child: _MiniUMapSubnodeTile(node: node),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MiniUMapSubnodeTile extends StatelessWidget {
+  const _MiniUMapSubnodeTile({required this.node});
+
+  final _HomeNodeHighlight node;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 78,
+      padding: const EdgeInsets.fromLTRB(6, 7, 6, 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.035),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: node.color.withValues(alpha: 0.18),
+          width: 0.9,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: node.color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: node.color.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            node.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 9.2,
+              fontWeight: FontWeight.w900,
+              height: 1.05,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Expanded(
+            child: Center(
+              child: Text(
+                node.topSubnode,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: node.color,
+                  fontSize: 9.8,
+                  fontWeight: FontWeight.w900,
+                  height: 1.15,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeNodeHighlight {
+  const _HomeNodeHighlight({
+    required this.label,
+    required this.topSubnode,
+    required this.signal,
+    required this.color,
+  });
+
+  final String label;
+  final String topSubnode;
+  final String signal;
+  final Color color;
+}
+
+const _homeNodeHighlights = [
+  _HomeNodeHighlight(
+    label: '관계 반응',
+    topSubnode: '빠른 공감 감지',
+    signal: '상대의 온도 변화를 먼저 읽음',
+    color: Color(0xFFA78BFA),
+  ),
+  _HomeNodeHighlight(
+    label: '탐험 흐름',
+    topSubnode: '패턴 재구성',
+    signal: '흩어진 단서를 구조로 묶음',
+    color: Color(0xFF7DD3FC),
+  ),
+  _HomeNodeHighlight(
+    label: '감정 신호',
+    topSubnode: '잔상 오래 보기',
+    signal: '하루 뒤에도 남는 장면을 추적',
+    color: Color(0xFFFB7185),
+  ),
+  _HomeNodeHighlight(
+    label: '회복 패턴',
+    topSubnode: '혼자 정리하는 시간',
+    signal: '소음이 줄 때 에너지가 회복됨',
+    color: Color(0xFFC4B5FD),
+  ),
+  _HomeNodeHighlight(
+    label: '선택 기준',
+    topSubnode: '오래 갈 수 있음',
+    signal: '즉시성보다 지속성을 우선함',
+    color: Color(0xFFF7C948),
+  ),
+  _HomeNodeHighlight(
+    label: '몰입 방향',
+    topSubnode: '아이디어 실행',
+    signal: '생각을 빠르게 현실로 옮김',
+    color: Color(0xFF60A5FA),
+  ),
+  _HomeNodeHighlight(
+    label: '갈등 반응',
+    topSubnode: '거리 두고 판단',
+    signal: '바로 맞서기보다 맥락을 확인',
+    color: Color(0xFFF87171),
+  ),
+  _HomeNodeHighlight(
+    label: '표현 확장',
+    topSubnode: '짧고 선명한 언어',
+    signal: '복잡한 감각을 문장으로 압축',
+    color: Color(0xFF8B5CF6),
+  ),
+  _HomeNodeHighlight(
+    label: '생활 리듬',
+    topSubnode: '몰입 후 회복',
+    signal: '강한 집중 뒤 휴식이 필요함',
+    color: Color(0xFF6EE7B7),
+  ),
+  _HomeNodeHighlight(
+    label: '성장 방식',
+    topSubnode: '반복보다 변형',
+    signal: '같은 방식을 조금씩 바꿔 감',
+    color: Color(0xFFF0ABFC),
+  ),
+];
+
+class NextExplorationRecommendationCard extends StatelessWidget {
+  const NextExplorationRecommendationCard({
+    super.key,
+    required this.data,
+    this.onQuestionTap,
+    this.onDiaryTap,
+  });
+
+  final HomeMockData data;
+  final VoidCallback? onQuestionTap;
+  final VoidCallback? onDiaryTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouSurface(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      borderColor: FiYouHomeColors.accentGold.withValues(alpha: 0.35),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionKicker(label: '다음 탐구 추천'),
+          const SizedBox(height: 7),
+          Text(
+            data.nextQuestion,
+            style: const TextStyle(
+              color: FiYouHomeColors.textPrimary,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+              height: 1.35,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            data.estimatedQuestionTime,
+            style: const TextStyle(
+              color: FiYouHomeColors.textMuted,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 15),
+          _NextExplorationActions(
+            onQuestionTap: onQuestionTap,
+            onDiaryTap: onDiaryTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NextExplorationActions extends StatelessWidget {
+  const _NextExplorationActions({this.onQuestionTap, this.onDiaryTap});
+
+  final VoidCallback? onQuestionTap;
+  final VoidCallback? onDiaryTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = FiYouLiquidButton(
+      label: '탐구 시작하기',
+      icon: const Icon(Icons.auto_awesome_rounded),
+      onPressed: onQuestionTap,
+      height: 52,
+      fontSize: 14,
+      accentColor: FiYouHomeColors.accentGold,
+      accentStrength: 0.8,
+    );
+    final secondary = FiYouLiquidButton(
+      label: 'Diary로 남기기',
+      icon: const Icon(Icons.edit_note_rounded),
+      onPressed: onDiaryTap,
+      height: 52,
+      fontSize: 14,
+      accentColor: FiYouHomeColors.accentCyan,
+      accentStrength: 0.45,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 336) {
+          return Column(
+            children: [primary, const SizedBox(height: 10), secondary],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(flex: 6, child: primary),
+            const SizedBox(width: 10),
+            Expanded(flex: 5, child: secondary),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SectionKicker extends StatelessWidget {
+  const _SectionKicker({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        color: FiYouHomeColors.textMuted,
+        fontSize: 11,
+        fontWeight: FontWeight.w900,
+        height: 1,
+        letterSpacing: 0,
       ),
     );
   }
@@ -1166,7 +2199,7 @@ class TodayClueCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  '아직 확정된 해석이 아닙니다. 기록에서 발견한 작은 신호입니다.',
+                  '아직 고정된 결론이 아니에요. 기록에서 발견한 작은 신호입니다.',
                   style: TextStyle(
                     color: FiYouHomeColors.textMuted,
                     fontSize: 11.2,

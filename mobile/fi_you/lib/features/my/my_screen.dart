@@ -31,8 +31,8 @@ class MyScreen extends StatelessWidget {
           _ProfileCard(profile: profile, onStarTap: () => _openStore(context)),
           const SizedBox(height: 24),
           const MySectionTitle(
-            title: '분석내용',
-            subtitle: '진단 결과가 아니라 지금까지의 기록에서 보이는 자기탐색 흐름입니다.',
+            title: '탐험의 흐름',
+            subtitle: '지금까지의 기록에서 보이는 자기탐색의 흔적입니다.',
           ),
           const SizedBox(height: 12),
           _InsightList(insights: insights),

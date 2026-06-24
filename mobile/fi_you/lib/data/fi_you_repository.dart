@@ -140,6 +140,246 @@ class ExplorationAnswerInput {
   final String? userNote;
 }
 
+class InsightSupportingNode {
+  const InsightSupportingNode({
+    required this.nodeId,
+    required this.nodeName,
+    this.parentNodeId,
+    this.parentNode,
+  });
+
+  final String nodeId;
+  final String nodeName;
+  final String? parentNodeId;
+  final String? parentNode;
+
+  factory InsightSupportingNode.fromJson(Object? data) {
+    final map = _optionalMap(data);
+    if (map == null) {
+      return const InsightSupportingNode(nodeId: '', nodeName: '');
+    }
+    return InsightSupportingNode(
+      nodeId: _stringValue(map['node_id']),
+      nodeName: _explorationText(_stringValue(map['node_name'])),
+      parentNodeId: _nullableString(map['parent_node_id']),
+      parentNode: _nullableString(_explorationText(_stringValue(map['parent_node']))),
+    );
+  }
+}
+
+class UserInsight {
+  const UserInsight({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.supportingNodes,
+    required this.confidenceLevel,
+    this.createdAt,
+  });
+
+  final String id;
+  final String type;
+  final String title;
+  final String description;
+  final List<InsightSupportingNode> supportingNodes;
+  final String confidenceLevel;
+  final DateTime? createdAt;
+
+  bool get isEmpty => title.trim().isEmpty && description.trim().isEmpty;
+
+  factory UserInsight.fromJson(Object? data) {
+    final map = _optionalMap(data);
+    if (map == null) {
+      return const UserInsight(
+        id: '',
+        type: '',
+        title: '',
+        description: '',
+        supportingNodes: [],
+        confidenceLevel: '',
+      );
+    }
+    return UserInsight(
+      id: _stringValue(map['insight_id'] ?? map['id']),
+      type: _stringValue(map['insight_type']),
+      title: _explorationText(_stringValue(map['title'])),
+      description: _explorationText(_stringValue(map['description'])),
+      supportingNodes: _objectList(map['supporting_nodes'])
+          .map(InsightSupportingNode.fromJson)
+          .where((node) => node.nodeName.trim().isNotEmpty)
+          .toList(),
+      confidenceLevel: _stringValue(map['confidence_level']),
+      createdAt: DateTime.tryParse(_stringValue(map['created_at'])),
+    );
+  }
+}
+
+class InsightFeedResponse {
+  const InsightFeedResponse({
+    required this.feedTitle,
+    required this.insights,
+    this.sections = const [],
+    this.errorMessage,
+  });
+
+  factory InsightFeedResponse.empty({String? errorMessage}) {
+    return InsightFeedResponse(
+      feedTitle: '최근 탐험',
+      insights: const [],
+      errorMessage: errorMessage,
+    );
+  }
+
+  final String feedTitle;
+  final List<UserInsight> insights;
+  final List<String> sections;
+  final String? errorMessage;
+
+  bool get isEmpty => insights.isEmpty;
+  bool get hasError => errorMessage != null && errorMessage!.trim().isNotEmpty;
+
+  factory InsightFeedResponse.fromJson(Object? data) {
+    final map = _optionalMap(data);
+    if (map == null) {
+      return InsightFeedResponse.empty(errorMessage: 'insight_feed_malformed');
+    }
+    final insights = _objectList(map['insights'])
+        .map(UserInsight.fromJson)
+        .where((insight) => !insight.isEmpty)
+        .toList();
+    final feedTitle = _stringValue(map['feed_title']).trim();
+    return InsightFeedResponse(
+      feedTitle: feedTitle.isEmpty ? '최근 탐험' : feedTitle,
+      sections: _stringList(map['sections']).map(_explorationText).toList(),
+      insights: insights,
+    );
+  }
+}
+
+class StorySupportingInsight {
+  const StorySupportingInsight({
+    required this.insightId,
+    required this.insightType,
+    required this.title,
+  });
+
+  final String insightId;
+  final String insightType;
+  final String title;
+
+  factory StorySupportingInsight.fromJson(Object? data) {
+    final map = _optionalMap(data);
+    if (map == null) {
+      return const StorySupportingInsight(
+        insightId: '',
+        insightType: '',
+        title: '',
+      );
+    }
+    return StorySupportingInsight(
+      insightId: _stringValue(map['insight_id'] ?? map['id']),
+      insightType: _stringValue(map['insight_type']),
+      title: _explorationText(_stringValue(map['title'])),
+    );
+  }
+}
+
+class UserStory {
+  const UserStory({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.description,
+    required this.supportingInsights,
+    this.createdAt,
+    this.updatedAt,
+    this.active = true,
+  });
+
+  final String id;
+  final String type;
+  final String title;
+  final String description;
+  final List<StorySupportingInsight> supportingInsights;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final bool active;
+
+  bool get isEmpty => title.trim().isEmpty && description.trim().isEmpty;
+
+  factory UserStory.fromJson(Object? data) {
+    final map = _optionalMap(data);
+    if (map == null) {
+      return const UserStory(
+        id: '',
+        type: '',
+        title: '',
+        description: '',
+        supportingInsights: [],
+      );
+    }
+    return UserStory(
+      id: _stringValue(map['story_id'] ?? map['id']),
+      type: _stringValue(map['story_type']),
+      title: _storyTitleFor(
+        _stringValue(map['story_type']),
+        _stringValue(map['title']),
+      ),
+      description: _explorationText(_stringValue(map['description'])),
+      supportingInsights: _objectList(map['supporting_insights'])
+          .map(StorySupportingInsight.fromJson)
+          .where((insight) => insight.title.trim().isNotEmpty)
+          .toList(),
+      createdAt: DateTime.tryParse(_stringValue(map['created_at'])),
+      updatedAt: DateTime.tryParse(_stringValue(map['updated_at'])),
+      active: map['active'] is bool ? map['active'] as bool : true,
+    );
+  }
+}
+
+class StoryFeedResponse {
+  const StoryFeedResponse({
+    required this.feedTitle,
+    required this.stories,
+    this.sections = const [],
+    this.errorMessage,
+  });
+
+  factory StoryFeedResponse.empty({String? errorMessage}) {
+    return StoryFeedResponse(
+      feedTitle: '나의 이야기',
+      stories: const [],
+      errorMessage: errorMessage,
+    );
+  }
+
+  final String feedTitle;
+  final List<UserStory> stories;
+  final List<String> sections;
+  final String? errorMessage;
+
+  bool get isEmpty => stories.isEmpty;
+  bool get hasError => errorMessage != null && errorMessage!.trim().isNotEmpty;
+
+  factory StoryFeedResponse.fromJson(Object? data) {
+    final map = _optionalMap(data);
+    if (map == null) {
+      return StoryFeedResponse.empty(errorMessage: 'story_feed_malformed');
+    }
+    final stories = _objectList(map['stories'])
+        .map(UserStory.fromJson)
+        .where((story) => !story.isEmpty)
+        .toList();
+    final feedTitle = _stringValue(map['feed_title']).trim();
+    return StoryFeedResponse(
+      feedTitle: feedTitle.isEmpty ? '나의 이야기' : feedTitle,
+      sections: _stringList(map['sections']).map(_storySectionLabel).toList(),
+      stories: stories,
+    );
+  }
+}
+
 class ClueInsight {
   const ClueInsight({
     required this.id,
@@ -212,6 +452,8 @@ abstract class FiYouRepository extends ChangeNotifier {
   Future<void> saveOnboardingAnswer(QuestionAnswerInput input);
   Future<ExplorationCard> loadNextExplorationCard();
   Future<void> submitExplorationAnswer(ExplorationAnswerInput input);
+  Future<InsightFeedResponse> getInsightFeed();
+  Future<StoryFeedResponse> getStoryFeed();
   Future<void> completeOnboarding({
     required String name,
     DateTime? birthday,
@@ -429,6 +671,153 @@ class MockFiYouRepository extends FiYouRepository {
     notifyListeners();
   }
 
+
+  @override
+  Future<InsightFeedResponse> getInsightFeed() async {
+    await Future<void>.delayed(const Duration(milliseconds: 180));
+    return InsightFeedResponse(
+      feedTitle: '최근 탐험',
+      sections: const [
+        '반복해서 나타나는 흐름',
+        '함께 보이는 연결',
+        '조금씩 선명해지는 방향',
+      ],
+      insights: const [
+        UserInsight(
+          id: 'mock-insight-1',
+          type: 'emerging_pattern',
+          title: '반복해서 나타나는 방향',
+          description:
+              '최근 탐험에서는 스스로 고르는 선택이 여러 장면에서 반복해서 나타납니다.',
+          supportingNodes: [
+            InsightSupportingNode(
+              nodeId: 'mock-node-1',
+              nodeName: '스스로 고르는 방향',
+              parentNode: '탐험',
+            ),
+            InsightSupportingNode(
+              nodeId: 'mock-node-2',
+              nodeName: '선택의 리듬',
+              parentNode: '결정',
+            ),
+          ],
+          confidenceLevel: 'forming',
+        ),
+        UserInsight(
+          id: 'mock-insight-2',
+          type: 'internal_tension',
+          title: '선명함과 움직일 여백',
+          description:
+              '어떤 답변은 선명한 선택으로 향하고, 어떤 답변은 가능성을 남겨두는 장면으로 이어집니다.',
+          supportingNodes: [
+            InsightSupportingNode(
+              nodeId: 'mock-node-3',
+              nodeName: '선명함',
+              parentNode: '결정',
+            ),
+          ],
+          confidenceLevel: 'early',
+        ),
+        UserInsight(
+          id: 'mock-insight-3',
+          type: 'exploration_gap',
+          title: '아직 열려 있는 탐험 영역',
+          description:
+              '우주의 몇몇 영역은 아직 조용히 남아 있어, 앞으로의 카드에서 새롭게 이어질 여백이 있습니다.',
+          supportingNodes: [],
+          confidenceLevel: 'early',
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<StoryFeedResponse> getStoryFeed() async {
+    await Future<void>.delayed(const Duration(milliseconds: 180));
+    return StoryFeedResponse(
+      feedTitle: '나의 이야기',
+      sections: const [
+        '현재의 장',
+        '선명해지는 방향',
+        '아직 조용한 영역',
+      ],
+      stories: const [
+        UserStory(
+          id: 'mock-story-1',
+          type: 'current_chapter',
+          title: '현재의 장',
+          description:
+              '최근 탐험은 여러 흐름을 하나의 조용한 장으로 모으고 있어요.',
+          supportingInsights: [
+            StorySupportingInsight(
+              insightId: 'mock-insight-1',
+              insightType: 'emerging_pattern',
+              title: '반복해서 나타나는 방향',
+            ),
+            StorySupportingInsight(
+              insightId: 'mock-insight-2',
+              insightType: 'consistent_theme',
+              title: '작은 선택들이 이어지는 장면',
+            ),
+            StorySupportingInsight(
+              insightId: 'mock-insight-3',
+              insightType: 'exploration_gap',
+              title: '아직 열려 있는 탐험 영역',
+            ),
+          ],
+        ),
+        UserStory(
+          id: 'mock-story-2',
+          type: 'emerging_direction',
+          title: '선명해지는 방향',
+          description:
+              'One thread appears to be moving from scattered observations toward a more connected path.',
+          supportingInsights: [
+            StorySupportingInsight(
+              insightId: 'mock-insight-4',
+              insightType: 'consistent_theme',
+              title: 'Connections appearing across areas',
+            ),
+            StorySupportingInsight(
+              insightId: 'mock-insight-5',
+              insightType: 'emerging_pattern',
+              title: 'A repeated direction in recent cards',
+            ),
+            StorySupportingInsight(
+              insightId: 'mock-insight-6',
+              insightType: 'change_over_time',
+              title: 'A gentle shift in recent exploration',
+            ),
+          ],
+        ),
+        UserStory(
+          id: 'mock-story-3',
+          type: 'hidden_territory',
+          title: 'A quiet area still waiting',
+          description:
+              'Some parts of the universe still feel spacious, as if they may become meaningful later.',
+          supportingInsights: [
+            StorySupportingInsight(
+              insightId: 'mock-insight-7',
+              insightType: 'exploration_gap',
+              title: 'A quieter area remains open',
+            ),
+            StorySupportingInsight(
+              insightId: 'mock-insight-8',
+              insightType: 'exploration_gap',
+              title: 'More cards may bring shape here',
+            ),
+            StorySupportingInsight(
+              insightId: 'mock-insight-9',
+              insightType: 'consistent_theme',
+              title: 'A thread beginning near the edges',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Future<void> signOut() async {
     _profile = null;
@@ -544,6 +933,89 @@ class MockFiYouRepository extends FiYouRepository {
     );
     notifyListeners();
   }
+}
+
+Map<String, dynamic>? _optionalMap(Object? data) {
+  if (data is Map<String, dynamic>) {
+    return data;
+  }
+  if (data is Map) {
+    return Map<String, dynamic>.from(data);
+  }
+  return null;
+}
+
+List<Object?> _objectList(Object? data) {
+  if (data is List) {
+    return data.cast<Object?>();
+  }
+  return const <Object?>[];
+}
+
+List<String> _stringList(Object? data) {
+  if (data is List) {
+    return data.map(_stringValue).where((item) => item.trim().isNotEmpty).toList();
+  }
+  return const <String>[];
+}
+
+String _stringValue(Object? value) => value == null ? '' : value.toString();
+
+String _explorationText(String value) {
+  return value
+      .replaceAll('\uacb0\uacfc \ub9ac\ud3ec\ud2b8', '탐험 이야기')
+      .replaceAll('\uc131\uaca9 \uc720\ud615', '성향의 모습')
+      .replaceAll('\ubd84\uc11d', '살펴보기')
+      .replaceAll('\ud3c9\uac00', '바라보기')
+      .replaceAll('\uc9c4\ub2e8', '탐험')
+      .replaceAll('\uc720\ud615', '모습')
+      .replaceAll('\uc810\uc218', '흐름')
+      .replaceAll('\ub4f1\uae09', '흐름')
+      .replaceAll('\uc0c1\uc704', '큰')
+      .replaceAll('\ud558\uc704', '작은')
+      .replaceAll('\uac80\uc0ac', '탐험')
+      .replaceAll('\ud504\ub85c\ud30c\uc77c', '이야기');
+}
+
+String _storyTitleFor(String type, String fallback) {
+  switch (type) {
+    case 'current_chapter':
+      return '현재의 장';
+    case 'emerging_direction':
+      return '선명해지는 방향';
+    case 'internal_tension':
+      return '함께 나타나는 두 흐름';
+    case 'hidden_territory':
+      return '아직 조용한 영역';
+    case 'change_over_time':
+      return '변화의 흔적';
+    default:
+      return _explorationText(fallback);
+  }
+}
+
+String _storySectionLabel(String value) {
+  switch (value) {
+    case 'Current Chapter':
+      return '현재의 장';
+    case 'Emerging Direction':
+      return '선명해지는 방향';
+    case 'Internal Tension':
+    case 'Tensions':
+      return '함께 나타나는 두 흐름';
+    case 'Hidden Territory':
+    case 'Unexplored Territory':
+      return '아직 조용한 영역';
+    case 'Change Over Time':
+      return '변화의 흔적';
+    default:
+      return _explorationText(value);
+  }
+}
+
+String? _nullableString(Object? value) {
+  final text = _stringValue(value).trim();
+  return text.isEmpty ? null : text;
 }
 
 class FiYouRepositoryScope extends InheritedNotifier<FiYouRepository> {

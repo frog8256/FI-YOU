@@ -34,6 +34,11 @@ type DeliveredCard = {
   required_selections: number;
 };
 
+type OpenAIResponseBody = {
+  output_text?: unknown;
+  output?: unknown;
+};
+
 const fallbackOptions: Record<CardType, string[]> = {
   binary_choice: [
     "네, 지금은 이쪽에 가까워요",
@@ -60,6 +65,151 @@ const fallbackOptions: Record<CardType, string[]> = {
   ],
 };
 
+const allowedCardTypes = new Set<CardType>([
+  "binary_choice",
+  "multiple_choice",
+  "priority_selection",
+  "scenario_choice",
+]);
+
+function explorationCopy(value: string) {
+  return value
+    .replaceAll("분석", "살펴보기")
+    .replaceAll("평가", "바라보기")
+    .replaceAll("진단", "탐험")
+    .replaceAll("유형", "모습")
+    .replaceAll("점수", "흐름")
+    .replaceAll("등급", "흐름")
+    .replaceAll("상위", "큰")
+    .replaceAll("하위", "작은")
+    .replaceAll("검사", "탐험")
+    .replaceAll("프로파일", "이야기");
+}
+
+function outputTextFromOpenAI(body: OpenAIResponseBody): string | null {
+  if (typeof body.output_text === "string" && body.output_text.trim()) {
+    return body.output_text;
+  }
+  if (!Array.isArray(body.output)) return null;
+
+  for (const item of body.output) {
+    if (!item || typeof item !== "object") continue;
+    const content = (item as { content?: unknown }).content;
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      if (!part || typeof part !== "object") continue;
+      const text = (part as { text?: unknown }).text;
+      if (typeof text === "string" && text.trim()) return text;
+    }
+  }
+
+  return null;
+}
+
+function buildCardSchema(cardType: CardType) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["card_type", "question", "options", "required_selections"],
+    properties: {
+      card_type: {
+        type: "string",
+        enum: [cardType],
+      },
+      question: {
+        type: "string",
+      },
+      options: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["id", "label"],
+          properties: {
+            id: {
+              type: "string",
+              pattern: "^option_[1-5]$",
+            },
+            label: {
+              type: "string",
+            },
+          },
+        },
+      },
+      required_selections: {
+        type: "integer",
+        enum: cardType === "priority_selection" ? [2, 3] : [1],
+      },
+    },
+  };
+}
+
+async function generateCardWithOpenAI(
+  apiKey: string,
+  payload: ExplorationCardRequestPayload,
+): Promise<unknown> {
+  const model = Deno.env.get("OPENAI_MODEL") ?? "gpt-4.1";
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      instructions: [
+        "You create safe Korean self-discovery exploration cards for FI-YOU.",
+        "Return only JSON matching the requested schema.",
+        "Do not diagnose, label personality type, counsel, prescribe, or make fixed claims about the user.",
+        "Write warm, neutral Korean copy based on the exploration payload.",
+        "The question should invite reflection without exposing internal field names.",
+        "Use ids option_1, option_2, and so on. binary_choice needs 2 options; multiple_choice and scenario_choice need 3-4 options; priority_selection needs 4-5 options.",
+      ].join("\n"),
+      input: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: JSON.stringify({
+                desired_card_type: payload.desired_card_type,
+                depth_level: payload.depth_level,
+                time_axis: payload.time_axis,
+                parent_node: payload.parent_node,
+                parent_node_description: payload.parent_node_description,
+                child_node: payload.child_node,
+                child_node_description: payload.child_node_description,
+                user_language: payload.user_language,
+              }),
+            },
+          ],
+        },
+      ],
+      max_output_tokens: 700,
+      text: {
+        format: {
+          type: "json_schema",
+          name: "fi_you_exploration_card",
+          strict: true,
+          schema: buildCardSchema(payload.desired_card_type),
+        },
+      },
+    }),
+  });
+
+  const body = await response.json().catch(() => null) as OpenAIResponseBody | null;
+  if (!response.ok) {
+    const message = body && typeof body === "object" && "error" in body
+      ? JSON.stringify((body as { error: unknown }).error)
+      : `OpenAI request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  const text = body ? outputTextFromOpenAI(body) : null;
+  if (!text) throw new Error("openai_response_missing_output_text");
+  return JSON.parse(text);
+}
+
 function normalizeGeneratedCard(
   generatedCard: unknown,
   fallbackCardId: string,
@@ -68,16 +218,19 @@ function normalizeGeneratedCard(
   const source = generatedCard && typeof generatedCard === "object"
     ? generatedCard as Record<string, unknown>
     : {};
-  const cardType = (source.card_type ?? source.cardType ?? payload.desired_card_type) as CardType;
+  const rawCardType = source.card_type ?? source.cardType ?? payload.desired_card_type;
+  const cardType = allowedCardTypes.has(rawCardType as CardType)
+    ? rawCardType as CardType
+    : payload.desired_card_type;
   const rawOptions = Array.isArray(source.options) ? source.options : [];
   const options = rawOptions
     .map((option, index) => {
-      if (typeof option === "string") return { id: `option_${index + 1}`, label: option };
+      if (typeof option === "string") return { id: `option_${index + 1}`, label: explorationCopy(option) };
       if (option && typeof option === "object") {
         const item = option as Record<string, unknown>;
         return {
           id: String(item.id ?? item.option_id ?? `option_${index + 1}`),
-          label: String(item.label ?? item.text ?? item.title ?? ""),
+          label: explorationCopy(String(item.label ?? item.text ?? item.title ?? "")),
         };
       }
       return { id: `option_${index + 1}`, label: "" };
@@ -88,14 +241,14 @@ function normalizeGeneratedCard(
   return {
     card_id: String(source.card_id ?? source.cardId ?? fallbackCardId),
     card_type: cardType,
-    question: String(
+    question: explorationCopy(String(
       source.question ??
         source.prompt ??
         `${payload.child_node_description} 지금의 나에게는 어떤 장면으로 떠오르나요?`,
-    ),
+    )),
     options: options.length > 0
       ? options
-      : fallback.map((label, index) => ({ id: `option_${index + 1}`, label })),
+      : fallback.map((label, index) => ({ id: `option_${index + 1}`, label: explorationCopy(label) })),
     required_selections: cardType === "priority_selection"
       ? Number(source.required_selections ?? source.requiredSelections ?? 2)
       : 1,
@@ -175,6 +328,7 @@ Deno.serve(async (request) => {
 
     let generatedCard: unknown = null;
     const explorationEngineUrl = Deno.env.get("EXPLORATION_CARD_ENGINE_URL");
+    const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
     if (explorationEngineUrl) {
       const generationResponse = await fetch(explorationEngineUrl, {
         method: "POST",
@@ -189,6 +343,16 @@ Deno.serve(async (request) => {
         return json(502, {
           error: "exploration_card_engine_failed",
           status: generationResponse.status,
+          payload: decision.payload,
+        });
+      }
+    } else if (openAIApiKey) {
+      try {
+        generatedCard = await generateCardWithOpenAI(openAIApiKey, decision.payload);
+      } catch (error) {
+        return json(502, {
+          error: "openai_card_generation_failed",
+          message: error instanceof Error ? error.message : String(error),
           payload: decision.payload,
         });
       }
@@ -221,7 +385,8 @@ Deno.serve(async (request) => {
         selectedNodeId: decision.selectedNode.id,
         allowedDepthRange: decision.allowedDepthRange,
         topScores: decision.scores,
-        generationCalled: Boolean(explorationEngineUrl),
+        generationCalled: Boolean(explorationEngineUrl || openAIApiKey),
+        generationProvider: explorationEngineUrl ? "external" : openAIApiKey ? "openai" : "fallback",
       },
     });
   } catch (error) {

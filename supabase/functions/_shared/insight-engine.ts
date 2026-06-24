@@ -120,6 +120,20 @@ const parentById = new Map<string, ExplorationParentNodeSummary>(
   typedParentNodes.map((parent) => [parent.id, parent]),
 );
 
+function explorationLabel(value: string) {
+  return value
+    .replaceAll("분석", "살펴보기")
+    .replaceAll("평가", "바라보기")
+    .replaceAll("진단", "탐험")
+    .replaceAll("유형", "모습")
+    .replaceAll("점수", "흐름")
+    .replaceAll("등급", "흐름")
+    .replaceAll("상위", "큰")
+    .replaceAll("하위", "작은")
+    .replaceAll("검사", "탐험")
+    .replaceAll("프로파일", "이야기");
+}
+
 function assertNoJudgmentLanguage(insight: InsightOutput) {
   const blocked = [
     "당신은",
@@ -157,9 +171,9 @@ function supportNodeFromId(nodeId: string): SupportingNode | null {
   if (!node) return null;
   return {
     node_id: node.id,
-    node_name: node.name,
+    node_name: explorationLabel(node.name),
     parent_node_id: node.parentId,
-    parent_node: node.parentName,
+    parent_node: explorationLabel(node.parentName),
   };
 }
 
@@ -167,9 +181,9 @@ function supportNodeFromRow(row: Pick<InsightHistoryRow | InsightProgressRow, "c
   const node = childNodeFor(row);
   return {
     node_id: node?.id ?? row.child_node_id ?? row.child_node,
-    node_name: node?.name ?? row.child_node,
+    node_name: explorationLabel(node?.name ?? row.child_node),
     parent_node_id: node?.parentId ?? row.parent_node_id ?? null,
-    parent_node: node?.parentName ?? row.parent_node ?? null,
+    parent_node: explorationLabel(node?.parentName ?? row.parent_node ?? ""),
   };
 }
 
@@ -304,16 +318,17 @@ function generateExplorationGaps(history: readonly InsightHistoryRow[]) {
       .slice(0, 3)
       .map((node) => ({
         node_id: node.id,
-        node_name: node.name,
+        node_name: explorationLabel(node.name),
         parent_node_id: node.parentId,
-        parent_node: node.parentName,
+        parent_node: explorationLabel(node.parentName),
       }))
     : [];
+  const gapParentName = explorationLabel(leastExplored.parent.name);
 
   return [{
     insight_type: "exploration_gap",
-    title: `${leastExplored.parent.name}에 남아 있는 여백`,
-    description: `${leastExplored.parent.name} 영역은 아직 비교적 적게 다뤄졌습니다. 이 부분은 부족함이라기보다, 앞으로 탐험할 수 있는 빈 공간에 가깝습니다.`,
+    title: `${gapParentName}에 남아 있는 여백`,
+    description: `${gapParentName} 영역은 아직 비교적 조용하게 남아 있어요. 부족함이라기보다, 앞으로 탐험할 수 있는 열린 공간에 가깝습니다.`,
     supporting_nodes: starterNodes,
     supporting_answers: [],
     confidence_level: confidenceLevel(exploredParents),
@@ -355,7 +370,7 @@ function generateConsistentThemes(
     const node = supportNodeFromId(nodeId);
     if (!node) continue;
     const parentNames = [...parents]
-      .map((id) => parentById.get(id)?.name ?? id)
+      .map((id) => explorationLabel(parentById.get(id)?.name ?? id))
       .slice(0, 3)
       .join(", ");
     const supportingNodes = [
@@ -380,6 +395,34 @@ function generateConsistentThemes(
   return insights;
 }
 
+function generateExplorationBreadth(
+  history: readonly InsightHistoryRow[],
+  answerByHistoryId: Map<string, InsightAnswerRow>,
+) {
+  if (history.length < 10) return [];
+
+  const parentIds = new Set(history.map((row) => row.parent_node_id ?? row.parent_node));
+  if (parentIds.size < 7) return [];
+
+  const supportingHistory = history
+    .filter((row, index, rows) =>
+      rows.findIndex((item) => (item.parent_node_id ?? item.parent_node) === (row.parent_node_id ?? row.parent_node)) === index
+    )
+    .slice(0, 5);
+  const supportingNodes = supportingHistory.map(supportNodeFromRow);
+
+  return [{
+    insight_type: "consistent_theme",
+    title: "여러 영역이 조금씩 연결되고 있어요",
+    description:
+      "최근 탐험은 한곳에 머물기보다 여러 영역을 지나가고 있어요. 처음에는 넓게 흩어진 장면처럼 보일 수 있지만, 영역 사이의 연결이 조금씩 나타나기 시작합니다.",
+    supporting_nodes: supportingNodes,
+    supporting_answers: answerSupport(answerByHistoryId, supportingHistory),
+    confidence_level: confidenceLevel(parentIds.size),
+    evidence_count: parentIds.size,
+  }] satisfies InsightOutput[];
+}
+
 function generateChangesOverTime(
   history: readonly InsightHistoryRow[],
   answerByHistoryId: Map<string, InsightAnswerRow>,
@@ -401,7 +444,7 @@ function generateChangesOverTime(
     .sort((a, b) => (b.recentCount - b.earlierCount) - (a.recentCount - a.earlierCount))[0];
 
   if (!shifted) return [];
-  const parentName = parentById.get(shifted.parentId)?.name ?? shifted.parentId;
+  const parentName = explorationLabel(parentById.get(shifted.parentId)?.name ?? shifted.parentId);
   const supportingHistory = recent.filter((row) => (row.parent_node_id ?? row.parent_node) === shifted.parentId);
   const supportingNodes = supportingHistory
     .map(supportNodeFromRow)
@@ -435,6 +478,9 @@ export function generateUserInsights(input: {
     pushInsight(insights, insight);
   }
   for (const insight of generateConsistentThemes(history, answerByHistoryId)) {
+    pushInsight(insights, insight);
+  }
+  for (const insight of generateExplorationBreadth(history, answerByHistoryId)) {
     pushInsight(insights, insight);
   }
   for (const insight of generateChangesOverTime(history, answerByHistoryId)) {
@@ -474,8 +520,11 @@ export function decideInsightRefresh(input: {
 }) {
   if (input.answeredCount < MIN_SUPPORTING_SIGNALS) return "insufficient_evidence" as const;
   if (!input.lastAnsweredCount) return "initial" as const;
+  if (input.answeredCount % 10 === 0 && input.answeredCount !== input.lastAnsweredCount) {
+    return "ten_card_interval" as const;
+  }
   if (input.answeredCount - input.lastAnsweredCount >= 10) return "ten_card_interval" as const;
-  const hasRepeatedPattern = input.patternSignature.includes("repeat:parent_");
+  const hasRepeatedPattern = /repeat:[^;]+/.test(input.patternSignature);
   if (
     input.answeredCount - input.lastAnsweredCount >= 3 &&
     hasRepeatedPattern &&
