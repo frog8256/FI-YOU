@@ -1,8 +1,17 @@
 # Insight Engine
 
-The Insight Engine turns exploration history into discovery-oriented observations.
-It is deliberately not an analysis engine, scoring system, diagnosis, or personality
-classifier.
+The Insight Engine turns exploration history into record-based self-discovery
+analysis results.
+
+It is an analysis engine for FI-YOU's product domain: preferences, interests,
+fit, friction, tendencies, temperament, relationship patterns, work-style
+patterns, and changes over time.
+
+It is not a clinical diagnosis system, treatment tool, fixed personality type
+classifier, compatibility judge, hiring decision tool, or destiny predictor.
+
+Clues are inputs. User-facing output should be a clear analysis result when
+there is enough evidence.
 
 ## Inputs
 
@@ -56,6 +65,33 @@ refresh is due, it returns a lightweight `not_due` result.
 - `change_over_time`: recent exploration shifts compared with earlier answers
 
 Every generated insight requires at least 3 supporting signals.
+
+## Result Strength
+
+Insight language should become clearer as evidence grows:
+
+- `early`: a concrete observed clue; do not make a stable result claim yet.
+- `forming`: a repeated pattern; present as a current analysis result.
+- `consistent`: a strong repeated pattern; present as one of the user's clearest current results.
+
+Safety should not be implemented by making every sentence vague. Instead:
+
+- be clear about the result,
+- show the evidence count and supporting records,
+- keep the result scoped to the current record,
+- let the user edit, hide, disagree, or report it.
+
+Safe strong language:
+
+- "Analysis result: autonomy is one of your clearest current values."
+- "Your records repeatedly point to quiet, self-directed environments as a better fit."
+- "This pattern is not a one-time signal anymore."
+
+Unsafe strong language:
+
+- "This is your fixed personality."
+- "You must choose this career."
+- "You are incompatible with this kind of person."
 
 ## Language Guardrails
 

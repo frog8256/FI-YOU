@@ -28,6 +28,7 @@ Flutter repository implementation handoff: see `docs/flutter-supabase-repository
 | `saveDiary(...)` | `rpc('upsert_diary', { p_body, p_mood_label, p_title, p_entry_date, p_diary_id, p_metadata })` |
 | `deleteDiary(id)` | `rpc('delete_diary_with_star_revoke', { p_diary_id: id })` |
 | `loadLatestUMap()` | `rpc('get_latest_u_map')` |
+| `generateUMapDetailReport()` | `rpc('generate_u_map_detail_report', { p_star_cost })` |
 | `hideInsight(...)` | `rpc('save_insight_feedback', { p_target_type, p_target_id, p_action: 'hide' })` |
 | `disagreeInsight(...)` | `rpc('save_insight_feedback', { p_target_type, p_target_id, p_action: 'disagree' })` |
 | `updateInsightNote(...)` | `rpc('save_insight_feedback', { p_target_type, p_target_id, p_action: 'revise_note', p_note })` |
@@ -82,6 +83,88 @@ Backend storage keeps stable English axis keys; Flutter displays `labelKo` from 
 | `stability` | 긴장과 회복 |
 | `growth` | 성장 동기 |
 | `exploration` | 삶의 방향 |
+
+## U-Map detail report contract
+
+`generate_u_map_detail_report` is the main surface for clear self-discovery
+analysis results.
+
+The ordinary U-Map may present signals, axes, and movement. The detail report
+must translate those clues into direct results.
+
+Required response shape:
+
+```json
+{
+  "starBalance": 0,
+  "report": {
+    "id": "uuid",
+    "title": "U-Map Analysis Report",
+    "coreSentence": "Analysis result: ...",
+    "summary": "This report is based on current records, not a fixed identity.",
+    "dataSufficiency": {
+      "score": 82,
+      "label": "Strong enough for clear results",
+      "items": [
+        { "label": "U-Map nodes", "value": "24", "status": "enough" },
+        { "label": "source records", "value": "31", "status": "enough" }
+      ]
+    },
+    "sourceCounts": {
+      "nodes": 24,
+      "records": 31,
+      "diary": 8
+    },
+    "keywords": ["autonomy", "quiet focus", "high standards"],
+    "sections": [
+      {
+        "type": "clear_results",
+        "title": "Clear Results",
+        "body": "Analysis result: autonomy is one of your clearest current values.",
+        "insights": [
+          "You fit better in environments with ownership, depth, and low interruption."
+        ],
+        "evidenceLabels": ["decision style", "values", "Diary"]
+      }
+    ],
+    "actionPlans": [],
+    "recordingGuides": [],
+    "evidence": [],
+    "createdAt": "2026-06-25T00:00:00.000Z",
+    "starCost": 0
+  }
+}
+```
+
+Required section types:
+
+- `clear_results`
+- `preference_results`
+- `interest_results`
+- `aptitude_work_fit`
+- `career_type_fit`
+- `relationship_fit`
+- `personality_temperament`
+- `friction_conditions`
+- `evidence`
+- `needs_more_records`
+
+Each section should include one direct result sentence, evidence labels, and fit
+or friction where relevant.
+
+Do:
+
+- say "Analysis result" when evidence is sufficient,
+- show source counts and evidence labels,
+- describe fit and friction clearly,
+- scope the result to the current record.
+
+Do not:
+
+- present a fixed personality type,
+- claim one objectively correct career,
+- judge another person,
+- imply medical, legal, financial, hiring, or relationship certainty.
 
 ## RLS two-user verification
 
