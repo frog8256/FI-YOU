@@ -87,7 +87,6 @@ function explorationLabel(value: string) {
     .replaceAll("검사", "탐험")
     .replaceAll("프로파일", "이야기");
 }
-
 function normalizeInsights(insights: readonly StoryInsightRow[]) {
   return [...insights]
     .filter((insight) => insight.active !== false)
@@ -157,9 +156,9 @@ function currentChapterStory(insights: readonly StoryInsightRow[], history: read
     : " 최근 탐험에서";
   return {
     story_type: "current_chapter",
-    title: "현재의 장",
+    title: "현재 장면",
     description:
-      `최근 탐험은${areaText} 여러 흐름을 천천히 모으고 있어요. 아직 고정된 결론은 아니지만, 몇 가지 발견이 서로 가까이 놓이기 시작합니다.`,
+      `최근 탐험은${areaText} 여러 흐름을 천천히 모으고 있어요. 아직 고정된 결론은 아니지만 몇 가지 발견이 서로 가까이 놓이기 시작합니다.`,
     supporting_insights: supportFromInsights(insights, 5),
   } satisfies UserStoryOutput;
 }
@@ -174,7 +173,7 @@ function emergingDirectionStory(insights: readonly StoryInsightRow[]) {
     story_type: "emerging_direction",
     title: "선명해지는 방향",
     description:
-      "반복해서 나타나는 발견 사이에서 하나의 방향이 조금씩 또렷해지고 있어요. 정해진 답이라기보다, 조금 더 머물러 살펴볼 만한 길처럼 보입니다.",
+      "반복해서 나타나는 발견 사이에서 하나의 방향이 조금씩 드러나고 있어요. 정해진 답이라기보다, 조금 더 머물며 살펴볼 만한 길처럼 보입니다.",
     supporting_insights: supportFromInsights(candidates, 5),
   } satisfies UserStoryOutput;
 }
@@ -198,7 +197,7 @@ function hiddenTerritoryStory(insights: readonly StoryInsightRow[]) {
     story_type: "hidden_territory",
     title: "아직 조용한 영역",
     description:
-      "우주의 몇몇 영역은 아직 다른 곳보다 조용하게 남아 있어요. 부족함이 아니라, 탐험이 닿을 때 새롭게 의미가 생길 수 있는 열린 공간에 가깝습니다.",
+      "자주 머물지 않은 영역은 아직 다른 곳보다 조용하게 남아 있어요. 부족함이 아니라, 탐험의 폭을 넓힐 때 열릴 수 있는 작은 공간에 가깝습니다.",
     supporting_insights: supportFromInsights(gaps, 5),
   } satisfies UserStoryOutput;
 }
@@ -210,7 +209,7 @@ function changeOverTimeStory(insights: readonly StoryInsightRow[]) {
     story_type: "change_over_time",
     title: "변화의 흔적",
     description:
-      "최근 발견에서는 여정이 조금씩 달라지는 흔적이 보입니다. 아직 단정할 수는 없지만, 새로 나타난 흐름이 이전의 장면과 다른 결을 만들고 있어요.",
+      "최근 발견에서는 이전과 조금 달라지는 흔적이 보입니다. 아직 단정할 수는 없지만, 새로 나타난 흐름이 이전 장면과 다른 결을 만들고 있어요.",
     supporting_insights: supportFromInsights(changes, 5),
   } satisfies UserStoryOutput;
 }

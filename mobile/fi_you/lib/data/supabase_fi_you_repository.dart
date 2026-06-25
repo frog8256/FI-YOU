@@ -88,7 +88,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
   List<AxisSummary> _axes = List.of(axisSummaries);
   ClueInsight _todayInsight = const ClueInsight(
     id: 'insight-today',
-    title: '오늘 발견된 단서',
+    title: '오늘 발견한 단서',
     body: '아직 충분한 기록이 없어 확정된 해석은 아니에요. 새로운 기록이 쌓이면 U-Map에 반영됩니다.',
     sourceCount: 0,
     diaryCount: 0,
@@ -343,10 +343,15 @@ class SupabaseFiYouRepository extends FiYouRepository {
     if (state.route == _LiveLaunchRoute.appShell) {
       await _hydrateHomeData(state);
     } else {
-      _profile = _profileFromLaunchState(state).copyWith(
-        name: displayName,
-        onboardingComplete: state.onboardingCompleted,
-      );
+      _profile =
+          _profileFromMap(
+            state.profile,
+            starBalance: state.starBalance,
+            onboardingComplete: state.onboardingCompleted,
+          ).copyWith(
+            name: displayName,
+            onboardingComplete: state.onboardingCompleted,
+          );
     }
     notifyListeners();
   }
@@ -535,7 +540,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
       title: '지금의 흐름을 다시 읽는 시기',
       summary:
           '서버 리포트 생성기가 아직 연결되지 않아, 현재 앱에 로드된 Diary와 U-Map 신호로 임시 Journy를 구성했어요. 기록이 쌓일수록 이 흐름은 더 선명해집니다.',
-      sourceWindowLabel: '자기탐구의 기록',
+      sourceWindowLabel: '자기탐구 기록',
       sourceCounts: {
         'diary': recentDiaries.length,
         'answers': 0,
@@ -547,7 +552,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
             dateLabel: entry.dateLabel,
             title: entry.title,
             body: entry.preview.trim().isEmpty
-                ? '이 시점의 기록이 Journy 흐름에 포함됐어요.'
+                ? '이 시점의 기록이 Journy 흐름에 포함되었어요.'
                 : entry.preview.trim(),
           ),
         if (recentDiaries.isEmpty)
@@ -628,7 +633,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
       id: 'fallback-umap-report-${now.microsecondsSinceEpoch}',
       title: 'U-Map 상세 리포트',
       coreSentence:
-          '현재 U-Map은 기록 속 반복 신호를 바탕으로, 생각의 중심과 아직 보강할 영역을 함께 보여주고 있습니다.',
+          '현재 U-Map은 기록 속 반복 신호를 바탕으로, 생각의 중심과 아직 더 살펴볼 영역을 함께 보여주고 있습니다.',
       summary:
           '서버 리포트 생성기가 아직 연결되지 않아 앱 안의 U-Map 스냅샷과 Diary 기록으로 상세 리포트를 구성했습니다. 모든 해석은 기록 근거를 기반으로 하며, 의료적 진단이나 고정된 유형 판단이 아닙니다.',
       dataSufficiency: UMapDataSufficiency(
@@ -646,7 +651,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
             status: sourceCount >= 20 ? '충분' : '보통',
           ),
           UMapDataSufficiencyItem(
-            label: '최근성',
+            label: '최근 기록',
             value: recentDiaries.isEmpty
                 ? '기록 없음'
                 : recentDiaries.first.dateLabel,
@@ -671,7 +676,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
           body:
               '상위 노드들은 현재 사용자의 관심이 어디에 모여 있는지를 보여줍니다. 잠겨 있거나 근거가 적은 노드는 결론을 내리기보다 다음 기록에서 더 확인해야 할 영역으로 남겨두는 편이 안전합니다.',
           insights: [
-            '높은 점수의 축은 최근 기록에서 반복적으로 강화된 신호입니다.',
+            '높은 축은 최근 기록에서 반복적으로 강화된 신호입니다.',
             '근거가 적은 영역은 해석보다 질문으로 이어가는 것이 좋습니다.',
           ],
           evidenceLabels: axesForReport
@@ -700,7 +705,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
               '기록상 기대와 부담이 함께 나타나는 구간에서는 실행이 늦어질 수 있습니다. 이 흐름은 성향의 문제가 아니라, 선택 직후의 불확실성을 줄이는 장치가 필요한 신호로 볼 수 있습니다.',
           insights: [
             '선택 기준이 많아질수록 결정 피로가 커질 수 있습니다.',
-            '감정 기록 이후에는 다음 행동이 더 명확해지는 경향이 있습니다.',
+            '감정 기록 이후에는 다음 행동을 더 명확히 하려는 경향이 있습니다.',
           ],
           evidenceLabels: ['최근 기록', '상위 U-Map 노드'],
         ),
@@ -718,8 +723,8 @@ class SupabaseFiYouRepository extends FiYouRepository {
           body:
               '해야 할 일과 해석해야 할 일이 동시에 늘어나면 U-Map이 정리 도구보다 부담으로 느껴질 수 있습니다. 이때는 노드를 늘리기보다 하나의 노드에 다음 행동만 붙이는 편이 좋습니다.',
           insights: [
-            '목표 과부하와 결정 피로를 주의해야 합니다.',
-            '회복 기록이 적다면 새 목표 추가를 잠시 늦추는 것이 좋습니다.',
+            '목표 과부하로 인한 결정 피로를 주의해야 합니다.',
+            '회복 기록이 줄어든다면 새 목표 추가를 잠시 늦추는 것이 좋습니다.',
           ],
           evidenceLabels: ['목표 노드', '회복 기록'],
         ),
@@ -727,7 +732,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
       actionPlans: const [
         UMapActionPlan(
           title: '오래 남은 노드 하나를 선택하기',
-          body: '가장 오래 해결되지 않은 노드 하나만 고르고, 오늘 할 수 있는 행동을 하나 붙이세요.',
+          body: '가장 오래 해결되지 않은 노드 하나만 고르고, 오늘 할 수 있는 행동을 하나 붙여보세요.',
           horizon: '오늘',
         ),
         UMapActionPlan(
@@ -737,15 +742,15 @@ class SupabaseFiYouRepository extends FiYouRepository {
         ),
         UMapActionPlan(
           title: '회복 노드 만들기',
-          body: '목표와 고민 노드가 많다면 회복 루틴 노드를 따로 만들어 균형을 맞추세요.',
+          body: '목표와 고민 노드가 많다면 회복 루틴 노드를 따로 만들어 균형을 맞춰보세요.',
           horizon: '이번 달',
         ),
       ],
       recordingGuides: const [
-        '오늘 내 선택을 어렵게 만든 기준은 무엇이었나?',
-        '내가 반복해서 돌아온 감정은 무엇인가?',
-        '지금 추가할 목표보다 유지해야 할 루틴은 무엇인가?',
-        '다음 리포트에서 더 확인하고 싶은 노드는 무엇인가?',
+        '오늘의 선택을 어렵게 만든 기준은 무엇이었나요?',
+        '내가 반복해서 돌아온 감정은 무엇인가요?',
+        '지금 추가 목표보다 유지해야 할 루틴은 무엇인가요?',
+        '다음 리포트에서 더 확인하고 싶은 노드는 무엇인가요?',
       ],
       evidence: [
         for (final entry in recentDiaries.take(3))
@@ -1170,31 +1175,21 @@ class SupabaseFiYouRepository extends FiYouRepository {
     }
   }
 
-  UserProfile _profileFromLaunchState(_FlutterLaunchState state) {
-    return _profileFromMap(
-      state.profile,
-      starBalance: state.starBalance,
-      onboardingComplete: state.onboardingCompleted,
-    );
-  }
-
   UserProfile _profileFromMap(
     Map<String, dynamic>? data, {
     required int starBalance,
     required bool onboardingComplete,
-    UserLevelStats levelStats = const UserLevelStats(),
+    UserLevelStats? levelStats,
   }) {
-    final user = client.auth.currentUser;
     final nickname = (data?['nickname'] as String?)?.trim();
     final focusArea = (data?['focus_area'] as String?)?.trim();
-    final email = user?.email?.trim();
+    final email = client.auth.currentUser?.email?.trim();
     return UserProfile(
       name: nickname?.isNotEmpty == true ? nickname! : 'User',
       email: email?.isNotEmpty == true ? email! : 'user@fi-you.app',
-      onboardingComplete:
-          (data?['onboarding_completed'] as bool?) ?? onboardingComplete,
+      onboardingComplete: onboardingComplete,
       starBalance: starBalance,
-      levelStats: levelStats,
+      levelStats: levelStats ?? const UserLevelStats(),
       profileLine: focusArea?.isNotEmpty == true
           ? focusArea!
           : '기록을 통해 나를 알아가는 중',
@@ -1249,10 +1244,10 @@ class SupabaseFiYouRepository extends FiYouRepository {
     final visibleAxes = _axes.take(2).map((axis) => axis.label).toList();
     return ClueInsight(
       id: 'insight-${DateTime.now().microsecondsSinceEpoch}',
-      title: '새로 발견된 단서',
+      title: '새로 발견한 단서',
       body: _hasLowUMapData
           ? '아직 기록이 적어 낮은 확신도로 U-Map을 보여주고 있어요.'
-          : '최근 기록과 답변에서 반복되는 흐름이 U-Map에 반영되었어요.',
+          : '최근 기록과 응답에서 반복되는 흐름이 U-Map에 반영되었어요.',
       sourceCount: _axes.fold<int>(
         _diaryEntries.length,
         (total, axis) => total + axis.recordCount,
@@ -1262,8 +1257,7 @@ class SupabaseFiYouRepository extends FiYouRepository {
       axes: visibleAxes.isEmpty ? const ['U-Map'] : visibleAxes,
       sources: [
         if (_diaryEntries.isNotEmpty) _diaryEntries.first.title,
-        // ignore: unnecessary_brace_in_string_interps
-        if (questionCount != null) '오늘 질문 답변 ${questionCount}개',
+        if (questionCount != null) '오늘 질문 응답 $questionCount개',
       ],
       userNote: userNote,
     );

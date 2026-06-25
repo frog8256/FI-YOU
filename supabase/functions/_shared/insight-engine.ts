@@ -149,67 +149,6 @@ function assertNoJudgmentLanguage(insight: InsightOutput) {
     throw new Error(`insight_judgment_language_detected:${insight.title}`);
   }
 }
-
-function confidenceLevel(evidenceCount: number): ConfidenceLevel {
-  if (evidenceCount >= 8) return "consistent";
-  if (evidenceCount >= 5) return "forming";
-  return "early";
-}
-
-function normalizeHistory(history: readonly InsightHistoryRow[]) {
-  return [...history]
-    .filter((item) => item.answered)
-    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
-}
-
-function childNodeFor(row: Pick<InsightHistoryRow | InsightProgressRow, "child_node" | "child_node_id" | "parent_node" | "parent_node_id">) {
-  return row.child_node_id ? nodeById.get(row.child_node_id) : undefined;
-}
-
-function supportNodeFromId(nodeId: string): SupportingNode | null {
-  const node = nodeById.get(nodeId);
-  if (!node) return null;
-  return {
-    node_id: node.id,
-    node_name: explorationLabel(node.name),
-    parent_node_id: node.parentId,
-    parent_node: explorationLabel(node.parentName),
-  };
-}
-
-function supportNodeFromRow(row: Pick<InsightHistoryRow | InsightProgressRow, "child_node" | "child_node_id" | "parent_node" | "parent_node_id">): SupportingNode {
-  const node = childNodeFor(row);
-  return {
-    node_id: node?.id ?? row.child_node_id ?? row.child_node,
-    node_name: explorationLabel(node?.name ?? row.child_node),
-    parent_node_id: node?.parentId ?? row.parent_node_id ?? null,
-    parent_node: explorationLabel(node?.parentName ?? row.parent_node ?? ""),
-  };
-}
-
-function answerSupport(
-  answerByHistoryId: Map<string, InsightAnswerRow>,
-  historyRows: readonly InsightHistoryRow[],
-  limit = 6,
-): SupportingAnswer[] {
-  return historyRows.slice(-limit).map((row) => {
-    const answer = answerByHistoryId.get(row.id);
-    return {
-      card_history_id: row.id,
-      selected_options: answer?.selected_options ?? [],
-      created_at: answer?.created_at ?? row.created_at,
-    };
-  });
-}
-
-function pushInsight(target: InsightOutput[], insight: InsightOutput) {
-  if (insight.evidence_count < MIN_SUPPORTING_SIGNALS) return;
-  assertNoJudgmentLanguage(insight);
-  if (!target.some((item) => item.insight_type === insight.insight_type && item.title === insight.title)) {
-    target.push(insight);
-  }
-}
-
 function countBy<T extends string>(values: readonly T[]) {
   const counts = new Map<T, number>();
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
@@ -223,8 +162,8 @@ function topCounts<T extends string>(counts: Map<T, number>, minimum: number) {
 }
 
 function generateEmergingPatterns(
-  history: readonly InsightHistoryRow[],
   progress: readonly InsightProgressRow[],
+  history: readonly InsightHistoryRow[],
   answerByHistoryId: Map<string, InsightAnswerRow>,
 ) {
   const insights: InsightOutput[] = [];
@@ -241,8 +180,8 @@ function generateEmergingPatterns(
     const matchingHistory = historyByNodeId.get(node.node_id) ?? historyByNodeId.get(node.node_name) ?? [];
     pushInsight(insights, {
       insight_type: "emerging_pattern",
-      title: `${node.node_name}의 반복되는 단서`,
-      description: `최근 탐험에서 ${node.node_name} 쪽의 선택이 여러 장면에 걸쳐 반복해서 나타납니다. 아직 하나의 결론이라기보다, 다시 살펴볼 만한 흐름으로 보입니다.`,
+      title: `${node.node_name}에 반복되는 단서`,
+      description: `최근 탐험에서 ${node.node_name} 쪽의 선택이 여러 장면을 거쳐 반복해서 나타납니다. 아직 하나의 결론이라기보다 다시 살펴볼 만한 흐름으로 보입니다.`,
       supporting_nodes: [node],
       supporting_answers: answerSupport(answerByHistoryId, matchingHistory),
       confidence_level: confidenceLevel(evidence),
@@ -284,7 +223,7 @@ function generateInternalTensions(
       pushInsight(insights, {
         insight_type: "internal_tension",
         title: `${node.node_name}와 ${opposite.node_name} 사이의 균형`,
-        description: `${node.node_name}와 ${opposite.node_name}, 두 단서가 함께 등장합니다. 한쪽으로 단정되기보다, 상황에 따라 서로 다른 필요가 같이 움직이는 모습으로 보입니다.`,
+        description: `${node.node_name}와 ${opposite.node_name}, 두 단서가 함께 등장합니다. 한쪽으로 단정하기보다 상황에 따라 서로 다른 필요가 같이 움직이는 모습으로 보입니다.`,
         supporting_nodes: [node, opposite],
         supporting_answers: answerSupport(answerByHistoryId, supportingHistory),
         confidence_level: confidenceLevel(evidence),
@@ -297,38 +236,31 @@ function generateInternalTensions(
 }
 
 function generateExplorationGaps(history: readonly InsightHistoryRow[]) {
-  if (history.length < 10) return [];
-
   const parentCounts = countBy(history.map((row) => row.parent_node_id ?? row.parent_node));
-  const exploredParents = [...parentCounts.values()].filter((count) => count > 0).length;
-  if (exploredParents < MIN_SUPPORTING_SIGNALS) return [];
+  const exploredParents = parentCounts.size;
+  if (exploredParents < 3) return [];
 
   const leastExplored = typedParentNodes
-    .map((parent) => ({
-      parent,
-      count: parentCounts.get(parent.id) ?? parentCounts.get(parent.name) ?? 0,
+    .map((parent) => ({ parent, count: parentCounts.get(parent.id) ?? parentCounts.get(parent.name) ?? 0 }))
+    .sort((a, b) => a.count - b.count)[0];
+  if (!leastExplored || leastExplored.count > 0) return [];
+
+  const starterNodes = typedChildNodes
+    .filter((node) => node.parentId === leastExplored.parent.id)
+    .slice(0, 3)
+    .map((node) => ({
+      node_id: node.id,
+      node_name: explorationLabel(node.name),
+      parent_node_id: node.parentId,
+      parent_node: explorationLabel(node.parentName),
     }))
-    .sort((a, b) => a.count - b.count || a.parent.order - b.parent.order)[0];
-
-  if (!leastExplored || leastExplored.count > 1) return [];
-
-  const starterNodes = leastExplored.parent.id
-    ? typedChildNodes
-      .filter((node) => node.parentId === leastExplored.parent.id)
-      .slice(0, 3)
-      .map((node) => ({
-        node_id: node.id,
-        node_name: explorationLabel(node.name),
-        parent_node_id: node.parentId,
-        parent_node: explorationLabel(node.parentName),
-      }))
-    : [];
+    ?? [];
   const gapParentName = explorationLabel(leastExplored.parent.name);
 
   return [{
     insight_type: "exploration_gap",
     title: `${gapParentName}에 남아 있는 여백`,
-    description: `${gapParentName} 영역은 아직 비교적 조용하게 남아 있어요. 부족함이라기보다, 앞으로 탐험할 수 있는 열린 공간에 가깝습니다.`,
+    description: `${gapParentName} 영역은 아직 비교적 조용하게 남아 있어요. 부족함이라기보다 앞으로 탐험할 수 있는 열린 공간에 가깝습니다.`,
     supporting_nodes: starterNodes,
     supporting_answers: [],
     confidence_level: confidenceLevel(exploredParents),
