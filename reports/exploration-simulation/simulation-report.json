@@ -1,0 +1,374 @@
+{
+  "generatedAt": "2026-06-25T01:33:36.426Z",
+  "options": {
+    "users": 100,
+    "cardsPerUser": 200,
+    "seed": 20260623,
+    "outputDir": "reports/exploration-simulation"
+  },
+  "totals": {
+    "users": 100,
+    "cardsDelivered": 20000,
+    "childNodeCoveragePercent": 100,
+    "uniqueChildNodesExplored": 300,
+    "totalChildNodes": 300,
+    "repeatedNodeFrequencyPercent": 1.95,
+    "loopRatePercent": 0,
+    "deadNodeCount": 0,
+    "hotNodeCount": 0,
+    "parentDistributionMaxDeviationPercent": 0.38
+  },
+  "successCriteria": {
+    "childNodeCoverageAbove90": true,
+    "parentDistributionVarianceBelow15": true,
+    "loopRateBelow5": true,
+    "deadNodesZero": true,
+    "depthProgressionHealthy": true,
+    "graphUsageBalanced": true
+  },
+  "parentDistribution": {
+    "자아상": 10.03,
+    "행동패턴": 10.38,
+    "삶의 방향": 9.99,
+    "성격": 9.93,
+    "가치관": 10.36,
+    "동기": 10.02,
+    "감정패턴": 9.9,
+    "스트레스 반응": 9.75,
+    "인간관계": 9.63,
+    "의사결정": 10.02
+  },
+  "depthDistribution": {
+    "1": 2.59,
+    "2": 25.5,
+    "3": 70,
+    "4": 1.91,
+    "5": 0
+  },
+  "cardTypeDistribution": {
+    "scenario_choice": 40.17,
+    "multiple_choice": 30.06,
+    "priority_selection": 19.94,
+    "binary_choice": 9.83
+  },
+  "timeAxisDistribution": {
+    "present": 40.38,
+    "past": 9.66,
+    "future": 9.9,
+    "repeated_pattern": 14.95,
+    "imagined_scenario": 25.1
+  },
+  "graphUsage": {
+    "related": 22.89,
+    "bridge": 68.19,
+    "opposite": 0.4,
+    "none": 8.51,
+    "start": 0
+  },
+  "topNodes": [
+    {
+      "childNodeId": "parent_06_child_03",
+      "childNode": "소속 동기",
+      "parentNode": "동기",
+      "count": 110,
+      "percent": 0.55
+    },
+    {
+      "childNodeId": "parent_07_child_01",
+      "childNode": "감정 민감도",
+      "parentNode": "감정패턴",
+      "count": 107,
+      "percent": 0.53
+    },
+    {
+      "childNodeId": "parent_07_child_02",
+      "childNode": "감정 표현력",
+      "parentNode": "감정패턴",
+      "count": 106,
+      "percent": 0.53
+    },
+    {
+      "childNodeId": "parent_09_child_04",
+      "childNode": "인정 욕구",
+      "parentNode": "인간관계",
+      "count": 106,
+      "percent": 0.53
+    },
+    {
+      "childNodeId": "parent_05_child_07",
+      "childNode": "진정성",
+      "parentNode": "가치관",
+      "count": 105,
+      "percent": 0.53
+    },
+    {
+      "childNodeId": "parent_08_child_01",
+      "childNode": "압박 민감도",
+      "parentNode": "스트레스 반응",
+      "count": 105,
+      "percent": 0.53
+    },
+    {
+      "childNodeId": "parent_10_child_03",
+      "childNode": "감정 의존도",
+      "parentNode": "의사결정",
+      "count": 105,
+      "percent": 0.53
+    },
+    {
+      "childNodeId": "parent_04_child_01",
+      "childNode": "외향성",
+      "parentNode": "성격",
+      "count": 102,
+      "percent": 0.51
+    },
+    {
+      "childNodeId": "parent_04_child_02",
+      "childNode": "내향성",
+      "parentNode": "성격",
+      "count": 102,
+      "percent": 0.51
+    },
+    {
+      "childNodeId": "parent_02_child_03",
+      "childNode": "지속성",
+      "parentNode": "행동패턴",
+      "count": 101,
+      "percent": 0.51
+    },
+    {
+      "childNodeId": "parent_07_child_03",
+      "childNode": "감정 억제",
+      "parentNode": "감정패턴",
+      "count": 101,
+      "percent": 0.51
+    },
+    {
+      "childNodeId": "parent_08_child_03",
+      "childNode": "회피 반응",
+      "parentNode": "스트레스 반응",
+      "count": 101,
+      "percent": 0.51
+    },
+    {
+      "childNodeId": "parent_01_child_02",
+      "childNode": "자기수용",
+      "parentNode": "자아상",
+      "count": 100,
+      "percent": 0.5
+    },
+    {
+      "childNodeId": "parent_03_child_03",
+      "childNode": "단기 목표",
+      "parentNode": "삶의 방향",
+      "count": 99,
+      "percent": 0.5
+    },
+    {
+      "childNodeId": "parent_08_child_04",
+      "childNode": "공격 반응",
+      "parentNode": "스트레스 반응",
+      "count": 99,
+      "percent": 0.5
+    },
+    {
+      "childNodeId": "parent_09_child_02",
+      "childNode": "독립성 욕구",
+      "parentNode": "인간관계",
+      "count": 99,
+      "percent": 0.5
+    },
+    {
+      "childNodeId": "parent_03_child_01",
+      "childNode": "인생 목표",
+      "parentNode": "삶의 방향",
+      "count": 98,
+      "percent": 0.49
+    },
+    {
+      "childNodeId": "parent_04_child_05",
+      "childNode": "친화성",
+      "parentNode": "성격",
+      "count": 98,
+      "percent": 0.49
+    },
+    {
+      "childNodeId": "parent_04_child_03",
+      "childNode": "개방성",
+      "parentNode": "성격",
+      "count": 97,
+      "percent": 0.48
+    },
+    {
+      "childNodeId": "parent_04_child_04",
+      "childNode": "성실성",
+      "parentNode": "성격",
+      "count": 97,
+      "percent": 0.48
+    }
+  ],
+  "deadNodes": [],
+  "hotNodes": [],
+  "loopDetection": {
+    "totalLoops": 0,
+    "loopRatePercent": 0,
+    "examples": []
+  },
+  "archetypeSummaries": [
+    {
+      "archetype": "Explorer",
+      "users": 13,
+      "childNodeCoveragePercent": 99.67,
+      "topParents": [
+        [
+          "의사결정",
+          10.38
+        ],
+        [
+          "감정패턴",
+          10.31
+        ],
+        [
+          "자아상",
+          10.27
+        ]
+      ]
+    },
+    {
+      "archetype": "Builder",
+      "users": 13,
+      "childNodeCoveragePercent": 100,
+      "topParents": [
+        [
+          "가치관",
+          10.69
+        ],
+        [
+          "삶의 방향",
+          10.27
+        ],
+        [
+          "자아상",
+          10.15
+        ]
+      ]
+    },
+    {
+      "archetype": "Connector",
+      "users": 13,
+      "childNodeCoveragePercent": 100,
+      "topParents": [
+        [
+          "행동패턴",
+          10.77
+        ],
+        [
+          "의사결정",
+          10.46
+        ],
+        [
+          "자아상",
+          10.38
+        ]
+      ]
+    },
+    {
+      "archetype": "Stability Seeker",
+      "users": 13,
+      "childNodeCoveragePercent": 100,
+      "topParents": [
+        [
+          "자아상",
+          10.23
+        ],
+        [
+          "삶의 방향",
+          10.19
+        ],
+        [
+          "성격",
+          10.19
+        ]
+      ]
+    },
+    {
+      "archetype": "Reflector",
+      "users": 12,
+      "childNodeCoveragePercent": 99.67,
+      "topParents": [
+        [
+          "행동패턴",
+          10.88
+        ],
+        [
+          "동기",
+          10.46
+        ],
+        [
+          "가치관",
+          10.33
+        ]
+      ]
+    },
+    {
+      "archetype": "Resilient",
+      "users": 12,
+      "childNodeCoveragePercent": 99.67,
+      "topParents": [
+        [
+          "행동패턴",
+          10.83
+        ],
+        [
+          "가치관",
+          10.42
+        ],
+        [
+          "의사결정",
+          10.38
+        ]
+      ]
+    },
+    {
+      "archetype": "Creator",
+      "users": 12,
+      "childNodeCoveragePercent": 98.33,
+      "topParents": [
+        [
+          "행동패턴",
+          10.75
+        ],
+        [
+          "가치관",
+          10.71
+        ],
+        [
+          "의사결정",
+          10.71
+        ]
+      ]
+    },
+    {
+      "archetype": "Decider",
+      "users": 12,
+      "childNodeCoveragePercent": 99,
+      "topParents": [
+        [
+          "가치관",
+          10.75
+        ],
+        [
+          "행동패턴",
+          10.54
+        ],
+        [
+          "인간관계",
+          10.33
+        ]
+      ]
+    }
+  ],
+  "recommendations": [
+    "Opposite-node traversal is low; consider a controlled contrast boost after several related/bridge moves."
+  ]
+}

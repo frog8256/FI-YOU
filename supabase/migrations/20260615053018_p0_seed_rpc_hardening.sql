@@ -231,7 +231,7 @@ begin
 
   v_expected_cost := case p_entitlement_type
     when 'love_analysis' then 30
-    when 'relation_map' then 80
+    when 'relation_map' then 1
     when 'past_compare' then 30
     when 'free_explore' then 30
     else null

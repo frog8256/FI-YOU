@@ -648,6 +648,26 @@ class FiYouChevronButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!showBorder) {
+      return Tooltip(
+        message: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: SizedBox.square(
+            dimension: size,
+            child: Center(
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: color,
+                size: iconSize,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return FiYouLiquidIconButton(
       icon: Icon(Icons.chevron_right_rounded, color: color, size: iconSize),
       label: label,
@@ -1147,7 +1167,7 @@ class _StaticStarryNightPainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF101936), Color(0xFF070D20), Color(0xFF030511)],
+          colors: [Color(0xFF0A1025), Color(0xFF040817), Color(0xFF01030B)],
         ).createShader(rect),
     );
 

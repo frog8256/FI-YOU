@@ -316,7 +316,7 @@ $$;
 
 create or replace function public.finalize_relation_map(
   p_relation_id uuid,
-  p_cost integer default 80
+  p_cost integer default 1
 )
 returns jsonb
 language plpgsql
@@ -334,7 +334,7 @@ begin
     raise exception 'not_authenticated';
   end if;
 
-  if p_cost <> 80 then
+  if p_cost <> 1 then
     raise exception 'invalid_relation_map_cost';
   end if;
 
@@ -369,7 +369,7 @@ begin
     raise exception 'relation_answers_incomplete';
   end if;
 
-  v_entitlement := public.unlock_entitlement('relation_map', 80, p_relation_id);
+  v_entitlement := public.unlock_entitlement('relation_map', 1, p_relation_id);
 
   update public.relations
   set status = 'completed',

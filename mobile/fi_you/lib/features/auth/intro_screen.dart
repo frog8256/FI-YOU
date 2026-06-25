@@ -72,111 +72,12 @@ class _BrandMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: SizedBox.square(
-        dimension: 72,
-        child: CustomPaint(painter: _BrandSparkPainter()),
+        dimension: 104,
+        child: Image(
+          image: AssetImage('assets/images/my_universe_logo_symbol.png'),
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }
-}
-
-class _BrandSparkPainter extends CustomPainter {
-  const _BrandSparkPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.48, size.height * 0.52);
-    final glowPaint = Paint()
-      ..color = const Color(0xFFC4B5FD).withValues(alpha: 0.28)
-      ..maskFilter = MaskFilter.blur(
-        BlurStyle.normal,
-        size.shortestSide * 0.16,
-      );
-    final mainPath = _sparkPath(
-      center,
-      size.shortestSide * 0.33,
-      size.shortestSide * 0.115,
-    );
-
-    canvas.drawPath(mainPath, glowPaint);
-    canvas.drawPath(
-      mainPath,
-      Paint()
-        ..shader = RadialGradient(
-          center: const Alignment(-0.35, -0.42),
-          radius: 0.9,
-          colors: const [
-            Color(0xFFFFFFFF),
-            Color(0xFFE7D9FF),
-            Color(0xFFA78BFA),
-          ],
-          stops: const [0.0, 0.3, 1.0],
-        ).createShader(Offset.zero & size),
-    );
-    canvas.drawPath(
-      mainPath,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.1
-        ..strokeJoin = StrokeJoin.round
-        ..color = Colors.white.withValues(alpha: 0.7),
-    );
-
-    _drawSmallSpark(
-      canvas,
-      Offset(size.width * 0.76, size.height * 0.22),
-      size.shortestSide * 0.11,
-      const Color(0xFFE7D9FF),
-    );
-    _drawSmallSpark(
-      canvas,
-      Offset(size.width * 0.26, size.height * 0.73),
-      size.shortestSide * 0.075,
-      const Color(0xFFA78BFA),
-    );
-  }
-
-  Path _sparkPath(Offset center, double longRadius, double shortRadius) {
-    return Path()
-      ..moveTo(center.dx, center.dy - longRadius)
-      ..quadraticBezierTo(
-        center.dx + shortRadius * 0.62,
-        center.dy - shortRadius * 0.62,
-        center.dx + longRadius,
-        center.dy,
-      )
-      ..quadraticBezierTo(
-        center.dx + shortRadius * 0.62,
-        center.dy + shortRadius * 0.62,
-        center.dx,
-        center.dy + longRadius,
-      )
-      ..quadraticBezierTo(
-        center.dx - shortRadius * 0.62,
-        center.dy + shortRadius * 0.62,
-        center.dx - longRadius,
-        center.dy,
-      )
-      ..quadraticBezierTo(
-        center.dx - shortRadius * 0.62,
-        center.dy - shortRadius * 0.62,
-        center.dx,
-        center.dy - longRadius,
-      )
-      ..close();
-  }
-
-  void _drawSmallSpark(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    Color color,
-  ) {
-    canvas.drawPath(
-      _sparkPath(center, radius, radius * 0.35),
-      Paint()..color = color,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _BrandSparkPainter oldDelegate) => false;
 }

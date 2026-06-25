@@ -3,6 +3,30 @@ import 'package:fi_you/features/my/my_theme.dart';
 import 'package:fi_you/core/ui/fi_you_glass.dart';
 import 'package:flutter/material.dart';
 
+Future<void> showStoreModal(
+  BuildContext context, {
+  MyProfileData profile = const MyProfileData(),
+  List<StorePackageData> packages = myDefaultPackages,
+  List<StarHistoryData> history = myDefaultHistory,
+  ValueChanged<StorePackageData>? onPackageTap,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.56),
+    builder: (context) {
+      return _StoreModal(
+        profile: profile,
+        packages: packages,
+        history: history,
+        onPackageTap: onPackageTap,
+      );
+    },
+  );
+}
+
 class StoreScreen extends StatelessWidget {
   const StoreScreen({
     this.profile = const MyProfileData(),
@@ -22,9 +46,122 @@ class StoreScreen extends StatelessWidget {
     return MyPageScaffold(
       appBar: myPlainAppBar(context, 'Store'),
       bottomPadding: 0,
+      child: _StoreContent(
+        profile: profile,
+        packages: packages,
+        history: history,
+        onPackageTap: onPackageTap,
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+      ),
+    );
+  }
+}
+
+class _StoreModal extends StatelessWidget {
+  const _StoreModal({
+    required this.profile,
+    required this.packages,
+    required this.history,
+    this.onPackageTap,
+  });
+
+  final MyProfileData profile;
+  final List<StorePackageData> packages;
+  final List<StarHistoryData> history;
+  final ValueChanged<StorePackageData>? onPackageTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return FractionallySizedBox(
+      heightFactor: 0.9,
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: FiYouGlassSurface(
+            padding: EdgeInsets.zero,
+            radius: 28,
+            v5Preset: FiYouGlassV5Preset.large,
+            transparent: true,
+            borderColor: FiYouGlass.glassStrokeTop,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: MyColors.textMuted.withValues(alpha: 0.46),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 14, 8),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Store',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: MyColors.text,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: '닫기',
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: _StoreContent(
+                    profile: profile,
+                    packages: packages,
+                    history: history,
+                    onPackageTap: onPackageTap,
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 34),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreContent extends StatelessWidget {
+  const _StoreContent({
+    required this.profile,
+    required this.packages,
+    required this.history,
+    required this.padding,
+    this.onPackageTap,
+  });
+
+  final MyProfileData profile;
+  final List<StorePackageData> packages;
+  final List<StarHistoryData> history;
+  final EdgeInsetsGeometry padding;
+  final ValueChanged<StorePackageData>? onPackageTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scrollbar(
       child: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+        padding: padding,
         children: [
           MySurface(
             padding: const EdgeInsets.all(20),
@@ -32,7 +169,7 @@ class StoreScreen extends StatelessWidget {
             radius: FiYouGlass.glassRadiusCard,
             child: Row(
               children: [
-                const _GoldLogoBadge(size: 58, padding: 8),
+                const _GoldStarBadge(size: 58, iconSize: 32),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -69,6 +206,14 @@ class StoreScreen extends StatelessWidget {
           const MySectionTitle(
             title: '구매 패키지',
             subtitle: 'Google Play Billing 연결 전 mock UI입니다.',
+          ),
+          const SizedBox(height: 12),
+          _WatchAdRewardButton(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('광고 시청 보상 연결 전 mock 버튼입니다.')),
+              );
+            },
           ),
           const SizedBox(height: 12),
           for (final package in packages) ...[
@@ -115,11 +260,11 @@ class StoreScreen extends StatelessWidget {
   }
 }
 
-class _GoldLogoBadge extends StatelessWidget {
-  const _GoldLogoBadge({required this.size, required this.padding});
+class _GoldStarBadge extends StatelessWidget {
+  const _GoldStarBadge({required this.size, required this.iconSize});
 
   final double size;
-  final double padding;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -127,11 +272,36 @@ class _GoldLogoBadge extends StatelessWidget {
       width: size,
       height: size,
       child: FiYouGlassSurface(
-        padding: EdgeInsets.all(padding),
+        padding: EdgeInsets.zero,
         radius: size,
         v5Preset: FiYouGlassV5Preset.small,
-        child: Image.asset('assets/images/Logo_gold.png', fit: BoxFit.contain),
+        borderColor: MyColors.gold,
+        child: Center(
+          child: Icon(Icons.star_rounded, color: MyColors.gold, size: iconSize),
+        ),
       ),
+    );
+  }
+}
+
+class _WatchAdRewardButton extends StatelessWidget {
+  const _WatchAdRewardButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FiYouLiquidButton(
+      label: '광고 시청 후 Star 획득하기',
+      icon: const Icon(Icons.play_circle_outline_rounded),
+      onPressed: onTap,
+      height: 52,
+      radius: FiYouGlass.glassRadiusSmall,
+      foregroundColor: MyColors.gold,
+      borderColor: MyColors.gold,
+      accentColor: MyColors.gold,
+      accentStrength: 0.32,
+      iconSize: 19,
     );
   }
 }
@@ -151,7 +321,7 @@ class _PackageTile extends StatelessWidget {
       v5Preset: FiYouGlassV5Preset.medium,
       child: Row(
         children: [
-          const _GoldLogoBadge(size: 42, padding: 7),
+          const _GoldStarBadge(size: 42, iconSize: 24),
           const SizedBox(width: 13),
           Expanded(
             child: Column(

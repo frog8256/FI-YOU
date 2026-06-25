@@ -8,12 +8,16 @@ import 'package:fi_you/features/auth/auth.dart';
 import 'package:fi_you/features/diary/diary.dart' as diary;
 import 'package:fi_you/features/explore/explore_screen.dart' as explore;
 import 'package:fi_you/features/home/home.dart' as home;
+import 'package:fi_you/features/journy/journy.dart' as journy;
 import 'package:fi_you/features/my/my.dart' as my;
 import 'package:fi_you/features/onboarding/onboarding.dart' as onboarding;
+import 'package:fi_you/features/relation_map/relation_map.dart' as relation_map;
 import 'package:fi_you/features/umap/umap.dart' as umap;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+
+const _skipAuthForPreview = true;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +36,12 @@ Future<void> main() async {
 }
 
 Future<FiYouRepository> _createRepository() async {
+  if (_skipAuthForPreview) {
+    final repository = MockFiYouRepository();
+    await repository.restoreLaunchState();
+    return repository;
+  }
+
   final supabaseClient = await AppConfig.initializeSupabaseIfConfigured();
   if (supabaseClient != null) {
     return SupabaseFiYouRepository(supabaseClient);
@@ -172,14 +182,16 @@ class FiYouApp extends StatelessWidget {
             ),
           );
         },
-        home: LaunchGate(
-          repository: repository,
-          appShellBuilder: (_) => const FiYouShell(),
-          onboardingBuilder: (_, refresh) => _RepositoryBackedOnboarding(
-            repository: repository,
-            onComplete: refresh,
-          ),
-        ),
+        home: _skipAuthForPreview
+            ? const FiYouShell()
+            : LaunchGate(
+                repository: repository,
+                appShellBuilder: (_) => const FiYouShell(),
+                onboardingBuilder: (_, refresh) => _RepositoryBackedOnboarding(
+                  repository: repository,
+                  onComplete: refresh,
+                ),
+              ),
       ),
     );
   }
@@ -317,8 +329,21 @@ class _FiYouShellState extends State<FiYouShell> {
     setState(() => _tab = tab);
   }
 
+  void _openQuestionFlow() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const explore.ExplorationExperienceScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final repository = FiYouRepositoryScope.of(context);
+    final profile = repository.profile;
+    final homeData = _homeDataFor(profile);
+    final myProfile = _myProfileFor(repository, profile);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -327,14 +352,17 @@ class _FiYouShellState extends State<FiYouShell> {
             index: FiYouTab.values.indexOf(_tab),
             children: [
               home.HomeScreen(
+                data: homeData,
                 onNotificationTap: () =>
                     _showMessage(context, '알림 설정은 출시 때 연결됩니다.'),
                 onProfileTap: () => _select(FiYouTab.my),
-                onStoreTap: () => _select(FiYouTab.my),
+                onStoreTap: _openStore,
+                onLevelTap: () => _select(FiYouTab.my),
                 onUMapTap: () => _select(FiYouTab.uMap),
                 onDiaryTap: () => _select(FiYouTab.diary),
-                onQuestionTap: () => _select(FiYouTab.explore),
+                onQuestionTap: _openQuestionFlow,
                 onStatusTap: () => _select(FiYouTab.explore),
+                onShareTap: () => _showMessage(context, '공유 기능은 출시 때 연결됩니다.'),
               ),
               const diary.DiaryScreen(),
               explore.ExploreScreen(
@@ -344,15 +372,14 @@ class _FiYouShellState extends State<FiYouShell> {
                 },
               ),
               umap.FiYouUMapScreen(
-                onStartQuestion: () => _select(FiYouTab.explore),
+                onStartQuestion: _openQuestionFlow,
                 onShare: () => _showMessage(context, '공유 기능은 출시 때 연결됩니다.'),
-                onOpenGrowthMap: () =>
-                    _showMessage(context, 'Growth Map은 Star 콘텐츠로 준비 중입니다.'),
+                onOpenJourny: _openJourny,
                 onOpenRelationMap: () =>
                     _showMessage(context, 'Relation Map은 Star 콘텐츠로 준비 중입니다.'),
-                onOpenReport: () => _showMessage(context, '상세 리포트는 준비 중입니다.'),
+                onOpenReport: _openUMapDetailReport,
               ),
-              const my.MyScreen(),
+              my.MyScreen(profile: myProfile, onOpenStore: _openStore),
             ],
           ),
           Positioned(
@@ -362,6 +389,104 @@ class _FiYouShellState extends State<FiYouShell> {
             child: FiYouNavBar(current: _tab, onChanged: _select),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openStore() {
+    final repository = FiYouRepositoryScope.of(context);
+    my.showStoreModal(
+      context,
+      profile: _myProfileFor(repository, repository.profile),
+    );
+  }
+
+  home.HomeMockData _homeDataFor(UserProfile? profile) {
+    if (profile == null) {
+      return home.homeMockData;
+    }
+    final stats = profile.levelStats;
+    return home.homeMockData.copyWith(
+      userName: profile.name,
+      starCount: profile.starBalance,
+      levelLabel: profile.levelDisplayName,
+      journeyMetrics: [
+        home.HomeJourneyMetric(label: 'Joined', value: '${stats.joinedDays}d'),
+        home.HomeJourneyMetric(
+          label: 'Attend',
+          value: '${stats.attendanceDays}d',
+        ),
+        home.HomeJourneyMetric(
+          label: 'Question',
+          value: '${stats.questionCount}',
+        ),
+        home.HomeJourneyMetric(label: 'Diary', value: '${stats.diaryCount}'),
+        home.HomeJourneyMetric(label: 'Lv', value: '${profile.level}'),
+      ],
+      activityMetrics: [
+        home.HomeActivityMetric(
+          label: 'Question',
+          value: '${stats.questionCount}',
+          icon: Icons.auto_awesome_rounded,
+          color: const Color(0xFFC4B5FD),
+        ),
+        home.HomeActivityMetric(
+          label: 'Diary',
+          value: '${stats.diaryCount}',
+          icon: Icons.edit_note_rounded,
+          color: const Color(0xFF60A5FA),
+        ),
+        home.HomeActivityMetric(
+          label: 'Attend',
+          value: '${stats.attendanceDays}d',
+          icon: Icons.calendar_month_rounded,
+          color: const Color(0xFF7DD3FC),
+        ),
+        home.HomeActivityMetric(
+          label: 'Joined',
+          value: '${stats.joinedDays}d',
+          icon: Icons.history_edu_rounded,
+          color: const Color(0xFF6EE7B7),
+        ),
+      ],
+    );
+  }
+
+  my.MyProfileData _myProfileFor(
+    FiYouRepository repository,
+    UserProfile? profile,
+  ) {
+    if (profile == null) {
+      return const my.MyProfileData();
+    }
+    final stats = profile.levelStats;
+    return my.MyProfileData(
+      name: profile.name,
+      email: profile.email,
+      profileLine: profile.profileLine,
+      level: profile.level,
+      levelLabel: profile.levelDisplayName,
+      starBalance: profile.starBalance,
+      diaryCount: stats.diaryCount,
+      questionCount: stats.questionCount,
+      attendanceDays: stats.attendanceDays,
+      joinedDays: stats.joinedDays,
+      clueCount: repository.todayInsight.sourceCount,
+    );
+  }
+
+  void _openJourny(JournyReport report) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => journy.JournyReportScreen(report: report),
+      ),
+    );
+  }
+
+  void _openUMapDetailReport(UMapDetailReport report) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => umap.UMapDetailReportScreen(report: report),
       ),
     );
   }
@@ -645,5 +770,13 @@ class _SparkNavIconPainter extends CustomPainter {
 }
 
 void _showMessage(BuildContext context, String message) {
+  if (message.startsWith('Relation Map')) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const relation_map.RelationMapHomeScreen(),
+      ),
+    );
+    return;
+  }
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }

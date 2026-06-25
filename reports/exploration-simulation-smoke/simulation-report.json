@@ -1,0 +1,2287 @@
+{
+  "generatedAt": "2026-06-23T09:07:31.439Z",
+  "options": {
+    "users": 4,
+    "cardsPerUser": 8,
+    "seed": 1,
+    "outputDir": "reports/exploration-simulation-smoke"
+  },
+  "totals": {
+    "users": 4,
+    "cardsDelivered": 32,
+    "childNodeCoveragePercent": 8.67,
+    "uniqueChildNodesExplored": 26,
+    "totalChildNodes": 300,
+    "repeatedNodeFrequencyPercent": 0,
+    "loopRatePercent": 0,
+    "deadNodeCount": 274,
+    "hotNodeCount": 6,
+    "parentDistributionMaxDeviationPercent": 5.63
+  },
+  "successCriteria": {
+    "childNodeCoverageAbove90": false,
+    "parentDistributionVarianceBelow15": true,
+    "loopRateBelow5": true,
+    "deadNodesZero": false,
+    "depthProgressionHealthy": false,
+    "graphUsageBalanced": false
+  },
+  "parentDistribution": {
+    "자아상": 15.63,
+    "행동패턴": 9.38,
+    "삶의 방향": 9.38,
+    "성격": 9.38,
+    "가치관": 9.38,
+    "동기": 6.25,
+    "감정패턴": 9.38,
+    "스트레스 반응": 9.38,
+    "인간관계": 12.5,
+    "의사결정": 9.38
+  },
+  "depthDistribution": {
+    "1": 53.13,
+    "2": 46.88,
+    "3": 0,
+    "4": 0,
+    "5": 0
+  },
+  "cardTypeDistribution": {
+    "scenario_choice": 34.38,
+    "multiple_choice": 28.13,
+    "priority_selection": 28.13,
+    "binary_choice": 9.38
+  },
+  "timeAxisDistribution": {
+    "present": 43.75,
+    "past": 3.13,
+    "future": 12.5,
+    "repeated_pattern": 9.38,
+    "imagined_scenario": 31.25
+  },
+  "graphUsage": {
+    "related": 21.88,
+    "bridge": 59.38,
+    "opposite": 0,
+    "none": 18.75,
+    "start": 0
+  },
+  "topNodes": [
+    {
+      "childNodeId": "parent_01_child_01",
+      "childNode": "자기인식",
+      "parentNode": "자아상",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_01_child_19",
+      "childNode": "자기표현 욕구",
+      "parentNode": "자아상",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_04_child_01",
+      "childNode": "외향성",
+      "parentNode": "성격",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_07_child_01",
+      "childNode": "감정 민감도",
+      "parentNode": "감정패턴",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_08_child_01",
+      "childNode": "압박 민감도",
+      "parentNode": "스트레스 반응",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_09_child_01",
+      "childNode": "친밀감 욕구",
+      "parentNode": "인간관계",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_01_child_20",
+      "childNode": "내면 이미지",
+      "parentNode": "자아상",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_02_child_19",
+      "childNode": "안정 추구 행동",
+      "parentNode": "행동패턴",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_02_child_22",
+      "childNode": "자기관리",
+      "parentNode": "행동패턴",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_02_child_23",
+      "childNode": "목표 추적력",
+      "parentNode": "행동패턴",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_03_child_19",
+      "childNode": "자기실현",
+      "parentNode": "삶의 방향",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_03_child_25",
+      "childNode": "선택의 방향성",
+      "parentNode": "삶의 방향",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_03_child_27",
+      "childNode": "현재 몰입도",
+      "parentNode": "삶의 방향",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_04_child_03",
+      "childNode": "개방성",
+      "parentNode": "성격",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_05_child_01",
+      "childNode": "자유",
+      "parentNode": "가치관",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_05_child_25",
+      "childNode": "소속감",
+      "parentNode": "가치관",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_05_child_27",
+      "childNode": "균형",
+      "parentNode": "가치관",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_06_child_22",
+      "childNode": "즐거움 기반 동기",
+      "parentNode": "동기",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_06_child_23",
+      "childNode": "책임 기반 동기",
+      "parentNode": "동기",
+      "count": 1,
+      "percent": 3.13
+    },
+    {
+      "childNodeId": "parent_07_child_27",
+      "childNode": "상처 민감도",
+      "parentNode": "감정패턴",
+      "count": 1,
+      "percent": 3.13
+    }
+  ],
+  "deadNodes": [
+    {
+      "childNodeId": "parent_01_child_02",
+      "childNode": "자기수용",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_03",
+      "childNode": "자기비판",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_04",
+      "childNode": "자기신뢰",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_05",
+      "childNode": "자기존중감",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_06",
+      "childNode": "자존감 안정성",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_07",
+      "childNode": "이상적 자아",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_08",
+      "childNode": "현실적 자아",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_09",
+      "childNode": "사회적 자아",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_10",
+      "childNode": "숨겨진 자아",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_11",
+      "childNode": "열등감",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_12",
+      "childNode": "우월감",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_13",
+      "childNode": "자기확신",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_14",
+      "childNode": "자기의심",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_15",
+      "childNode": "정체성 명확성",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_16",
+      "childNode": "역할 인식",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_17",
+      "childNode": "타인의 시선 의식",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_18",
+      "childNode": "인정 욕구",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_21",
+      "childNode": "외적 이미지 관리",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_22",
+      "childNode": "실패에 대한 자기평가",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_23",
+      "childNode": "성공에 대한 자기평가",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_24",
+      "childNode": "자기효능감",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_25",
+      "childNode": "자기통제감",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_26",
+      "childNode": "내적 기준",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_27",
+      "childNode": "비교 성향",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_28",
+      "childNode": "자기방어",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_29",
+      "childNode": "성장 가능성 인식",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_01_child_30",
+      "childNode": "존재감 욕구",
+      "parentNode": "자아상",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_01",
+      "childNode": "실행력",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_02",
+      "childNode": "추진력",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_03",
+      "childNode": "지속성",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_04",
+      "childNode": "루틴 선호",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_05",
+      "childNode": "즉흥성",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_06",
+      "childNode": "계획성",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_07",
+      "childNode": "습관 형성력",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_08",
+      "childNode": "미루기 성향",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_09",
+      "childNode": "완수 성향",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_10",
+      "childNode": "시작 민감도",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_11",
+      "childNode": "몰입력",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_12",
+      "childNode": "집중 지속력",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_13",
+      "childNode": "행동 속도",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_14",
+      "childNode": "반응 속도",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_15",
+      "childNode": "에너지 관리",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_16",
+      "childNode": "반복 행동",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_17",
+      "childNode": "회피 행동",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_18",
+      "childNode": "도전 행동",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_20",
+      "childNode": "탐색 행동",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_21",
+      "childNode": "충동성",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_24",
+      "childNode": "우선순위 설정",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_25",
+      "childNode": "환경 의존성",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_26",
+      "childNode": "타인 영향성",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_27",
+      "childNode": "독립 실행력",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_28",
+      "childNode": "피드백 반영",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_29",
+      "childNode": "실패 후 재시도",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_02_child_30",
+      "childNode": "행동 일관성",
+      "parentNode": "행동패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_01",
+      "childNode": "인생 목표",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_02",
+      "childNode": "장기 비전",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_03",
+      "childNode": "단기 목표",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_04",
+      "childNode": "성장 지향",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_05",
+      "childNode": "안정 지향",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_06",
+      "childNode": "자유 지향",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_07",
+      "childNode": "성취 지향",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_08",
+      "childNode": "관계 지향",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_09",
+      "childNode": "영향력 지향",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_10",
+      "childNode": "의미 추구",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_11",
+      "childNode": "행복 기준",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_12",
+      "childNode": "성공 기준",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_13",
+      "childNode": "삶의 우선순위",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_14",
+      "childNode": "커리어 방향",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_15",
+      "childNode": "경제적 목표",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_16",
+      "childNode": "창조 욕구",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_17",
+      "childNode": "탐험 욕구",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_18",
+      "childNode": "기여 욕구",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_20",
+      "childNode": "독립 욕구",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_21",
+      "childNode": "소속 욕구",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_22",
+      "childNode": "변화 수용성",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_23",
+      "childNode": "미래 확신도",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_24",
+      "childNode": "미래 불안도",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_26",
+      "childNode": "삶의 만족도",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_28",
+      "childNode": "장기 인내력",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_29",
+      "childNode": "인생 서사감",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_03_child_30",
+      "childNode": "목적 의식",
+      "parentNode": "삶의 방향",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_02",
+      "childNode": "내향성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_04",
+      "childNode": "성실성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_05",
+      "childNode": "친화성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_06",
+      "childNode": "정서 안정성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_07",
+      "childNode": "예민성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_08",
+      "childNode": "신중함",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_09",
+      "childNode": "대담함",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_10",
+      "childNode": "호기심",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_11",
+      "childNode": "독립성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_12",
+      "childNode": "의존성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_13",
+      "childNode": "완벽주의",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_14",
+      "childNode": "낙관성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_15",
+      "childNode": "비관성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_16",
+      "childNode": "현실성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_17",
+      "childNode": "이상주의",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_18",
+      "childNode": "경쟁성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_19",
+      "childNode": "협력성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_20",
+      "childNode": "융통성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_21",
+      "childNode": "고집성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_22",
+      "childNode": "자기통제력",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_23",
+      "childNode": "충동성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_24",
+      "childNode": "사교성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_25",
+      "childNode": "침착성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_26",
+      "childNode": "열정성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_27",
+      "childNode": "분석성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_28",
+      "childNode": "창의성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_29",
+      "childNode": "책임감",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_04_child_30",
+      "childNode": "모험성",
+      "parentNode": "성격",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_02",
+      "childNode": "안정",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_03",
+      "childNode": "성취",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_04",
+      "childNode": "인정",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_05",
+      "childNode": "관계",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_06",
+      "childNode": "성장",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_07",
+      "childNode": "진정성",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_08",
+      "childNode": "정의",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_09",
+      "childNode": "책임",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_10",
+      "childNode": "효율",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_11",
+      "childNode": "창의성",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_12",
+      "childNode": "돈",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_13",
+      "childNode": "명예",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_14",
+      "childNode": "영향력",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_15",
+      "childNode": "가족",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_16",
+      "childNode": "우정",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_17",
+      "childNode": "사랑",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_18",
+      "childNode": "건강",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_19",
+      "childNode": "지식",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_20",
+      "childNode": "경험",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_21",
+      "childNode": "도전",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_22",
+      "childNode": "평화",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_23",
+      "childNode": "즐거움",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_24",
+      "childNode": "독립",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_26",
+      "childNode": "신뢰",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_28",
+      "childNode": "품격",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_29",
+      "childNode": "기여",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_05_child_30",
+      "childNode": "자기실현",
+      "parentNode": "가치관",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_01",
+      "childNode": "성취 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_02",
+      "childNode": "인정 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_03",
+      "childNode": "소속 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_04",
+      "childNode": "성장 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_05",
+      "childNode": "회피 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_06",
+      "childNode": "보상 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_07",
+      "childNode": "경쟁 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_08",
+      "childNode": "기여 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_09",
+      "childNode": "탐구 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_10",
+      "childNode": "창조 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_11",
+      "childNode": "안정 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_12",
+      "childNode": "자유 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_13",
+      "childNode": "권한 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_14",
+      "childNode": "영향력 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_15",
+      "childNode": "의미 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_16",
+      "childNode": "호기심 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_17",
+      "childNode": "관계 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_18",
+      "childNode": "완성 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_19",
+      "childNode": "생존 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_20",
+      "childNode": "자기증명",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_21",
+      "childNode": "두려움 기반 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_24",
+      "childNode": "기대 충족 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_25",
+      "childNode": "변화 추구 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_26",
+      "childNode": "문제 해결 동기",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_27",
+      "childNode": "성장 압박감",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_28",
+      "childNode": "내적 만족감",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_29",
+      "childNode": "외적 평가 의식",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_06_child_30",
+      "childNode": "목표 몰입도",
+      "parentNode": "동기",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_02",
+      "childNode": "감정 표현력",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_03",
+      "childNode": "감정 억제",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_04",
+      "childNode": "감정 회피",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_05",
+      "childNode": "감정 폭발성",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_06",
+      "childNode": "감정 지속성",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_07",
+      "childNode": "감정 회복력",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_08",
+      "childNode": "불안 패턴",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_09",
+      "childNode": "분노 패턴",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_10",
+      "childNode": "슬픔 패턴",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_11",
+      "childNode": "기쁨 반응",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_12",
+      "childNode": "죄책감",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_13",
+      "childNode": "수치심",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_14",
+      "childNode": "외로움 민감도",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_15",
+      "childNode": "질투심",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_16",
+      "childNode": "서운함 민감도",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_17",
+      "childNode": "감정 기복",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_18",
+      "childNode": "감정 안정성",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_19",
+      "childNode": "공감 반응",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_20",
+      "childNode": "감정 전염성",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_21",
+      "childNode": "감정 인식력",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_22",
+      "childNode": "감정 언어화",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_23",
+      "childNode": "감정 조절력",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_24",
+      "childNode": "부정감정 처리",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_25",
+      "childNode": "긍정감정 유지",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_26",
+      "childNode": "감정적 의사결정",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_28",
+      "childNode": "기대 실망 패턴",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_29",
+      "childNode": "감정 누적성",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_07_child_30",
+      "childNode": "내면 긴장감",
+      "parentNode": "감정패턴",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_02",
+      "childNode": "긴장 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_03",
+      "childNode": "회피 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_04",
+      "childNode": "공격 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_05",
+      "childNode": "얼어붙기 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_06",
+      "childNode": "과잉통제",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_07",
+      "childNode": "과잉생각",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_08",
+      "childNode": "무기력 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_09",
+      "childNode": "문제 해결 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_10",
+      "childNode": "감정 폭발",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_11",
+      "childNode": "침묵 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_12",
+      "childNode": "도움 요청",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_13",
+      "childNode": "혼자 버티기",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_14",
+      "childNode": "수면 영향",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_15",
+      "childNode": "식욕 변화",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_16",
+      "childNode": "집중력 저하",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_17",
+      "childNode": "신체화 반응",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_18",
+      "childNode": "불안 증가",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_19",
+      "childNode": "분노 증가",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_20",
+      "childNode": "자기비난",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_21",
+      "childNode": "타인비난",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_22",
+      "childNode": "완벽주의 강화",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_24",
+      "childNode": "관계 단절",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_25",
+      "childNode": "생산성 저하",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_26",
+      "childNode": "스트레스 회복력",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_27",
+      "childNode": "스트레스 예측력",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_28",
+      "childNode": "스트레스 해소 방식",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_29",
+      "childNode": "위기 적응력",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_08_child_30",
+      "childNode": "번아웃 위험도",
+      "parentNode": "스트레스 반응",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_02",
+      "childNode": "독립성 욕구",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_03",
+      "childNode": "소속감 욕구",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_05",
+      "childNode": "애착 안정성",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_06",
+      "childNode": "관계 불안",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_07",
+      "childNode": "관계 회피",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_08",
+      "childNode": "신뢰 형성",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_09",
+      "childNode": "신뢰 민감도",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_10",
+      "childNode": "경계 설정",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_11",
+      "childNode": "거리 조절",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_12",
+      "childNode": "의존 성향",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_13",
+      "childNode": "주도 성향",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_14",
+      "childNode": "배려 성향",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_15",
+      "childNode": "희생 성향",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_16",
+      "childNode": "갈등 회피",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_17",
+      "childNode": "갈등 직면",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_18",
+      "childNode": "소통 방식",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_19",
+      "childNode": "감정 공유",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_20",
+      "childNode": "자기표현",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_21",
+      "childNode": "타인 이해력",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_22",
+      "childNode": "공감 능력",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_23",
+      "childNode": "거절 능력",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_24",
+      "childNode": "부탁 능력",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_25",
+      "childNode": "관계 지속성",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_26",
+      "childNode": "관계 피로도",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_28",
+      "childNode": "관계 선택 기준",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_29",
+      "childNode": "집단 적응력",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_09_child_30",
+      "childNode": "관계 회복력",
+      "parentNode": "인간관계",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_01",
+      "childNode": "직관 의존도",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_02",
+      "childNode": "논리 의존도",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_03",
+      "childNode": "감정 의존도",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_04",
+      "childNode": "데이터 의존도",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_05",
+      "childNode": "신중함",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_06",
+      "childNode": "결단력",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_07",
+      "childNode": "우유부단함",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_08",
+      "childNode": "위험 감수성",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_09",
+      "childNode": "안정 선호",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_10",
+      "childNode": "손실 회피",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_11",
+      "childNode": "기회 포착력",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_12",
+      "childNode": "장기 관점",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_13",
+      "childNode": "단기 관점",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_14",
+      "childNode": "타인 의견 영향",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_15",
+      "childNode": "자기 확신",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_16",
+      "childNode": "후회 민감도",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_18",
+      "childNode": "완벽한 선택 욕구",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_19",
+      "childNode": "대안 탐색력",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_20",
+      "childNode": "우선순위 판단",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_21",
+      "childNode": "기준 명확성",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_23",
+      "childNode": "목표 기반 선택",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_24",
+      "childNode": "관계 기반 선택",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_25",
+      "childNode": "충동 결정",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_26",
+      "childNode": "결정 지연",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_28",
+      "childNode": "결정 후 확신도",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_29",
+      "childNode": "실패 학습력",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    },
+    {
+      "childNodeId": "parent_10_child_30",
+      "childNode": "선택 책임감",
+      "parentNode": "의사결정",
+      "count": 0,
+      "percent": 0
+    }
+  ],
+  "hotNodes": [
+    {
+      "childNodeId": "parent_01_child_01",
+      "childNode": "자기인식",
+      "parentNode": "자아상",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_01_child_19",
+      "childNode": "자기표현 욕구",
+      "parentNode": "자아상",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_04_child_01",
+      "childNode": "외향성",
+      "parentNode": "성격",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_07_child_01",
+      "childNode": "감정 민감도",
+      "parentNode": "감정패턴",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_08_child_01",
+      "childNode": "압박 민감도",
+      "parentNode": "스트레스 반응",
+      "count": 2,
+      "percent": 6.25
+    },
+    {
+      "childNodeId": "parent_09_child_01",
+      "childNode": "친밀감 욕구",
+      "parentNode": "인간관계",
+      "count": 2,
+      "percent": 6.25
+    }
+  ],
+  "loopDetection": {
+    "totalLoops": 0,
+    "loopRatePercent": 0,
+    "examples": []
+  },
+  "archetypeSummaries": [
+    {
+      "archetype": "Explorer",
+      "users": 1,
+      "childNodeCoveragePercent": 2.67,
+      "topParents": [
+        [
+          "자아상",
+          25
+        ],
+        [
+          "인간관계",
+          25
+        ],
+        [
+          "의사결정",
+          12.5
+        ]
+      ]
+    },
+    {
+      "archetype": "Builder",
+      "users": 1,
+      "childNodeCoveragePercent": 2.67,
+      "topParents": [
+        [
+          "자아상",
+          25
+        ],
+        [
+          "스트레스 반응",
+          12.5
+        ],
+        [
+          "감정패턴",
+          12.5
+        ]
+      ]
+    },
+    {
+      "archetype": "Connector",
+      "users": 1,
+      "childNodeCoveragePercent": 2.67,
+      "topParents": [
+        [
+          "행동패턴",
+          25
+        ],
+        [
+          "동기",
+          25
+        ],
+        [
+          "가치관",
+          12.5
+        ]
+      ]
+    },
+    {
+      "archetype": "Stability Seeker",
+      "users": 1,
+      "childNodeCoveragePercent": 2.67,
+      "topParents": [
+        [
+          "성격",
+          25
+        ],
+        [
+          "감정패턴",
+          12.5
+        ],
+        [
+          "인간관계",
+          12.5
+        ]
+      ]
+    },
+    {
+      "archetype": "Reflector",
+      "users": 0,
+      "childNodeCoveragePercent": 0,
+      "topParents": []
+    },
+    {
+      "archetype": "Resilient",
+      "users": 0,
+      "childNodeCoveragePercent": 0,
+      "topParents": []
+    },
+    {
+      "archetype": "Creator",
+      "users": 0,
+      "childNodeCoveragePercent": 0,
+      "topParents": []
+    },
+    {
+      "archetype": "Decider",
+      "users": 0,
+      "childNodeCoveragePercent": 0,
+      "topParents": []
+    }
+  ],
+  "recommendations": [
+    "Increase underexplored-node scoring or reduce graph continuation weight until child coverage exceeds 90%.",
+    "Add bridge or related inbound paths to dead nodes, especially nodes with zero selections across the full run.",
+    "Reduce graph or semantic-group weight for hot nodes, or add a stronger per-user repeat penalty.",
+    "Opposite-node traversal is low; consider a controlled contrast boost after several related/bridge moves."
+  ]
+}
