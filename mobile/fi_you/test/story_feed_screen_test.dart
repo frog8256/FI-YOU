@@ -66,7 +66,9 @@ void main() {
     expect(find.text('모습을 갖추는 장'), findsOneWidget);
   });
 
-  testWidgets('StoryFeedScreen renders unknown story type safely', (tester) async {
+  testWidgets('StoryFeedScreen renders unknown story type safely', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _testApp(_StoryFeedRepository(loader: _unknownTypeFeed)),
     );
@@ -128,8 +130,7 @@ StoryFeedResponse _successFeed() {
         id: 'story-raw-id',
         type: 'current_chapter',
         title: '모습을 갖추는 장',
-        description:
-            '최근 탐험이 여러 흐름을 조용한 장으로 모으고 있어요.',
+        description: '최근 탐험이 여러 흐름을 조용한 장으로 모으고 있어요.',
         supportingInsights: [
           StorySupportingInsight(
             insightId: 'insight-raw-id',

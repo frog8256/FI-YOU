@@ -125,10 +125,7 @@ void main() {
 
       expect(find.text('생각 남기기 (선택)'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
-      expect(
-        find.text('필수는 아니에요. 떠오르는 생각이 있다면 남겨보세요.'),
-        findsOneWidget,
-      );
+      expect(find.text('필수는 아니에요. 떠오르는 생각이 있다면 남겨보세요.'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), '가' * 350);
       await tester.tap(find.text(card.options.first.label));

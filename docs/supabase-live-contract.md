@@ -96,7 +96,7 @@ Required response shape:
 
 ```json
 {
-  "starBalance": 0,
+  "starBalance": 899,
   "report": {
     "id": "uuid",
     "title": "U-Map Analysis Report",
@@ -131,7 +131,7 @@ Required response shape:
     "recordingGuides": [],
     "evidence": [],
     "createdAt": "2026-06-25T00:00:00.000Z",
-    "starCost": 0
+    "starCost": 1
   }
 }
 ```

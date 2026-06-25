@@ -52,8 +52,14 @@ void main() {
         ],
       });
 
-      expect(feed.insights.single.supportingNodes.single.nodeId, 'parent_01_child_01');
-      expect(feed.insights.single.supportingNodes.single.nodeName, '스스로 고르는 방향');
+      expect(
+        feed.insights.single.supportingNodes.single.nodeId,
+        'parent_01_child_01',
+      );
+      expect(
+        feed.insights.single.supportingNodes.single.nodeName,
+        '스스로 고르는 방향',
+      );
     });
 
     test('mock insight copy avoids forbidden analysis language', () async {

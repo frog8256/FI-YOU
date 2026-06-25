@@ -11,7 +11,10 @@ void main() {
       expect(feed.hasError, isFalse);
       expect(feed.feedTitle, '나의 이야기');
       expect(feed.stories, isNotEmpty);
-      expect(feed.stories.first.supportingInsights.length, greaterThanOrEqualTo(3));
+      expect(
+        feed.stories.first.supportingInsights.length,
+        greaterThanOrEqualTo(3),
+      );
     });
 
     test('empty story feed parses safely', () {

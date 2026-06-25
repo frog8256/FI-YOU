@@ -30,4 +30,12 @@ Thumbs.db
 
 # Local verification artifacts
 mobile/fi_you/screenshots/
+mobile/fi_you/after-monkey.png
+mobile/fi_you/android-studio-*-run-check.png
+mobile/fi_you/android-studio-run-check.png
+mobile/fi_you/black-check.png
+mobile/fi_you/current-black-issue.png
+mobile/fi_you/fiyou-api36-boot.png
+mobile/fi_you/run-check.png
+mobile/fi_you/skip-login-home.png
 supabase/.temp/

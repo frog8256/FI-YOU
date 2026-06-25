@@ -8,9 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('InsightFeedScreen shows loading state', (tester) async {
     final completer = Completer<InsightFeedResponse>();
-    final repository = _InsightFeedRepository(
-      loader: () => completer.future,
-    );
+    final repository = _InsightFeedRepository(loader: () => completer.future);
 
     await tester.pumpWidget(_testApp(repository));
     await tester.pump();
@@ -42,7 +40,9 @@ void main() {
     expect(find.text('forming'), findsNothing);
   });
 
-  testWidgets('InsightFeedScreen shows retry state and recovers', (tester) async {
+  testWidgets('InsightFeedScreen shows retry state and recovers', (
+    tester,
+  ) async {
     var calls = 0;
     final repository = _InsightFeedRepository(
       loader: () {
@@ -65,7 +65,9 @@ void main() {
     expect(find.text('반복해서 나타나는 방향'), findsOneWidget);
   });
 
-  testWidgets('InsightFeedScreen avoids forbidden visible copy', (tester) async {
+  testWidgets('InsightFeedScreen avoids forbidden visible copy', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _testApp(_InsightFeedRepository(loader: _successFeed)),
     );
@@ -98,8 +100,7 @@ InsightFeedResponse _successFeed() {
         id: 'insight-1',
         type: 'emerging_pattern',
         title: '반복해서 나타나는 방향',
-        description:
-            '최근 탐험에서는 하나의 방향이 여러 순간에 걸쳐 보입니다.',
+        description: '최근 탐험에서는 하나의 방향이 여러 순간에 걸쳐 보입니다.',
         confidenceLevel: 'forming',
         supportingNodes: [
           InsightSupportingNode(

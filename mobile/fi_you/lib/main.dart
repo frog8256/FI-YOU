@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+const _skipAuthForPreview = true;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
@@ -34,6 +36,12 @@ Future<void> main() async {
 }
 
 Future<FiYouRepository> _createRepository() async {
+  if (_skipAuthForPreview) {
+    final repository = MockFiYouRepository();
+    await repository.restoreLaunchState();
+    return repository;
+  }
+
   final supabaseClient = await AppConfig.initializeSupabaseIfConfigured();
   if (supabaseClient != null) {
     return SupabaseFiYouRepository(supabaseClient);
@@ -174,14 +182,16 @@ class FiYouApp extends StatelessWidget {
             ),
           );
         },
-        home: LaunchGate(
-          repository: repository,
-          appShellBuilder: (_) => const FiYouShell(),
-          onboardingBuilder: (_, refresh) => _RepositoryBackedOnboarding(
-            repository: repository,
-            onComplete: refresh,
-          ),
-        ),
+        home: _skipAuthForPreview
+            ? const FiYouShell()
+            : LaunchGate(
+                repository: repository,
+                appShellBuilder: (_) => const FiYouShell(),
+                onboardingBuilder: (_, refresh) => _RepositoryBackedOnboarding(
+                  repository: repository,
+                  onComplete: refresh,
+                ),
+              ),
       ),
     );
   }
